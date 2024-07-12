@@ -1,6 +1,6 @@
 ---
 
-name: docker_sd
+name: "service: docker_sd"
 
 on:
   workflow_dispatch:

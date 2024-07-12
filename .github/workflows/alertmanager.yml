@@ -1,6 +1,6 @@
 ---
 
-name: alertmanager
+name: "service: alertmanager"
 
 on:
   workflow_dispatch:
