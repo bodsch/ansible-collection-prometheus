@@ -13,18 +13,18 @@ on:
           - info
           - warning
           - debug
-  push:
-    branches:
-      - 'main'
-      - 'feature/**'
-      - 'fix/**'
-      - '!doc/**'
-  pull_request:
-    branches:
-      - 'main'
-      - 'feature/**'
-      - 'fix/**'
-      - '!doc/**'
+  # push:
+  #   branches:
+  #     - 'main'
+  #     - 'feature/**'
+  #     - 'fix/**'
+  #     - '!doc/**'
+  # pull_request:
+  #   branches:
+  #     - 'main'
+  #     - 'feature/**'
+  #     - 'fix/**'
+  #     - '!doc/**'
 
 env:
   COLLECTION_NAMESPACE: bodsch
