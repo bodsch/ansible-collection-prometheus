@@ -17,6 +17,8 @@ ExecStart         = /usr/bin/{{ nginx_exporter_release.binary }} $OPTIONS
 
 SyslogIdentifier  = nginx_exporter
 Restart           = always
+RestartSec        = 15
 
 [Install]
+Alias             = nginx-exporter.service
 WantedBy          = multi-user.target

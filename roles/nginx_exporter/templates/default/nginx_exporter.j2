@@ -1,8 +1,18 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
 # {{ ansible_managed }}
 
+# Version: {{ nginx_exporter_version }}
+
 OPTIONS="
 {% if nginx_exporter_service is defined %}
+  {% if nginx_exporter_service.log.level in ["debug", "info", "warn", "error"] %}
+    {% set _loglevel = nginx_exporter_service.log.level %}
+  {% endif %}
+  --log.level {{ _loglevel }} \
+  {% if nginx_exporter_service.log.format is defined and
+        nginx_exporter_service.log.format in ["logfmt", "json"] %}
+  --log.format {{ nginx_exporter_service.log.format }} \
+  {% endif %}
   {# web configuration #}
   {% if nginx_exporter_service.web.listen_address is defined and
         nginx_exporter_service.web.listen_address | string | length > 0 %}
@@ -12,10 +22,12 @@ OPTIONS="
         nginx_exporter_service.web.telemetry_path | string | length > 0 %}
   --web.telemetry-path {{ nginx_exporter_service.web.telemetry_path }} \
   {% endif %}
-  {% if nginx_exporter_service.web.secured_metrics is defined and
-        nginx_exporter_service.web.secured_metrics | string | length > 0 and
-        nginx_exporter_service.web.secured_metrics | bool %}
+  {% if nginx_exporter_version is version_compare('1.0', "<") %}
+    {% if nginx_exporter_service.web.secured_metrics is defined and
+          nginx_exporter_service.web.secured_metrics | string | length > 0 and
+          nginx_exporter_service.web.secured_metrics | bool %}
   --web.secured-metrics \
+    {% endif %}
   {% endif %}
   {# nginx #}
   {% if nginx_exporter_service.nginx.plus is defined and
@@ -23,13 +35,15 @@ OPTIONS="
         nginx_exporter_service.nginx.plus | bool %}
   --nginx.plus \
   {% endif %}
-  {% if nginx_exporter_service.nginx.retries is defined and
-        nginx_exporter_service.nginx.retries | string | length > 0 %}
+  {% if nginx_exporter_version is version_compare('1.0', "<") %}
+    {% if nginx_exporter_service.nginx.retries is defined and
+          nginx_exporter_service.nginx.retries | string | length > 0 %}
   --nginx.retries {{ nginx_exporter_service.nginx.retries }} \
-  {% endif %}
-  {% if nginx_exporter_service.nginx.retry_interval is defined and
-        nginx_exporter_service.nginx.retry_interval | string | length > 0 %}
+    {% endif %}
+    {% if nginx_exporter_service.nginx.retry_interval is defined and
+          nginx_exporter_service.nginx.retry_interval | string | length > 0 %}
   --nginx.retry-interval {{ nginx_exporter_service.nginx.retry_interval }} \
+    {% endif %}
   {% endif %}
   {% if nginx_exporter_service.nginx.scrape_uri is defined and
         nginx_exporter_service.nginx.scrape_uri | string | length > 0 %}
@@ -65,53 +79,40 @@ OPTIONS="
 {% endif %}
 "
 {#
-# Usage of nginx_exporter:
-#   -nginx.plus
-#         Start the exporter for NGINX Plus. By default, the exporter is started for NGINX.
-#         The default value can be overwritten by NGINX_PLUS environment variable.
-#   -nginx.retries uint
-#         A number of retries the exporter will make on start to connect to the NGINX stub_status page/NGINX Plus API before exiting with an error.
-#         The default value can be overwritten by NGINX_RETRIES environment variable.
-#   -nginx.retry-interval value
-#         An interval between retries to connect to the NGINX stub_status page/NGINX Plus API on start.
-#         The default value can be overwritten by NGINX_RETRY_INTERVAL environment variable. (default 5s)
-#   -nginx.scrape-uri string
-#         A URI or unix domain socket path for scraping NGINX or NGINX Plus metrics.
-#         For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API.
-#         The default value can be overwritten by SCRAPE_URI environment variable. (default "http://127.0.0.1:8080/stub_status")
-#   -nginx.ssl-ca-cert string
-#         Path to the PEM encoded CA certificate file used to validate the servers SSL certificate.
-#         The default value can be overwritten by SSL_CA_CERT environment variable.
-#   -nginx.ssl-client-cert string
-#         Path to the PEM encoded client certificate file to use when connecting to the server.
-#         The default value can be overwritten by SSL_CLIENT_CERT environment variable.
-#   -nginx.ssl-client-key string
-#         Path to the PEM encoded client certificate key file to use when connecting to the server.
-#         The default value can be overwritten by SSL_CLIENT_KEY environment variable.
-#   -nginx.ssl-verify
-#         Perform SSL certificate verification.
-#         The default value can be overwritten by SSL_VERIFY environment variable. (default true)
-#   -nginx.timeout value
-#         A timeout for scraping metrics from NGINX or NGINX Plus.
-#         The default value can be overwritten by TIMEOUT environment variable. (default 5s)
-#   -prometheus.const-labels value
-#         A comma separated list of constant labels that will be used in every metric.
-#         Format is label1=value1,label2=value2...
-#         The default value can be overwritten by CONST_LABELS environment variable.
-#   -version
-#         Display the NGINX exporter version.
-#   -web.listen-address string
-#         An address or unix domain socket path to listen on for web interface and telemetry.
-#         The default value can be overwritten by LISTEN_ADDRESS environment variable. (default ":9113")
-#   -web.secured-metrics
-#         Expose metrics using https. The default value can be overwritten by SECURED_METRICS variable.
-#   -web.ssl-server-cert string
-#         Path to the PEM encoded certificate for the nginx-exporter metrics server(when web.secured-metrics=true).
-#         The default value can be overwritten by SSL_SERVER_CERT variable.
-#   -web.ssl-server-key string
-#         Path to the PEM encoded key for the nginx-exporter metrics server (when web.secured-metrics=true).
-#         The default value can be overwritten by SSL_SERVER_KEY variable.
-#   -web.telemetry-path string
-#         A path under which to expose metrics.
-#         The default value can be overwritten by TELEMETRY_PATH environment variable. (default "/metrics")
+# nginx_exporter --version
+nginx_exporter, version 1.2.0 (branch: HEAD, revision: d3f9f94934c8a90de58ca264ee531a7648b2bb2b)
+  build user:       goreleaser
+  build date:       2024-05-29T14:56:38Z
+  go version:       go1.22.3
+  platform:         linux/amd64
+  tags:             unknown
+
+# nginx_exporter --help
+usage: nginx_exporter [<flags>]
+
+
+Flags:
+  -h, --[no-]help                Show context-sensitive help (also try --help-long and --help-man).
+      --[no-]web.systemd-socket  Use systemd socket activation listeners instead of port listeners (Linux only). ($SYSTEMD_SOCKET)
+      --web.listen-address=:9113 ...
+                                 Addresses on which to expose metrics and web interface. Repeatable for multiple addresses. ($LISTEN_ADDRESS)
+      --web.config.file=""       Path to configuration file that can enable TLS or authentication. See:
+                                 https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md ($CONFIG_FILE)
+      --web.telemetry-path="/metrics"
+                                 Path under which to expose metrics. ($TELEMETRY_PATH)
+      --[no-]nginx.plus          Start the exporter for NGINX Plus. By default, the exporter is started for NGINX. ($NGINX_PLUS)
+      --nginx.scrape-uri=http://127.0.0.1:8080/stub_status ...
+                                 A URI or unix domain socket path for scraping NGINX or NGINX Plus metrics. For NGINX, the stub_status page must be available through the
+                                 URI. For NGINX Plus -- the API. Repeatable for multiple URIs. ($SCRAPE_URI)
+      --[no-]nginx.ssl-verify    Perform SSL certificate verification. ($SSL_VERIFY)
+      --nginx.ssl-ca-cert=""     Path to the PEM encoded CA certificate file used to validate the servers SSL certificate. ($SSL_CA_CERT)
+      --nginx.ssl-client-cert=""
+                                 Path to the PEM encoded client certificate file to use when connecting to the server. ($SSL_CLIENT_CERT)
+      --nginx.ssl-client-key=""  Path to the PEM encoded client certificate key file to use when connecting to the server. ($SSL_CLIENT_KEY)
+      --nginx.timeout=5s         A timeout for scraping metrics from NGINX or NGINX Plus. ($TIMEOUT)
+      --prometheus.const-label=PROMETHEUS.CONST-LABEL ...
+                                 Label that will be used in every metric. Format is label=value. It can be repeated multiple times. ($CONST_LABELS)
+      --log.level=info           Only log messages with the given severity or above. One of: [debug, info, warn, error]
+      --log.format=logfmt        Output format of log messages. One of: [logfmt, json]
+      --[no-]version             Show application version.
 #}

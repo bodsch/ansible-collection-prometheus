@@ -11,6 +11,9 @@ nginx_exporter_local_tmp_directory: "{{
   default(lookup('env', 'HOME') ~ '/.cache/ansible/nginx_exporter', true) }}/{{ nginx_exporter_version }}"
 
 nginx_exporter_defaults_service:
+  log:
+    level: info
+    format: ""
   nginx:
     plus: false
     retries: 3
@@ -25,6 +28,9 @@ nginx_exporter_defaults_service:
     const_labels: {}
   web:
     listen_address: "127.0.0.1:9113"
+    systemd-socket: false                         # TODO
+    config:
+      file: ""                                    # TODO
     secured_metrics: ""
     ssl_server_cert: ""
     ssl_server_key: ""
