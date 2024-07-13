@@ -13,6 +13,9 @@
         - name: update pacman system
           ansible.builtin.command: |
             pacman --refresh --sync --sysupgrade --noconfirm
+          register: pacman
+          changed_when: pacman.rc != 0
+          failed_when: pacman.rc != 0
 
         - name: create depends service
           ansible.builtin.copy:
@@ -24,11 +27,6 @@
           when:
             - ansible_os_family | lower == 'artix linux'
 
-    - name: update package cache
-      become: true
-      ansible.builtin.package:
-        update_cache: true
-
     - name: make sure python3-apt is installed (only debian based)
       ansible.builtin.package:
         name:
@@ -36,6 +34,17 @@
         state: present
       when:
         - ansible_os_family | lower == 'debian'
+
+    - name: update package cache
+      become: true
+      ansible.builtin.package:
+        update_cache: true
+
+    - name: install dependencies
+      ansible.builtin.package:
+        name:
+          - iproute2
+        state: present
 
     - name: environment
       ansible.builtin.debug:
@@ -50,4 +59,4 @@
   gather_facts: true
 
   roles:
-    - role: docker
+    - role: bodsch.docker.docker
