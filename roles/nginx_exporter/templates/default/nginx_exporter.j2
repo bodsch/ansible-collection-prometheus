@@ -51,7 +51,7 @@ OPTIONS="
   {% endif %}
   {% if nginx_exporter_service.nginx.timeout is defined and
         nginx_exporter_service.nginx.timeout | string | length > 0 %}
-  --nginx.timeout {{ nginx_exporter_service.nginx.timeout }}
+  --nginx.timeout {{ nginx_exporter_service.nginx.timeout }} \
   {% endif %}
   {% if nginx_exporter_service.nginx.ssl_ca_cert is defined and
         nginx_exporter_service.nginx.ssl_ca_cert | string | length > 0 %}
@@ -74,7 +74,13 @@ OPTIONS="
   {% if nginx_exporter_service.prometheus.const_labels is defined and
         nginx_exporter_service.prometheus.const_labels | bodsch.core.type == "dict" and
         nginx_exporter_service.prometheus.const_labels | count > 0 %}
-  -prometheus.const-labels {{ nginx_exporter_service.prometheus.const_labels | bodsch.prometheus.nginx_exporter_prometheus_labels }} \
+    {% if nginx_exporter_version is version_compare('1.0', "<") %}
+  --prometheus.const-labels {{ nginx_exporter_service.prometheus.const_labels | bodsch.prometheus.nginx_exporter_prometheus_labels }} \
+    {% else %}
+      {% for key, value in nginx_exporter_service.prometheus.const_labels.items() %}
+  --prometheus.const-label {{ key }}={{ value }} \
+      {% endfor %}
+    {% endif %}
   {% endif %}
 {% endif %}
 "
