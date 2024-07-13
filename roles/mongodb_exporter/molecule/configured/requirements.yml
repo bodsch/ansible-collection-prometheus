@@ -1,0 +1,6 @@
+---
+
+- name: mongodb
+  src: bodsch.mongodb
+
+...
