@@ -16,8 +16,8 @@ A collection of Ansible roles for the Prometheus universe.
 
 * Arch Linux
 * Debian based
-    - Debian 10 / 11
-    - Ubuntu 20.10
+    - Debian 11 / 12
+    - Ubuntu 22.04
 
 
 ## Contribution

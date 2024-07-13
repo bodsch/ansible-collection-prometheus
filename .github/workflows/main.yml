@@ -13,18 +13,28 @@ on:
           - info
           - warning
           - debug
-  # push:
-  #   branches:
-  #     - 'main'
-  #     - 'feature/**'
-  #     - 'fix/**'
-  #     - '!doc/**'
-  # pull_request:
-  #   branches:
-  #     - 'main'
-  #     - 'feature/**'
-  #     - 'fix/**'
-  #     - '!doc/**'
+  push:
+    branches:
+      - 'main'
+      - 'feature/**'
+      - 'fix/**'
+      - '!doc/**'
+    paths:
+      - "!Makefile"
+      - "!README.md"
+      - '.config/ansible-lint.yml'
+      - '.yamllint'
+  pull_request:
+    branches:
+      - 'main'
+      - 'feature/**'
+      - 'fix/**'
+      - '!doc/**'
+    paths:
+      - "!Makefile"
+      - "!README.md"
+      - '.config/ansible-lint.yml'
+      - '.yamllint'
 
 env:
   COLLECTION_NAMESPACE: bodsch
