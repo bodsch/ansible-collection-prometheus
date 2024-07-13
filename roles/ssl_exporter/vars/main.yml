@@ -30,6 +30,7 @@ ssl_exporter_defaults_release:
   download_url: https://github.com/ribbybibby/ssl_exporter/releases
   file: ssl_exporter_{{ ssl_exporter_version }}_{{ ansible_system | lower }}_{{ system_architecture }}.tar.gz
   binary: ssl_exporter
+  checksum_file: ssl_exporter_{{ ssl_exporter_version }}_checksums.txt
 
 go_arch_map:
   i386: '386'
