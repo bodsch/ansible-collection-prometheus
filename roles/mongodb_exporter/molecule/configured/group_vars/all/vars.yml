@@ -6,5 +6,6 @@ mongodb_exporter_service:
     level: debug
   web:
     listen_address: "127.0.0.1:9104"
-
+  mongodb:
+    uri: "mongodb://molecule:molecule@mongodb:27017/admin?ssl=true"
 ...

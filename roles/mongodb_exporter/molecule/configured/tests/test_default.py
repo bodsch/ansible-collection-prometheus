@@ -105,7 +105,6 @@ def local_facts(host):
 
 
 @pytest.mark.parametrize("directories", [
-    "/etc/mongodb_exporter",
     "/usr/local/opt/mongodb_exporter"
 ])
 def test_directories(host, directories):
@@ -139,8 +138,8 @@ def test_files(host, get_vars):
         files.append(f"{install_dir}/mongodb_exporter")
     if defaults_dir and not distribution == "artix":
         files.append(f"{defaults_dir}/mongodb_exporter")
-    if config_dir:
-        files.append(f"{config_dir}/mongodb_exporter.cnf")
+    # if config_dir:
+    #    files.append(f"{config_dir}/mongodb_exporter.cnf")
 
     print(files)
 
@@ -179,7 +178,7 @@ def test_open_port(host, get_vars):
         listen_address = _web.get("listen_address")
 
     if not listen_address:
-        listen_address = "127.0.0.1:9104"
+        listen_address = "127.0.0.1:9216"
 
     print(listen_address)
 

@@ -1,7 +1,7 @@
 ---
 
 - name: information
-  hosts: all
+  hosts: instance
   gather_facts: true
 
   pre_tasks:
@@ -53,12 +53,5 @@
           - "distribution version : {{ ansible_distribution_major_version }}"
           - "ansible version      : {{ ansible_version.full }}"
           - "python version       : {{ ansible_python.version.major }}.{{ ansible_python.version.minor }}"
-
-- name: prepare container
-  hosts: all
-  gather_facts: true
-
-  roles:
-    - role: mongodb
 
 ...
