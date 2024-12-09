@@ -42,7 +42,10 @@
   ansible.builtin.file:
     path: "{{ json_exporter_local_tmp_directory }}"
     state: directory
-    mode: 0750
+    mode: "0750"
+    force: true
+    recurse: true
+  check_mode: false
 
 - name: detect the downloaded json_exporter archive
   become: false
@@ -56,6 +59,7 @@
   when:
     - stat_json_exporter_archive.stat is defined
     - not stat_json_exporter_archive.stat.exists | default('false')
+    - not running_in_check_mode
   block:
     - name: checksum
       become: false
@@ -78,6 +82,8 @@
           ansible.builtin.set_fact:
             __json_exporter_checksum: "sha256:{{ _latest_checksum.checksum }}"
           when:
+            - _latest_checksum is defined
+            - _latest_checksum.rc is defined
             - _latest_checksum.rc == 0
             - _latest_checksum.checksum is defined
             - _latest_checksum.checksum | string | length > 0
@@ -90,12 +96,12 @@
         url: "{{ json_exporter_release.download_url }}/download/v{{ json_exporter_version }}/{{ json_exporter_release.file }}"
         dest: "{{ json_exporter_local_tmp_directory }}/{{ json_exporter_release.file }}"
         checksum: "{{ __json_exporter_checksum | default(omit) }}"
-        mode: 0640
+        mode: "0640"
+        tmp_dest: "/tmp"
       register: _download_archive
       until: _download_archive is succeeded
       retries: 5
       delay: 2
-      check_mode: false
 
   rescue:
     - name: delete download directory
@@ -118,6 +124,14 @@
     path: "{{ json_exporter_local_tmp_directory }}/{{ json_exporter_release.binary }}"
   register: stat_json_exporter_binary
 
+- name: detect the downloaded json_exporter archive
+  become: false
+  delegate_to: "{{ json_exporter_delegate_to }}"
+  run_once: "{{ 'false' if json_exporter_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ json_exporter_local_tmp_directory }}/{{ json_exporter_release.file }}"
+  register: stat_json_exporter_archive
+
 - name: extract json_exporter archive
   become: false
   delegate_to: "{{ json_exporter_delegate_to }}"
@@ -131,5 +145,7 @@
   when:
     - stat_json_exporter_binary.stat is defined
     - not stat_json_exporter_binary.stat.exists | default('false')
+    - stat_json_exporter_archive.stat is defined
+    - stat_json_exporter_archive.stat.exists | default('false')
 
 ...

@@ -14,17 +14,23 @@
     json_exporter \
       --config.check \
       --config.file={{ json_exporter_service.config.file }}
+  when:
+    - not running_in_check_mode
 
 - name: reload json exporter
   become: true
   ansible.builtin.service:
     name: json_exporter
     state: reloaded
+  when:
+    - not running_in_check_mode
 
 - name: restart json exporter
   become: true
   ansible.builtin.service:
     name: json_exporter
     state: restarted
+  when:
+    - not running_in_check_mode
 
 ...
