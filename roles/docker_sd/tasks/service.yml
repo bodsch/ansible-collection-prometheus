@@ -5,6 +5,8 @@
 
 - name: ensure docker-sd is enabled on boot
   become: true
+  when:
+    - not running_in_check_mode
   ansible.builtin.service:
     name: docker-sd
     enabled: true

@@ -1,0 +1,12 @@
+---
+
+docker_sd_rest_api:
+  port: 8088
+  address: 127.0.0.1
+
+docker_sd_hosts:
+  - host: "unix:///run/docker.sock"
+    metrics_ports:
+      8199: "/metrics"
+      8081: "/actuator/prometheus"
+...
