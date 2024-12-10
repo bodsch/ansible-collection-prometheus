@@ -14,7 +14,7 @@
     group: "{{ blackbox_exporter_system_group }}"
     mode: 0644
   notify:
-    - validate config
+    - validate blackbox config
     - reload blackbox exporter
 
 ...

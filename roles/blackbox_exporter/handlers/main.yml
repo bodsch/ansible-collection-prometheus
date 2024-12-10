@@ -8,7 +8,7 @@
   when:
     - ansible_service_mgr == 'systemd'
 
-- name: validate config  # noqa no-handler
+- name: validate blackbox config  # noqa no-handler
   become: true
   ansible.builtin.command: |
     /usr/bin/blackbox_exporter \
@@ -17,17 +17,23 @@
   register: _validate
   changed_when: _validate.rc != 0
   failed_when: _validate.rc != 0
+  when:
+    - not running_in_check_mode
 
 - name: restart blackbox exporter
   become: true
   ansible.builtin.service:
     name: blackbox_exporter
     state: restarted
+  when:
+    - not running_in_check_mode
 
 - name: reload blackbox exporter
   become: true
   ansible.builtin.service:
     name: blackbox_exporter
     state: reloaded
+  when:
+    - not running_in_check_mode
 
 ...
