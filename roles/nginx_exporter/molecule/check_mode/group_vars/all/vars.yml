@@ -1,0 +1,18 @@
+---
+
+nginx_exporter_service:
+  nginx:
+    retries: 5
+    retry_interval: 15s
+    scrape_uri: http://127.0.0.1:8088/nginx_status
+    timeout: "15s"
+  prometheus:
+    const_labels:
+      environment: molecule
+      env: DEV
+      testing: true
+  web:
+    listen_address: "127.0.0.1:9213"
+    telemetry_path: /metrics
+
+...

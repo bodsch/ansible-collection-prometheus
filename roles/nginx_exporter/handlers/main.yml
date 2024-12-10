@@ -13,11 +13,15 @@
   ansible.builtin.service:
     name: nginx_exporter
     state: restarted
+  when:
+    - not running_in_check_mode
 
 - name: reload nginx exporter
   become: true
   ansible.builtin.service:
     name: nginx_exporter
     state: reloaded
+  when:
+    - not running_in_check_mode
 
 ...
