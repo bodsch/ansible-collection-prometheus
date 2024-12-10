@@ -1,0 +1,23 @@
+---
+
+prometheus_web_listen_address: "{{ ansible_default_ipv4.address }}:9090"
+# prometheus_web_listen_address: '127.0.0.1:9091' # "{{ ansible_default_ipv4.address }}:9090"
+
+prometheus_storage_retention: "90d"
+prometheus_storage_retention_size: "100MB"
+
+# disable default alert rules
+prometheus_alert_rules: []
+
+# prometheus_web_external_url: 'http://localhost:9190/prometheus/'
+
+prometheus_targets:
+- node:
+  # local - node_exporter
+  - targets:
+    - localhost:9100
+    labels:
+      env: node_exporter
+      job: monitoring
+
+...

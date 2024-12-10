@@ -40,6 +40,7 @@
   ansible.builtin.fail:
     msg: "missing extracted binary on ansible controller"
   when:
+    - not running_in_check_mode
     - not stat_file_binary.stat.exists
 
 - name: detect installed trickster binary
@@ -54,6 +55,8 @@
 
 - name: install and activate trickster
   when:
+    - not running_in_check_mode
+    - stat_file_binary.stat.exists
     - (stat_trickster_binary.stat is defined and not stat_trickster_binary.stat.exists | default('false')) or
       not stat_trickster_activated.stat | bodsch.prometheus.linked_version(trickster_install_path, trickster_version)
   block:
@@ -109,6 +112,7 @@
 - name: systemd
   when:
     - ansible_service_mgr | lower == "systemd"
+    - not running_in_check_mode
   block:
     - name: create trickster run configuration
       ansible.builtin.template:
@@ -135,6 +139,7 @@
 - name: openrc
   when:
     - ansible_service_mgr | lower == "openrc"
+    - not running_in_check_mode
   block:
     - name: create openrc service configuration
       ansible.builtin.template:
@@ -153,6 +158,8 @@
         mode: 0750
 
 - name: create custom fact file
+  when:
+    - not running_in_check_mode
   bodsch.core.facts:
     name: trickster
     facts:
