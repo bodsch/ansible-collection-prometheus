@@ -20,7 +20,7 @@ class Amtool(object):
         """
         self.module = module
 
-        self.amtool_bin = module.get_bin_path('amtool', True)
+        self.amtool_bin = module.get_bin_path('amtool', False)
         self.state = module.params.get("state")
         self.verbose = module.params.get("verbose")
         self.config = module.params.get("config")
@@ -29,6 +29,15 @@ class Amtool(object):
         """
           runner
         """
+        if self.module.check_mode:
+            self.module.debug("In check mode.")
+
+            return dict(
+                failed=False,
+                changed=False,
+                msg="In check mode."
+            )
+
         result = dict(
             failed=True,
         )

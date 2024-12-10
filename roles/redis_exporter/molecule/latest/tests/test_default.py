@@ -149,7 +149,7 @@ def test_version(host, get_vars):
         files.append(f"{install_dir}/redis_exporter")
     if defaults_dir and not distribution == "artix":
         files.append(f"{defaults_dir}/redis_exporter")
-    #if config_dir:
+    # if config_dir:
     #    files.append(f"{config_dir}/config.yml")
 
     print(files)

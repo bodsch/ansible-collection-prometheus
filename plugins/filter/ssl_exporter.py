@@ -1,7 +1,7 @@
 # python 3 headers, required if submitting to Ansible
 
 from __future__ import (absolute_import, print_function)
-import os
+
 __metaclass__ = type
 
 from ansible.utils.display import Display

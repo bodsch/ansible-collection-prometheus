@@ -3,7 +3,7 @@
 namespace: bodsch
 name: prometheus
 
-version: 1.1.1
+version: 1.2.0
 
 readme: README.md
 
@@ -25,6 +25,8 @@ tags:
 dependencies:
   bodsch.core: ">=2.5.0"
   bodsch.scm: "*"
+  bodsch.docker: "*"
+  community.mysql: ">=3.10.0"
 
 repository: https://github.com/bodsch/ansible-collection-prometheus
 documentation: https://github.com/bodsch/ansible-collection-prometheus/README.md
