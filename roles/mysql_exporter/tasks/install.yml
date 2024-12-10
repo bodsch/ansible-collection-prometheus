@@ -40,6 +40,7 @@
   ansible.builtin.fail:
     msg: "missing extracted binary on ansible controller"
   when:
+    - not running_in_check_mode
     - not stat_file_binary.stat.exists
 
 - name: detect installed mysql_exporter binary
@@ -54,6 +55,8 @@
 
 - name: install and activate mysql_exporter
   when:
+    - not running_in_check_mode
+    - stat_file_binary.stat.exists
     - (stat_mysql_exporter_binary.stat is defined and not stat_mysql_exporter_binary.stat.exists | default('false')) or
       not stat_mysql_exporter_activated.stat | bodsch.prometheus.linked_version(mysql_exporter_install_path, mysql_exporter_version)
   block:
@@ -67,13 +70,6 @@
             owner: "{{ mysql_exporter_system_user }}"
             group: "{{ mysql_exporter_system_group }}"
             remote_src: "{{ 'true' if mysql_exporter_direct_download else 'false' }}"
-
-        - name: make files executable
-          ansible.builtin.file:
-            path: "{{ mysql_exporter_install_path }}/{{ mysql_exporter_release.binary }}"
-            mode: 0755
-            owner: "{{ mysql_exporter_system_user }}"
-            group: "{{ mysql_exporter_system_group }}"
 
         - name: create link to binary
           ansible.builtin.file:
@@ -98,6 +94,7 @@
 - name: systemd
   when:
     - ansible_service_mgr | lower == "systemd"
+    - not running_in_check_mode
   block:
     - name: create mysql_exporter run configuration
       ansible.builtin.template:
@@ -124,6 +121,7 @@
 - name: openrc
   when:
     - ansible_service_mgr | lower == "openrc"
+    - not running_in_check_mode
   block:
     - name: create openrc service configuration
       ansible.builtin.template:
@@ -142,6 +140,8 @@
         mode: 0750
 
 - name: create custom fact file
+  when:
+    - not running_in_check_mode
   bodsch.core.facts:
     name: mysql_exporter
     facts:

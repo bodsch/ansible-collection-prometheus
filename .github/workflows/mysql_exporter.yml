@@ -24,7 +24,7 @@ on:
       - "!Makefile"
       - "!README.md"
       - 'roles/mysql_exporter/**'
-      - '.github/workflows/test_role_mysql_exporter.yml'
+      - '.github/workflows/mysql_exporter.yml'
       - '.config/ansible-lint.yml'
       - '.yamllint'
   pull_request:
@@ -37,7 +37,7 @@ on:
       - "!Makefile"
       - "!README.md"
       - 'roles/mysql_exporter/**'
-      - '.github/workflows/test_role_mysql_exporter.yml'
+      - '.github/workflows/mysql_exporter.yml'
       - '.config/ansible-lint.yml'
       - '.yamllint'
 
@@ -168,6 +168,7 @@ jobs:
         scenario:
           - configured
           - latest
+          - check_mode
         collection_role:
           - mysql_exporter
 

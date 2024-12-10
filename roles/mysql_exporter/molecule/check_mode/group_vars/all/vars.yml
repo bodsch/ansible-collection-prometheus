@@ -1,0 +1,27 @@
+---
+
+mysql_exporter_service:
+  log:
+    # debug, info, warn, error, fatal
+    level: debug
+  web:
+    listen_address: "127.0.0.1:9104"
+
+mysql_exporter_collectors:
+  - global_variables
+  - engine_innodb_status
+
+mysql_exporter_credentials:
+  client:
+    hostname: "127.0.0.1"
+    port: 3306
+    socket: "/run/mysqld/mysqld.sock"
+    username: "monitoring"
+    password: "8WOMmRWWYHPR"
+#  server1:
+#    hostname: ""
+#    socket: ""
+#    username: ""
+#    password: ""
+
+...

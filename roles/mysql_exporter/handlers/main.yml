@@ -8,16 +8,20 @@
   when:
     - ansible_service_mgr | lower == "systemd"
 
-- name: restart mysql exporter
-  become: true
-  ansible.builtin.service:
-    name: mysql_exporter
-    state: restarted
-
 - name: reload mysql exporter
   become: true
   ansible.builtin.service:
     name: mysql_exporter
     state: reloaded
+  when:
+    - not running_in_check_mode
+
+- name: restart mysql exporter
+  become: true
+  ansible.builtin.service:
+    name: mysql_exporter
+    state: restarted
+  when:
+    - not running_in_check_mode
 
 ...
