@@ -42,7 +42,8 @@
   ansible.builtin.file:
     path: "{{ node_exporter_local_tmp_directory }}"
     state: directory
-    mode: 0750
+    mode: "0750"
+  check_mode: false
 
 - name: detect the downloaded node_exporter archive
   become: false
@@ -56,6 +57,7 @@
   when:
     - stat_node_exporter_archive.stat is defined
     - not stat_node_exporter_archive.stat.exists | default('false')
+    - not running_in_check_mode
   block:
     - name: checksum
       become: false
@@ -90,7 +92,7 @@
         url: "{{ node_exporter_release.download_url }}/download/v{{ node_exporter_version }}/{{ node_exporter_release.file }}"
         dest: "{{ node_exporter_local_tmp_directory }}/{{ node_exporter_release.file }}"
         checksum: "{{ __node_exporter_checksum | default(omit) }}"
-        mode: 0640
+        mode: "0640"
       register: _download_archive
       until: _download_archive is succeeded
       retries: 5
@@ -129,6 +131,7 @@
     extra_opts:
       - --strip-components=1
   when:
+    - not running_in_check_mode
     - stat_node_exporter_binary.stat is defined
     - not stat_node_exporter_binary.stat.exists | default('false')
 

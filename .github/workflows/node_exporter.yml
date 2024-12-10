@@ -24,7 +24,7 @@ on:
       - "!Makefile"
       - "!README.md"
       - 'roles/node_exporter/**'
-      - '.github/workflows/test_role_node_exporter.yml'
+      - '.github/workflows/node_exporter.yml'
       - '.config/ansible-lint.yml'
       - '.yamllint'
   pull_request:
@@ -37,7 +37,7 @@ on:
       - "!Makefile"
       - "!README.md"
       - 'roles/node_exporter/**'
-      - '.github/workflows/test_role_node_exporter.yml'
+      - '.github/workflows/node_exporter.yml'
       - '.config/ansible-lint.yml'
       - '.yamllint'
 
@@ -171,6 +171,7 @@ jobs:
           - configured
           - latest
           - upgrade
+          - check_mode
         collection_role:
           - node_exporter
 
