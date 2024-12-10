@@ -1,29 +1,5 @@
 ---
 
-- name: restart prometheus
-  become: true
-  ansible.builtin.service:
-    name: prometheus
-    state: restarted
-  when:
-    - prometheus_valid_config is defined
-    - prometheus_valid_config.rc is defined
-    - prometheus_valid_config.rc == 0
-
-- name: reload prometheus
-  become: true
-  ansible.builtin.service:
-    name: prometheus
-    state: reloaded
-
-- name: validate config
-  promtool:
-    state: check
-    config: "{{ prometheus_config_dir }}/prometheus.yml"
-  register: prometheus_valid_config
-  notify:
-    - restart prometheus
-
 - name: daemon-reload
   become: true
   ansible.builtin.systemd:
@@ -32,11 +8,38 @@
   when:
     - ansible_service_mgr | lower == "systemd"
 
+- name: validate config
+  bodsch.prometheus.promtool:
+    state: check
+    config: "{{ prometheus_config_dir }}/prometheus.yml"
+  register: prometheus_valid_config
+  notify:
+    - restart prometheus
+
 - name: summary of changes or failed
   ansible.builtin.debug:
     msg: "{{ _created_alert_rules }}"
   when:
     - _created_alert_rules.changed or
       _created_alert_rules.failed
+
+- name: reload prometheus
+  become: true
+  ansible.builtin.service:
+    name: prometheus
+    state: reloaded
+  when:
+    - not running_in_check_mode
+
+- name: restart prometheus
+  become: true
+  ansible.builtin.service:
+    name: prometheus
+    state: restarted
+  when:
+    - not running_in_check_mode
+    - prometheus_valid_config is defined
+    - prometheus_valid_config.rc is defined
+    - prometheus_valid_config.rc == 0
 
 ...

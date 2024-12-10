@@ -4,12 +4,16 @@
   bodsch.prometheus.promtool:
     state: check
     config: "{{ prometheus_config_dir }}/prometheus.yml"
+  when:
+    - not running_in_check_mode
 
 - name: flush handlers
   ansible.builtin.meta: flush_handlers
 
 - name: ensure prometheus is enabled on boot
   become: true
+  when:
+    - not running_in_check_mode
   ansible.builtin.service:
     name: prometheus
     enabled: true

@@ -1,0 +1,95 @@
+---
+prometheus_alert_rules:
+  - name: ops
+    rules:
+      watchdog:
+        alert: Watchdog
+        expr: vector(1)
+        for: 10m
+        labels:
+          severity: information
+        annotations:
+          description: |
+            This is an alert meant to ensure that the entire alerting pipeline is functional.
+            This alert is always firing, therefore it should always be firing in Alertmanager
+            and always fire against a receiver.
+            There are integrations with various notification mechanisms that send a notification when this alert is not firing.
+            For example the
+
+            "DeadMansSnitch" integration in PagerDuty.
+
+          summary: 'Ensure entire alerting pipeline is functional'
+      #
+      instance_down:
+        # state: absent
+        alert: InstanceDown
+        # Condition for alerting
+        expr: up == 0
+        for: 1m
+        # Annotation - additional informational labels to store more information
+        annotations: !unsafe
+          notes: "prometheus.matrix.lan"
+          title: 'Instance {{ $labels.instance }} down'
+          description: '{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 1 minute.'
+        # Labels - additional labels to be attached to the alert
+        labels: !unsafe
+          severity: 'critical'
+
+  - name: prometheus
+    rules:
+      prometheus_job_missing:
+        # state: absent
+        alert: PrometheusJobMissing
+        expr: !unsafe 'absent(up{job="prometheus"})'
+        for: 0m
+        labels:
+          severity: warning
+        annotations: !unsafe
+          summary: 'Prometheus job missing (instance {{ $labels.instance }})'
+          description: 'A Prometheus job has disappeared\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}'
+
+      prometheus_connection_to_alertmanager:
+        alert: PrometheusNotConnectedToAlertmanager
+        expr: prometheus_notifications_alertmanagers_discovered < 1
+        for: 0m
+        labels:
+          severity: critical
+        annotations: !unsafe
+          notes: "prometheus.matrix.lan"
+          summary: 'Prometheus not connected to alertmanager (instance {{ $labels.instance }})'
+          description: 'Prometheus cannot connect the alertmanager\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}'
+
+      prometheus_notification_backlog:
+        alert: PrometheusNotificationsBacklog
+        expr: min_over_time(prometheus_notifications_queue_length[10m]) > 0
+        for: 0m
+        labels:
+          severity: warning
+        annotations: !unsafe
+          summary: 'Prometheus notifications backlog (instance {{ $labels.instance }})'
+          description: '
+            The Prometheus notification queue has not been empty for 10 minutes\n
+                VALUE  = {{ $value }}\n
+                LABELS = {{ $labels }}'
+
+  - name: node_checks
+    rules:
+      host_disk_will_fill_in_24_hours:
+        # Please add ignored mountpoints in node_exporter parameters like
+        # "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|run)($|/)".
+        # Same rule using "node_filesystem_free_bytes" will fire when disk fills for non-root users.
+        alert: HostDiskWillFillIn24Hours
+        expr:  !unsafe
+          '(node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes < 10 and
+            ON (instance, device, mountpoint) predict_linear(node_filesystem_avail_bytes{fstype!~"tmpfs"}[1h], 24 * 3600) < 0 and
+            ON (instance, device, mountpoint) node_filesystem_readonly == 0'
+        for: 2m
+        labels:
+          severity: warning
+        annotations: !unsafe
+          summary: 'Host disk will fill in 24 hours (instance {{ $labels.instance }})'
+          description: '
+            Filesystem is predicted to run out of space within the next 24 hours at current write rate\n
+              VALUE  = {{ $value }}\n
+              LABELS = {{ $labels }}
+            '

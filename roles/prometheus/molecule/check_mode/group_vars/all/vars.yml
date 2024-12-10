@@ -1,0 +1,125 @@
+---
+
+prometheus_version: 2.41.0
+
+prometheus_service:
+  log:
+    level: info
+  web:
+    listen_address: "0.0.0.0:9090"
+
+prometheus_global:
+  scrape_interval: 5m
+  evaluation_interval: 2m
+  external_labels:
+    environment: MOLECULE
+    production: not
+  query_log_file: ""
+
+prometheus_alerting:
+  alertmanagers:
+    - scheme: http
+      timeout: 10s
+      api_version: ""
+      path_prefix: "/"
+      #file_sd_configs:
+      #  - "file_sd_config"
+      static_configs:
+        - targets:
+            - localhost
+            # - remote_1
+            # - remote_2
+          # Labels assigned to all metrics scraped from the targets.
+          labels:
+            can_ignored: true
+
+prometheus_file_sd_targets:
+  #
+  node:
+    - targets:
+        - localhost:9100
+      labels:
+        env: test
+  sensors:
+    - labels:
+        service: sensors
+      targets:
+        - sensor-01.matrix.lan:9080  # buero
+        - sensor-02.matrix.lan:9080  # titus
+        - sensor-03.matrix.lan:9080  # esszimmer
+        - sensor-05.matrix.lan:9080    # it-raum
+  kresd:
+    - labels:
+        service: dns
+      targets:
+        - ns.matrix.lan:8453
+
+prometheus_scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets:
+          - "{{ ansible_fqdn | default(ansible_host) | default('localhost') }}:9090"
+  #
+  - job_name: grafana
+    static_configs:
+      - targets:
+          - 127.0.0.1:3000
+  #
+  - job_name: node
+    file_sd_configs:
+      - files:
+          - "{{ prometheus_config_dir }}/file_sd/node.yml"
+        refresh_interval: 2m
+
+  # sensors
+  - job_name: sensors
+    file_sd_configs:
+      - files:
+          - "{{ prometheus_config_dir }}/file_sd/sensors.yml"
+    relabel_configs:
+      # remove port from instance name
+      - source_labels:
+          - __address__
+        regex: (.*):.*
+        replacement: $1
+        target_label: instance
+      # Extract the host ID (last octet of IPv4 address)
+      - source_labels:
+          - __address__
+        regex: "sensor-(\\d+)..*"
+        target_label: host_id
+      # Set location label
+      - source_labels:
+          - host_id
+        regex: "01"
+        replacement: buero
+        target_label: location
+      # Set location label
+      - source_labels:
+          - host_id
+        regex: "01"
+        replacement: buero
+        target_label: location
+      - source_labels:
+          - host_id
+        regex: "02"
+        replacement: titus
+        target_label: location
+      - source_labels:
+          - host_id
+        regex: "03"
+        replacement: esszimmer
+        target_label: location
+
+      - source_labels:
+          - host_id
+        regex: "05"
+        replacement: it-bunker
+        target_label: location
+  #
+  - job_name: kresd
+    file_sd_configs:
+      - files:
+          - "{{ prometheus_config_dir }}/file_sd/kresd.yml"
+
+...
