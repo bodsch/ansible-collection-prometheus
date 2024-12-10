@@ -21,11 +21,15 @@
   ansible.builtin.service:
     name: ssl_exporter
     state: restarted
+  when:
+    - not running_in_check_mode
 
 - name: reload ssl exporter
   become: true
   ansible.builtin.service:
     name: ssl_exporter
     state: reloaded
+  when:
+    - not running_in_check_mode
 
 ...
