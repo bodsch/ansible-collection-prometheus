@@ -22,11 +22,6 @@
   tags:
     - redis_exporter_install
 
-# - name: configure
-#   ansible.builtin.import_tasks: configure.yml
-#   tags:
-#     - redis_exporter_configure
-
 - name: service
   ansible.builtin.import_tasks: service.yml
   tags:
