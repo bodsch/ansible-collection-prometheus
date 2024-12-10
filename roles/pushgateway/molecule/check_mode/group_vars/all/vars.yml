@@ -1,0 +1,11 @@
+---
+
+pushgateway_service:
+  log:
+    level: debug
+  web:
+    listen_address: "0.0.0.0:9080"
+  persistence:
+    file: /run/pushgateway/persistence
+
+...

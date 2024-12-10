@@ -14,6 +14,7 @@
     append: true
     state: present
   when:
+    - not running_in_check_mode
     - docker_sd_docker_group.ansible_facts.getent_group.docker is defined
     - docker_sd_docker_group.ansible_facts.getent_group.docker
 
@@ -30,6 +31,7 @@
     permissions: rw
     state: present
   when:
+    - not running_in_check_mode
     - docker_sd_docker_socket.stat.exists is defined
     - docker_sd_docker_socket.stat.exists
 

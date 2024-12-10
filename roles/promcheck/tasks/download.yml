@@ -24,7 +24,9 @@
 
 - name: define download information
   ansible.builtin.set_fact:
-    promcheck_release: "{{ promcheck_defaults_release | combine(promcheck_release, recursive=True) }}"
+    promcheck_release: "{{ promcheck_defaults_release |
+      combine(promcheck_release, recursive=True) |
+      bodsch.prometheus.promcheck_fix_release(promcheck_version=promcheck_version, version='1.1.8') }}"
 
 - name: define delegate instance for download handling
   ansible.builtin.set_fact:
@@ -42,7 +44,8 @@
   ansible.builtin.file:
     path: "{{ promcheck_local_tmp_directory }}"
     state: directory
-    mode: 0750
+    mode: "0750"
+  check_mode: false
 
 - name: detect the downloaded promcheck archive
   become: false
@@ -56,6 +59,7 @@
   when:
     - stat_promcheck_archive.stat is defined
     - not stat_promcheck_archive.stat.exists | default('false')
+    - not running_in_check_mode
   block:
     # - name: checksum
     #   become: false
@@ -95,7 +99,6 @@
       until: _download_archive is succeeded
       retries: 5
       delay: 2
-      check_mode: false
 
   rescue:
     - name: delete download directory
@@ -118,6 +121,14 @@
     path: "{{ promcheck_local_tmp_directory }}/{{ promcheck_release.binary }}"
   register: stat_promcheck_binary
 
+- name: detect the downloaded promcheck archive
+  become: false
+  delegate_to: "{{ promcheck_delegate_to }}"
+  run_once: "{{ 'false' if promcheck_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ promcheck_local_tmp_directory }}/{{ promcheck_release.file }}"
+  register: stat_promcheck_archive
+
 - name: extract promcheck archive
   become: false
   delegate_to: "{{ promcheck_delegate_to }}"
@@ -129,7 +140,10 @@
     extra_opts:
       - --strip-components=1
   when:
-    - stat_promcheck_binary.stat is defined
+    - not running_in_check_mode
+    - stat_promcheck_archive.stat | default({}) is defined
+    - stat_promcheck_archive.stat.mimetype in ["application/zip","application/gzip"]
+    - stat_promcheck_binary.stat | default({}) is defined
     - not stat_promcheck_binary.stat.exists | default('false')
 
 ...

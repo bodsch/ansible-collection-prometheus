@@ -20,7 +20,7 @@ class Promtool(object):
         """
         self.module = module
 
-        self.promtool_bin = module.get_bin_path('promtool', True)
+        self.promtool_bin = module.get_bin_path('promtool', False)
         self.state = module.params.get("state")
         self.config = module.params.get("config")
 
@@ -28,6 +28,15 @@ class Promtool(object):
         """
           runner
         """
+        if self.module.check_mode:
+            self.module.debug("In check mode.")
+
+            return dict(
+                failed=False,
+                changed=False,
+                msg="In check mode."
+            )
+
         result = dict(
             failed=True,
         )

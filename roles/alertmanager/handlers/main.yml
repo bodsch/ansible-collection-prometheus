@@ -1,40 +1,44 @@
 ---
 
-- name: restart alertmanager
-  become: true
-  ansible.builtin.service:
-    name: alertmanager
-    state: restarted
+- name: daemon-reload
+  ansible.builtin.systemd:
+    daemon_reload: true
+    force: true
+  notify: restart alertmanager
   when:
-    - alertmanger_valid_config is defined
-    - alertmanger_valid_config.rc is defined
-    - alertmanger_valid_config.rc == 0
-
-- name: reload alertmanager
-  become: true
-  ansible.builtin.service:
-    name: alertmanager
-    state: reloaded
+    - ansible_service_mgr == 'systemd'
 
 - name: validate config
-  amtool:
-    verbose: true
+  bodsch.prometheus.amtool:
+    verbose: false
     state: check
     config: "{{ alertmanager_config_dir }}/alertmanager.yml"
   register: alertmanger_valid_config
   when:
+    - not running_in_check_mode
     - alertmanger_config is defined
     - alertmanger_config.changed is defined
     - alertmanger_config.changed
   notify:
     - restart alertmanager
 
-- name: daemon-reload
+- name: reload alertmanager
   become: true
-  ansible.builtin.systemd:
-    daemon_reload: true
-    force: true
+  ansible.builtin.service:
+    name: alertmanager
+    state: reloaded
   when:
-    - ansible_service_mgr | lower == "systemd"
+    - not running_in_check_mode
+
+- name: restart alertmanager
+  become: true
+  ansible.builtin.service:
+    name: alertmanager
+    state: restarted
+  when:
+    - not running_in_check_mode
+    - alertmanger_valid_config is defined
+    - alertmanger_valid_config.rc is defined
+    - alertmanger_valid_config.rc == 0
 
 ...

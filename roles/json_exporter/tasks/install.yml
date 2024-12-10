@@ -40,6 +40,7 @@
   ansible.builtin.fail:
     msg: "missing extracted binary on ansible controller"
   when:
+    - not running_in_check_mode
     - not stat_file_binary.stat.exists
 
 - name: detect installed json_exporter binary
@@ -54,6 +55,8 @@
 
 - name: install and activate json_exporter
   when:
+    - not running_in_check_mode
+    - stat_file_binary.stat.exists
     - (stat_json_exporter_binary.stat is defined and not stat_json_exporter_binary.stat.exists | default('false')) or
       not stat_json_exporter_activated.stat | bodsch.prometheus.linked_version(json_exporter_install_path, json_exporter_version)
   block:
@@ -80,8 +83,6 @@
             path: "{{ json_exporter_install_path }}/{{ json_exporter_release.binary }}"
             capability: cap_net_raw+ep
             state: present
-          when:
-            - not ansible_check_mode
 
         - name: create link to binary
           ansible.builtin.file:
@@ -106,6 +107,7 @@
 - name: systemd
   when:
     - ansible_service_mgr | lower == "systemd"
+    - not running_in_check_mode
   block:
     - name: create json_exporter run configuration
       ansible.builtin.template:
@@ -132,6 +134,7 @@
 - name: openrc
   when:
     - ansible_service_mgr | lower == "openrc"
+    - not running_in_check_mode
   block:
     - name: create openrc service configuration
       ansible.builtin.template:
@@ -150,6 +153,8 @@
         mode: 0750
 
 - name: create custom fact file
+  when:
+    - not running_in_check_mode
   bodsch.core.facts:
     name: json_exporter
     facts:

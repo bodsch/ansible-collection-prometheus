@@ -3,8 +3,10 @@
 - name: flush handlers
   ansible.builtin.meta: flush_handlers
 
-- name: Ensure json_exporter is enabled on boot
+- name: ensure json_exporter is enabled on boot
   become: true
+  when:
+    - not running_in_check_mode
   ansible.builtin.service:
     name: json_exporter
     enabled: true

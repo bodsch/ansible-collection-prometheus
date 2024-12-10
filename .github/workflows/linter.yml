@@ -22,7 +22,7 @@ on:
     paths:
       - 'plugins/**'
       - '!roles/**'
-      - '!.github/workflows/test_role*.yml'
+      - '!.github/workflows/*.yml'
       - '.config/pycodestyle.cfg'
   pull_request:
     branches:
@@ -32,7 +32,7 @@ on:
     paths:
       - 'plugins/**'
       - '!roles/**'
-      - '!.github/workflows/test_role*.yml'
+      - '!.github/workflows/*.yml'
       - '.config/pycodestyle.cfg'
 
 jobs:

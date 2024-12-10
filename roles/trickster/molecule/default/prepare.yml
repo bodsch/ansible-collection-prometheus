@@ -53,7 +53,7 @@
   gather_facts: true
 
   roles:
-    - role: redis
+    - role: bodsch.redis
 
 - name: prepare prometheus
   hosts: prometheus

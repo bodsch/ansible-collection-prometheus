@@ -1,9 +1,13 @@
 ---
 
-- name: Ensure trickster is enabled on boot
+- name: flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: ensure trickster is enabled on boot
   become: true
+  when:
+    - not running_in_check_mode
   ansible.builtin.systemd:
-    daemon_reload: true
     name: trickster
     enabled: true
     state: started

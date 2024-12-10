@@ -1,6 +1,6 @@
 ---
 
-- name: redis
+- name: bodsch.redis
   src: bodsch.redis
   version: 1.4.0
 

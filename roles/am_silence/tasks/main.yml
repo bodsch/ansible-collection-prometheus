@@ -12,6 +12,7 @@
 - name: add silence
   ansible.builtin.import_tasks: silence/add.yml
   when:
+    - not running_in_check_mode
     - ansible_run_tags | intersect(["silence_add"]) | count > 0
   tags:
     - silence_add
@@ -19,6 +20,7 @@
 - name: delete silence
   ansible.builtin.import_tasks: silence/remove.yml
   when:
+    - not running_in_check_mode
     - ansible_run_tags | intersect(["silence_remove"]) | count > 0
   tags:
     - silence_remove

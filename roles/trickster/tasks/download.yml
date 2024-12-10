@@ -45,7 +45,8 @@
   ansible.builtin.file:
     path: "{{ trickster_local_tmp_directory }}"
     state: directory
-    mode: 0750
+    mode: "0750"
+  check_mode: false
 
 - name: detect the downloaded trickster archive
   become: false
@@ -59,6 +60,7 @@
   when:
     - stat_trickster_archive.stat is defined
     - not stat_trickster_archive.stat.exists | default('false')
+    - not running_in_check_mode
   block:
     # - name: checksum
     #   become: false
@@ -98,7 +100,6 @@
       until: _download_archive is succeeded
       retries: 5
       delay: 2
-      check_mode: false
 
   rescue:
     - name: delete download directory
@@ -132,6 +133,7 @@
     extra_opts:
       - --strip-components=1
   when:
+    - not running_in_check_mode
     - stat_trickster_binary.stat is defined
     - not stat_trickster_binary.stat.exists | default('false')
 

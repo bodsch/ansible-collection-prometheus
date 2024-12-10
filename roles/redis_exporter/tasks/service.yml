@@ -5,6 +5,8 @@
 
 - name: Ensure redis_exporter is enabled on boot
   become: true
+  when:
+    - not running_in_check_mode
   ansible.builtin.service:
     name: redis_exporter
     enabled: true

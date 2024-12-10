@@ -44,6 +44,7 @@
   ansible.builtin.fail:
     msg: "missing extracted binary on ansible controller"
   when:
+    - not running_in_check_mode
     - not stat_file_binary.stat.exists
 
 - name: detect installed docker_sd binary
@@ -58,6 +59,8 @@
 
 - name: install and activate docker_sd
   when:
+    - not running_in_check_mode
+    - stat_file_binary.stat.exists
     - (stat_docker_sd_binary.stat is defined and not stat_docker_sd_binary.stat.exists | default('false')) or
       not stat_docker_sd_activated.stat | bodsch.prometheus.linked_version(docker_sd_install_path, docker_sd_version)
   block:
@@ -103,6 +106,7 @@
 - name: systemd
   when:
     - ansible_service_mgr | lower == "systemd"
+    - not running_in_check_mode
   block:
     - name: create docker-sd system configuration
       ansible.builtin.template:
@@ -128,6 +132,7 @@
 - name: openrc
   when:
     - ansible_service_mgr | lower == "openrc"
+    - not running_in_check_mode
   block:
     - name: create openrc service configuration
       ansible.builtin.template:
@@ -146,6 +151,8 @@
         mode: 0750
 
 - name: create custom fact file
+  when:
+    - not running_in_check_mode
   bodsch.core.facts:
     name: docker_sd
     facts:

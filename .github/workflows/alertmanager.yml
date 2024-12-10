@@ -24,7 +24,7 @@ on:
       - "!Makefile"
       - "!README.md"
       - 'roles/alertmanager/**'
-      - '.github/workflows/test_role_alertmanager.yml'
+      - '.github/workflows/alertmanager.yml'
       - '.config/ansible-lint.yml'
       - '.yamllint'
   pull_request:
@@ -37,7 +37,7 @@ on:
       - "!Makefile"
       - "!README.md"
       - 'roles/alertmanager/**'
-      - '.github/workflows/test_role_alertmanager.yml'
+      - '.github/workflows/alertmanager.yml'
       - '.config/ansible-lint.yml'
       - '.yamllint'
 
@@ -171,6 +171,7 @@ jobs:
           - configured
           - latest
           - custom_alert_template
+          - check_mode
         collection_role:
           - alertmanager
 

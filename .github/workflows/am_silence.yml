@@ -24,7 +24,7 @@ on:
       - "!Makefile"
       - "!README.md"
       - 'roles/am_silence/**'
-      - '.github/workflows/test_role_am_silence.yml'
+      - '.github/workflows/am_silence.yml'
       - '.config/ansible-lint.yml'
       - '.yamllint'
   pull_request:
@@ -37,7 +37,7 @@ on:
       - "!Makefile"
       - "!README.md"
       - 'roles/am_silence/**'
-      - '.github/workflows/test_role_am_silence.yml'
+      - '.github/workflows/am_silence.yml'
       - '.config/ansible-lint.yml'
       - '.yamllint'
 

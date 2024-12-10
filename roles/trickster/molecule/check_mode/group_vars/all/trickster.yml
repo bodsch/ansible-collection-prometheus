@@ -1,0 +1,31 @@
+---
+
+# trickster_version: latest
+
+trickster_service_config:
+  log:
+    level: warn
+
+trickster_backends:
+  prometheus:
+    provider: prometheus
+    is_default: true
+    origin_url: http://prometheus:9090
+  influx:
+    provider: influxdb
+    is_default: false
+    origin_url: http://influxdb:8176
+
+trickster_caches:
+  default:
+    provider: redis
+    redis:
+      endpoint: 'redis:6379'
+      db: 0
+    index:
+      max_size_backoff_objects: 100
+
+trickster_metrics:
+  listen_port: 8481
+
+...

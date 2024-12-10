@@ -12,6 +12,7 @@
   loop_control:
     label: "{{ item.key }}.yml"
   when:
+    - not running_in_check_mode
     - prometheus_file_sd_targets is defined
     - prometheus_file_sd_targets | count > 0
   notify:
@@ -24,6 +25,7 @@
     group: "{{ prometheus_system_group }}"
   register: _created_alert_rules
   when:
+    - not running_in_check_mode
     - prometheus_alert_rules is defined
     - prometheus_alert_rules | count > 0
   notify:

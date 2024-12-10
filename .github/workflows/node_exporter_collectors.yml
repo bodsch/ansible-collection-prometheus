@@ -24,7 +24,7 @@ on:
       - "!Makefile"
       - "!README.md"
       - 'roles/node_exporter_textfile_collectors/**'
-      - '.github/workflows/test_role_node_exporter_collectors.yml'
+      - '.github/workflows/node_exporter_collectors.yml'
       - '.config/ansible-lint.yml'
       - '.yamllint'
   pull_request:
@@ -37,7 +37,7 @@ on:
       - "!Makefile"
       - "!README.md"
       - 'roles/node_exporter_textfile_collectors/**'
-      - '.github/workflows/test_role_node_exporter_collectors.yml'
+      - '.github/workflows/node_exporter_collectors.yml'
       - '.config/ansible-lint.yml'
       - '.yamllint'
 

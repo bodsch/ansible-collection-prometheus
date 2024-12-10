@@ -8,16 +8,20 @@
   when:
     - ansible_service_mgr == 'systemd'
 
-- name: restart trickster
-  ansible.builtin.systemd:
-    name: trickster
-    state: restarted
-  when: trickster_service_state != 'stopped'
-
 - name: reload trickster
   become: true
   ansible.builtin.service:
     name: trickster
     state: reloaded
+  when:
+    - not running_in_check_mode
+
+- name: restart trickster
+  become: true
+  ansible.builtin.service:
+    name: trickster
+    state: restarted
+  when:
+    - not running_in_check_mode
 
 ...
