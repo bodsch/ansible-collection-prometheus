@@ -100,6 +100,20 @@ def get_vars(host):
     return result
 
 
+def local_facts(host):
+    """
+      return local facts
+    """
+    local_fact = host.ansible("setup").get("ansible_facts").get("ansible_local")
+
+    print(f"local_fact     : {local_fact}")
+
+    if local_fact:
+        return local_fact.get("json_exporter", {})
+    else:
+        return dict()
+
+
 @pytest.mark.parametrize("files", [
     "/usr/bin/json_exporter",
     "/etc/json_exporter/config.yml",

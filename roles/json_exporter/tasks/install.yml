@@ -39,7 +39,6 @@
 - name: fail when extracted binary are missing
   ansible.builtin.fail:
     msg: "missing extracted binary on ansible controller"
-  ignore_errors: true
   when:
     - not running_in_check_mode
     - not stat_file_binary.stat.exists

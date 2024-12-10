@@ -43,8 +43,6 @@
     path: "{{ json_exporter_local_tmp_directory }}"
     state: directory
     mode: "0750"
-    force: true
-    recurse: true
   check_mode: false
 
 - name: detect the downloaded json_exporter archive
@@ -97,7 +95,6 @@
         dest: "{{ json_exporter_local_tmp_directory }}/{{ json_exporter_release.file }}"
         checksum: "{{ __json_exporter_checksum | default(omit) }}"
         mode: "0640"
-        tmp_dest: "/tmp"
       register: _download_archive
       until: _download_archive is succeeded
       retries: 5
@@ -124,14 +121,6 @@
     path: "{{ json_exporter_local_tmp_directory }}/{{ json_exporter_release.binary }}"
   register: stat_json_exporter_binary
 
-- name: detect the downloaded json_exporter archive
-  become: false
-  delegate_to: "{{ json_exporter_delegate_to }}"
-  run_once: "{{ 'false' if json_exporter_direct_download else 'true' }}"
-  ansible.builtin.stat:
-    path: "{{ json_exporter_local_tmp_directory }}/{{ json_exporter_release.file }}"
-  register: stat_json_exporter_archive
-
 - name: extract json_exporter archive
   become: false
   delegate_to: "{{ json_exporter_delegate_to }}"
@@ -143,9 +132,8 @@
     extra_opts:
       - --strip-components=1
   when:
+    - not running_in_check_mode
     - stat_json_exporter_binary.stat is defined
     - not stat_json_exporter_binary.stat.exists | default('false')
-    - stat_json_exporter_archive.stat is defined
-    - stat_json_exporter_archive.stat.exists | default('false')
 
 ...
