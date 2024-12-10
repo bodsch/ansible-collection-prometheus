@@ -5,6 +5,8 @@
 
 - name: ensure mongodb_exporter is enabled on boot
   become: true
+  when:
+    - not running_in_check_mode
   ansible.builtin.service:
     name: mongodb_exporter
     enabled: true

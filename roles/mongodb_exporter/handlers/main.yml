@@ -8,16 +8,20 @@
   when:
     - ansible_service_mgr | lower == "systemd"
 
-- name: restart mongodb exporter
-  become: true
-  ansible.builtin.service:
-    name: mongodb_exporter
-    state: restarted
-
 - name: reload mongodb exporter
   become: true
   ansible.builtin.service:
     name: mongodb_exporter
     state: reloaded
+  when:
+    - not running_in_check_mode
+
+- name: restart mongodb exporter
+  become: true
+  ansible.builtin.service:
+    name: mongodb_exporter
+    state: restarted
+  when:
+    - not running_in_check_mode
 
 ...

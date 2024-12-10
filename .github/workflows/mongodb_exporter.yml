@@ -24,7 +24,7 @@ on:
       - "!Makefile"
       - "!README.md"
       - 'roles/mongodb_exporter/**'
-      - '.github/workflows/test_role_mongodb_exporter.yml'
+      - '.github/workflows/mongodb_exporter.yml'
       - '.config/ansible-lint.yml'
       - '.yamllint'
   pull_request:
@@ -37,7 +37,7 @@ on:
       - "!Makefile"
       - "!README.md"
       - 'roles/mongodb_exporter/**'
-      - '.github/workflows/test_role_mongodb_exporter.yml'
+      - '.github/workflows/mongodb_exporter.yml'
       - '.config/ansible-lint.yml'
       - '.yamllint'
 
@@ -170,6 +170,7 @@ jobs:
         scenario:
           - configured
           - latest
+          - check_mode
         collection_role:
           - mongodb_exporter
 
