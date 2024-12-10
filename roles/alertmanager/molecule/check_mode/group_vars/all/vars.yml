@@ -1,0 +1,186 @@
+---
+
+alertmanager_service:
+  log:
+    level: debug
+    format: ""
+  web:
+    listen_address: '127.0.0.1:9093'
+    external_url: 'http://molecule.docker.local'
+
+alertmanager_global:
+  smtp:
+    smarthost: 'localhost:25'
+    from: 'alertmanager@example.org'
+    auth_username: 'alertmanager'
+    auth_password: 'password'
+
+alertmanager_receivers:
+  blackhole: {}
+  team-X-mails:
+    email_configs:
+      - to: 'team-X+alerts@example.org'
+        headers:
+          # https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_advanced_syntax.html#unsafe-or-raw-strings
+          subject: !unsafe "{{ template \"custom_mail_subject\" . }}"
+        html: !unsafe '{{ template "custom_mail_html" . }}'
+
+  team-DB-pager:
+    pagerduty_configs:
+      - service_key: <team-DB-key>
+  smtp: {}
+  slack: {}
+  slack_qa: {}
+  opsgenie: {}
+
+  # - name: slack
+  #   slack_configs:
+  #     - channel: '#molecule-alerts'
+  #       api_url: "{{ vault__alertmanager_slack.QA }}"
+  #       send_resolved: false
+  #       title: |-
+  #         {% raw %}
+  #         [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}
+  #         {% endraw %}
+  #
+  #       text: >-
+  #         {% raw %}
+  #         {{ range .Alerts -}}
+  #         *Alert:*  {{ if .Labels.severity }} - `{{ .Labels.severity }}`: {{ end }}{{ .Annotations.summary }}
+  #
+  #         *Description:* {{ .Annotations.description }}
+  #
+  #         *Details:*
+  #           {{ range .Labels.SortedPairs }} • *{{ .Name }}:* `{{ .Value }}`
+  #           {{ end }}
+  #         {{ end }}
+  #         {% endraw %}
+
+alertmanager_route:
+  group_by:
+    - 'alertname'
+    - 'service'
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  default_receiver: blackhole
+
+  routes:
+    # capture all 'test' severity
+    - description: capture all 'test' severity for blackhole
+      receiver: blackhole
+      match:
+        severity: test
+
+    # capture 'critical' severity
+    - description: capture 'critical' severity
+      matchers:
+        - severity="critical"
+      receiver: blackhole
+
+      routes:
+        # forward DEV to 'blackhole'
+        - matchers:
+            - environment=DEV
+          receiver: blackhole
+
+        - description: "Forward all \"service: cadvisor\" to 'blackhole'"
+          match:
+            service: cadvisor
+          receiver: blackhole
+
+        - description: "forward DEV to 'blackhole'"
+          matchers:
+            - environment=~".*(-dev).*"
+          receiver: blackhole
+
+        # forward OPS to 'slack_qa'
+        - match:
+            environment: OPS
+          receiver: slack_qa
+
+        # forward QA to 'slack_qa'
+        - match:
+            environment: QA
+          receiver: slack_qa
+
+        # forward PROD to 'slack' -> smtp -> opsgenie
+        - description: "forward form alerts to mail too"
+          matchers:
+            - environment="PROD"
+            - type="forms"
+          receiver: smtp
+          continue: true
+        - match:
+            environment: PROD
+          receiver: slack
+          continue: true
+        - match:
+            environment: PROD
+          receiver: smtp
+          continue: true
+        - match:
+            environment: PROD
+          receiver: opsgenie
+
+    # - match:
+    #     alertname: QuietHours
+    #   receiver: blackhole
+
+alertmanager_time_intervals:
+  out-of-business-hours:
+    description: only receive alarms during weekdays, between 08:00 and 18:00
+    time_intervals:
+      # Mute on Saturdays and Sundays, all day.
+      - weekdays:
+          - 'Saturday'
+          - 'Sunday'
+      # Mute in the morning and in the evening, any day.
+      - times:
+          - start_time: '00:00'
+            end_time: '08:00'
+          - start_time: '18:00'
+            end_time: '24:00'
+  foo:
+    time_intervals:
+      # - times:
+      - weekdays:
+          - 'monday:friday'
+
+alertmanager_inhibit_rules:
+  - description: >
+      inhibit rule for flimflamflum
+      and foo with bar
+    source_matchers: [severity="critical"]
+    target_matchers: [severity="warning"]
+    # Apply inhibition if the alertname is the same.
+    # CAUTION:
+    #   If all label names listed in `equal` are missing
+    #   from both the source and target alerts,
+    #   the inhibition rule will apply!
+    equal: [alertname, cluster, service]
+  - target_matchers: [environment="QA"]
+  - target_matchers:
+      - severity=~"warning|info"
+    source_matchers:
+      - severity=critical
+    equal:
+      - cluster
+      - namespace
+      - alertname
+  - target_matchers:
+      - severity=info
+    source_matchers:
+      - severity=warning
+    equal:
+      - cluster
+      - namespace
+      - alertname
+  - target_matchers:
+      - severity=info
+    source_matchers:
+      - alertname=InfoInhibitor
+    equal:
+      - cluster
+      - namespace
+...

@@ -1,0 +1,6 @@
+---
+
+vault__alertmanager_slack:
+  QA: http://localhost/
+
+...

@@ -39,6 +39,7 @@
   ansible.builtin.fail:
     msg: "missing extracted binary on ansible controller"
   when:
+    - not running_in_check_mode
     - not stat_file_binary.stat.exists
 
 - name: detect installed alertmanager binary
@@ -53,6 +54,8 @@
 
 - name: install and activate alertmanager
   when:
+    - not running_in_check_mode
+    - stat_file_binary.stat.exists
     - (stat_alertmanager_binary.stat is defined and not stat_alertmanager_binary.stat.exists | default('false')) or
       not stat_alertmanager_activated.stat | bodsch.prometheus.linked_version(alertmanager_install_path, alertmanager_version)
   block:
@@ -141,6 +144,7 @@
 - name: systemd
   when:
     - ansible_service_mgr | lower == "systemd"
+    - not running_in_check_mode
   block:
     - name: create alertmanager run configuration
       ansible.builtin.template:
@@ -166,6 +170,7 @@
 - name: openrc
   when:
     - ansible_service_mgr | lower == "openrc"
+    - not running_in_check_mode
   block:
     - name: create openrc service configuration
       ansible.builtin.template:
@@ -184,6 +189,8 @@
         mode: 0750
 
 - name: create custom fact file
+  when:
+    - not running_in_check_mode
   bodsch.core.facts:
     name: alertmanager
     facts:
