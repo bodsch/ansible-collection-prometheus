@@ -1,5 +1,28 @@
 ---
 
+# - name: warn against the use of obsolete variables
+#   when:
+#     - json_exporter_config | default([]) | count > 0
+#   block:
+#     - name: warn against the use of obsolete variables  # noqa ignore-errors
+#       ansible.builtin.fail:
+#         msg: |
+#           The use of `json_exporter_config` is obsolete!
+#           Please use `json_exporter_modules` instead!
+#           The obsolete variable is automatically converted internally.
+#           The conversion will be removed in one of the next releases!
+#       ignore_errors: true
+#
+#     # - name: wait 5 seconds to realise the message
+#     #   delegate_to: localhost
+#     #   ansible.builtin.wait_for:
+#     #     timeout: 10
+#
+#     - name: convert obsolete variable ...
+#       ansible.builtin.set_fact:
+#         json_exporter_modules: "{{ json_exporter_config | bodsch.prometheus.convert_to_modules(json_exporter_modules) }}"
+#         json_exporter_config: []
+
 - name: prepare
   ansible.builtin.import_tasks: prepare.yml
   tags:

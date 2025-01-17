@@ -12,6 +12,11 @@ json_exporter_direct_download: false
 
 json_exporter_service: {}
 
+# `json_exporter_config` are OBSOLETE
+# replaced by `json_exporter_modules`
+# please read the documentation!
 json_exporter_config: []
+
+json_exporter_modules: {}
 
 ...

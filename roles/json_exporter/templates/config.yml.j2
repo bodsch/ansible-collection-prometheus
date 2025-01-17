@@ -2,6 +2,43 @@
 ---
 # {{ ansible_managed }}
 
+{% if json_exporter_modules.keys() | length > 0 %}
+modules:
+  {% for module in json_exporter_modules.keys() %}
+    {% set _mod_cfg = json_exporter_modules.get(module) %}
+    {% set _cfg_metrics = _mod_cfg.get('metrics', []) %}
+    {% set _cfg_headers = _mod_cfg.get('headers', {}) %}
+    {% set _cfg_http_client = _mod_cfg.get('http_client_config', {}) %}
+    {% set _cfg_status_codes = _mod_cfg.get('valid_status_codes', []) %}
+    {% set _cfg_body = _mod_cfg.get('body', {}) %}
+  {{ module }}:
+    {% if _cfg_headers | count > 0 %}
+    headers:
+      {{ _cfg_headers | to_nice_yaml(indent=2,sort_keys=False) | indent(6, False) }}
+    {% endif -%}
+    {% if _cfg_metrics | count > 0 %}
+    metrics:
+      {{ _cfg_metrics | to_nice_yaml(indent=2,sort_keys=False) | indent(6, False) }}
+    {% endif -%}
+    {% if _cfg_http_client | count > 0 %}
+    http_client_config:
+      {{ _cfg_http_client | to_nice_yaml(indent=2,sort_keys=False) | indent(6, False) }}
+    {% endif -%}
+    {% if _cfg_status_codes | count > 0 %}
+    valid_status_codes:
+      {{ _cfg_status_codes | to_nice_yaml(indent=2,sort_keys=False) | indent(6, False) }}
+    {% endif -%}
+    {% if _cfg_body | count > 0 %}
+    body:
+      {{ _cfg_body | to_nice_yaml(indent=2,sort_keys=False) | indent(6, False) }}
+    {% endif -%}
+  {% endfor %}
+{#
+  {{ json_exporter_modules | to_nice_yaml(indent=2,sort_keys=False) | indent(2, False) }}
+#}
+{% endif %}
+
+{#
 {% if json_exporter_config is defined and
       json_exporter_config | count > 0 %}
 modules:
@@ -9,3 +46,4 @@ modules:
     metrics:
       {{ json_exporter_config | to_nice_yaml(indent=2,sort_keys=False) | indent(6, False) }}
 {% endif %}
+#}
