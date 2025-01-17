@@ -14,6 +14,7 @@ json_exporter_requirements:
   - iproute2
 
 json_exporter_defaults_config: []
+json_exporter_defaults_modules: {}
 
 json_exporter_defaults_service:
   config:
