@@ -1,0 +1,22 @@
+---
+
+prometheus_version: latest
+
+prometheus_service:
+  log:
+    level: info
+  web:
+    listen_address: "0.0.0.0:9090"
+
+prometheus_global:
+  scrape_interval: 5m
+  evaluation_interval: 2m
+  external_labels:
+    environment: MOLECULE
+    production: not
+
+prometheus_alerting:
+  alert_relabel_configs: []
+  alertmanagers: []
+
+...
