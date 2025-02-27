@@ -1,0 +1,40 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+# GOMAXPROCS={{ ansible_processor_vcpus | default(ansible_processor_count) }}
+
+OPTIONS="
+{% if bind_exporter_service is defined %}
+  {# log configuration #}
+  --log.level={{ bind_exporter_service.log.level | default('info') }} \
+  {% if bind_exporter_service.log.format is defined and
+        bind_exporter_service.log.format in ["logfmt", "json"] %}
+  --log.format={{bind_exporter_service.log.format }} \
+  {% endif %}
+  {% if bind_exporter_service.web.listen_address is defined and
+        bind_exporter_service.web.listen_address | string | length > 0 %}
+  --web.listen-address={{ bind_exporter_service.web.listen_address }} \
+  {% endif %}
+{% endif %}
+  --config.file={{ bind_exporter_service.config.file }}
+"
+
+{#
+# bind_exporter --help
+usage: bind_exporter [<flags>]
+
+
+Flags:
+  -h, --[no-]help                Show context-sensitive help (also try --help-long and --help-man).
+      --config.file=config.yml   JSON exporter configuration file.
+      --[no-]config.check        If true validate the config file and then exit.
+      --web.telemetry-path="/metrics"
+                                 Path under which to expose metrics.
+      --[no-]web.systemd-socket  Use systemd socket activation listeners instead of port listeners (Linux only).
+      --web.listen-address=:7979 ...
+                                 Addresses on which to expose metrics and web interface. Repeatable for multiple addresses.
+      --web.config.file=""       [EXPERIMENTAL] Path to configuration file that can enable TLS or authentication. See: https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md
+      --log.level=info           Only log messages with the given severity or above. One of: [debug, info, warn, error]
+      --log.format=logfmt        Output format of log messages. One of: [logfmt, json]
+      --[no-]version             Show application version.
+#}

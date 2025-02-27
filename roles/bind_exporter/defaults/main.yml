@@ -1,0 +1,22 @@
+---
+
+bind_exporter_version: '0.6.0'
+
+bind_exporter_release: {}
+
+bind_exporter_system_group: bind-exporter
+bind_exporter_system_user: bind-exporter
+bind_exporter_config_dir: /etc/bind_exporter
+
+bind_exporter_direct_download: false
+
+bind_exporter_service: {}
+
+# `bind_exporter_config` are OBSOLETE
+# replaced by `bind_exporter_modules`
+# please read the documentation!
+bind_exporter_config: []
+
+bind_exporter_modules: {}
+
+...
