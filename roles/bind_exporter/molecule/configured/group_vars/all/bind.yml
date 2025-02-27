@@ -1,0 +1,130 @@
+---
+
+bind_statistics:
+  channels: true
+  allow:
+    - any
+  host: "127.0.0.1"
+
+bind_allow_query:
+  - any
+
+bind_listen:
+  ipv4:
+    - port: 53
+      addresses:
+        - "127.0.0.1"
+        - "10.11.0.1"
+    - port: 5353
+      addresses:
+        - "127.0.1.1"
+
+bind_acls:
+  - name: acl1
+    match_list:
+      - 10.11.0.0/24
+
+bind_forwarders:
+  - '9.9.9.9'
+  - '141.1.1.1'
+
+bind_recursion: true
+bind_dns64: true
+
+bind_check_names:
+  - master
+  - ignore
+
+bind_logging:
+  enable: true
+  channels:
+    - channel: general
+      file: "data/general.log"
+      versions: 3
+      size: 10M
+      print_time: true           # true | false
+      print_category: true
+      print_severity: true
+      severity: dynamic          # critical | error | warning | notice | info | debug [level] | dynamic
+  categories:
+    "lame-servers":
+      - general
+    config:
+      - general
+    default:
+      - general
+    security:
+      - general
+
+bind_zone_soa:
+  minimum_ttl: "32H"
+  ttl: "48H"
+  time_to_refresh: "24H"
+  time_to_retry: "2H"
+  time_to_expire: "2D"
+
+bind_zones:
+  - name: 'acme-inc.com'
+    type: primary
+    create_forward_zones: true
+    create_reverse_zones: true
+    #primaries:
+    #  - 10.11.0.1
+    networks:
+      - '10.11.0'
+    name_servers:
+      - ns1
+    hosts:
+      - name: ns1
+        ip: 10.11.0.1
+      - name: srv010
+        ip: 10.11.0.10
+      - name: srv011
+        ip: 10.11.0.11
+      - name: srv012
+        ip: 10.11.0.12
+    mail_servers:
+      - name: mail001
+        preference: 10
+      - name: mail002
+        preference: 20
+    services:
+      - name: _ldap._tcp
+        weight: 100
+        port: 88
+        target: srv010
+    text:
+      - name: _kerberos
+        text: KERBEROS.ACME-INC.COM
+      - name: '@'
+        text:
+          - 'some text'
+          - 'more text'
+
+  - name: cm.local
+    primaries:
+      - "{{ ansible_default_ipv4.address }}" # Primary server(s) for this zone
+    name_servers:
+      - 'dns'
+    networks:
+      - '192.168.124'
+    hosts:
+      - name: '@'
+        name_servers: 'dns.cm.local.'
+        ip: "{{ ansible_default_ipv4.address }}"
+      - name: dns
+        ip: "{{ ansible_default_ipv4.address }}"
+      - name: cms
+        ip: 192.168.124.21
+        aliases:
+          - content-management-server
+      - name: mls
+        ip: 192.168.124.30
+        aliases:
+          - master-live-server
+      - name: rls-01
+        ip: 192.168.124.35
+        aliases:
+          - replication-live-server-01
+
+...

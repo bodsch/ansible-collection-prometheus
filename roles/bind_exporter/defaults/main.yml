@@ -1,0 +1,14 @@
+---
+
+bind_exporter_version: '0.8.0'
+
+bind_exporter_release: {}
+
+bind_exporter_system_group: bind-exporter
+bind_exporter_system_user: bind-exporter
+
+bind_exporter_direct_download: false
+
+bind_exporter_service: {}
+
+...

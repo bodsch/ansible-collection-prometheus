@@ -1,0 +1,53 @@
+---
+
+bind_exporter_main_version: "{{ bind_exporter_version[0:3] }}"
+
+bind_exporter_install_path: /usr/local/opt/bind_exporter/{{ bind_exporter_version }}
+
+bind_exporter_delegate_to: localhost
+
+bind_exporter_local_tmp_directory: "{{
+  lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
+  default(lookup('env', 'HOME') ~ '/.cache/ansible/bind_exporter', true) }}/{{ bind_exporter_version }}"
+
+bind_exporter_requirements:
+  - iproute2
+
+bind_exporter_defaults_service:
+  #config:
+  #  file: "{{ bind_exporter_config_dir }}/config.yml"
+  # log:
+  #   level: info
+  #   format: ""
+  web:
+    listen_address: "127.0.0.1:9119"                # Addresses on which to expose metrics and web interface. Repeatable for multiple addresses.
+    telemetry_path: "/metrics"                      # Path under which to expose metrics
+    systemd_socket: false                           # Use systemd socket activation listeners instead of port listeners (Linux only).
+  #  config:
+  #    file: "{{ bind_exporter_config_dir }}/config.yml"
+  bind:
+    stats_url: ""                                   # http://localhost:8053/
+    timeout: 10s                                    # Timeout for trying to get stats from BIND server
+    pid_file: "/run/named/named.pid"                # Path to BIND's pid file to export process information
+    stats_version: auto                             # BIND statistics version. Can be detected automatically.
+    stats_groups:                                   # List of statistics to collect
+      - server
+      - view
+      - tasks
+
+bind_exporter_defaults_directory: /etc/default
+
+bind_exporter_defaults_release:
+  download_url: https://github.com/prometheus-community/bind_exporter/releases
+  file: bind_exporter-{{ bind_exporter_version }}.{{ ansible_system | lower }}-{{ system_architecture }}.tar.gz
+  binary: bind_exporter
+
+go_arch_map:
+  i386: '386'
+  x86_64: 'amd64'
+
+system_architecture: "{{ go_arch_map[ansible_architecture] | default(ansible_architecture) }}"
+
+systemd_lib_directory: /lib/systemd/system
+
+...

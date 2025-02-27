@@ -1,0 +1,73 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+OPTIONS="
+{% if bind_exporter_service is defined %}
+  {# log configuration #}
+{#
+  --log.level={{ bind_exporter_service.log.level | default('info') }} \
+  {% if bind_exporter_service.log.format is defined and
+        bind_exporter_service.log.format in ["logfmt", "json"] %}
+  --log.format={{bind_exporter_service.log.format }} \
+  {% endif %}
+#}
+  {# web ... #}
+  {% if bind_exporter_service.web.listen_address is defined and
+        bind_exporter_service.web.listen_address | string | length > 0 %}
+  --web.listen-address={{ bind_exporter_service.web.listen_address }} \
+  {% endif %}
+  {% if bind_exporter_service.web.systemd_socket is defined and
+        bind_exporter_service.web.systemd_socket | string | length > 0 and
+        bind_exporter_service.web.systemd_socket | bool %}
+  --web.systemd-socket \
+  {% endif %}
+  {# bind ... #}
+  {% if bind_exporter_service.bind.stats_url is defined and
+        bind_exporter_service.bind.stats_url | string | length > 0 %}
+  --bind.stats-url={{ bind_exporter_service.bind.stats_url }} \
+  {% endif %}
+  {% if bind_exporter_service.bind.timeout is defined and
+        bind_exporter_service.bind.timeout | string | length > 0 %}
+  --bind.timeout={{ bind_exporter_service.bind.timeout }} \
+  {% endif %}
+  {% if bind_exporter_service.bind.pid_file is defined and
+        bind_exporter_service.bind.pid_file | string | length > 0 %}
+  --bind.pid-file={{ bind_exporter_service.bind.pid_file }} \
+  {% endif %}
+  {% if bind_exporter_service.bind.stats_version is defined and
+        bind_exporter_service.bind.stats_version | string | length > 0 %}
+  --bind.stats-version={{ bind_exporter_service.bind.stats_version }} \
+  {% endif %}
+  {% if bind_exporter_service.bind.stats_groups is defined and
+        bind_exporter_service.bind.stats_groups | string | length > 0 %}
+    {% if bind_exporter_service.bind.stats_groups | bodsch.core.type == "string" %}
+  --bind.stats-groups={{ bind_exporter_service.bind.stats_groups }} \
+    {% elif bind_exporter_service.bind.stats_groups | bodsch.core.type == "list" %}
+  --bind.stats-groups={{ bind_exporter_service.bind.stats_groups | join(',') }} \
+    {% endif %}
+  {% endif %}
+{% endif %}
+"
+
+{#
+# bind_exporter --help
+usage: bind_exporter [<flags>]
+
+Flags:
+  -h, --help                     Show context-sensitive help (also try --help-long and --help-man).
+      --bind.stats-url="http://localhost:8053/"
+                                 HTTP XML API address of BIND server
+      --bind.timeout=10s         Timeout for trying to get stats from BIND server
+      --bind.pid-file="/run/named/named.pid"
+                                 Path to BIND's pid file to export process information
+      --bind.stats-version=auto  BIND statistics version. Can be detected automatically.
+      --web.telemetry-path="/metrics"
+                                 Path under which to expose metrics
+      --web.systemd-socket       Use systemd socket activation listeners instead of port listeners (Linux only).
+      --web.listen-address=:9119 ...
+                                 Addresses on which to expose metrics and web interface. Repeatable for multiple addresses.
+      --web.config.file=""       [EXPERIMENTAL] Path to configuration file that can enable TLS or authentication.
+      --bind.stats-groups=server,view,tasks
+                                 Comma-separated list of statistics to collect
+      --version                  Show application version.
+#}

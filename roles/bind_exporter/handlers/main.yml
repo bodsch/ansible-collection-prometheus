@@ -1,0 +1,34 @@
+---
+
+- name: daemon-reload
+  ansible.builtin.systemd:
+    daemon_reload: true
+    force: true
+  notify: restart bind_exporter
+  when:
+    - ansible_service_mgr == 'systemd'
+
+- name: verify configuration  # noqa no-changed-when
+  become: true
+  ansible.builtin.command: |
+    /bin/true
+  when:
+    - not running_in_check_mode
+
+- name: reload bind exporter
+  become: true
+  ansible.builtin.service:
+    name: bind_exporter
+    state: reloaded
+  when:
+    - not running_in_check_mode
+
+- name: restart bind exporter
+  become: true
+  ansible.builtin.service:
+    name: bind_exporter
+    state: restarted
+  when:
+    - not running_in_check_mode
+
+...

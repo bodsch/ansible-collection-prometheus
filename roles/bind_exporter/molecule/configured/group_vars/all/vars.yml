@@ -1,0 +1,16 @@
+---
+
+bind_exporter_service:
+  web:
+    listen_address: "127.0.0.1:9119"
+  bind:
+    stats_url: "http://localhost:8053"
+    timeout: 10s
+    pid_file: "/run/named/named.pid"
+    stats_version: auto
+    stats_groups:
+      - server
+      - view
+      - tasks
+
+...
