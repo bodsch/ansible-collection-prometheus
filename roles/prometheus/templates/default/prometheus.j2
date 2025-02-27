@@ -1,14 +1,22 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
 # {{ ansible_managed }}
-
-# GOMAXPROCS={{ ansible_processor_vcpus | default(ansible_processor_count) }}
-
+{# https://prometheus.io/docs/prometheus/latest/feature_flags/ #}
 {% set attr_features = [
-  "expand-external-labels", "remote-write-receiver",
-  "exemplar-storage", "memory-snapshot-on-shutdown",
-  "extra-scrape-metrics", "new-service-discovery-manager",
-  "agent", "promql-per-step-stats",
-  "auto-gomaxprocs" ] %}
+    "auto-gomaxprocs",
+    "concurrent-rule-eval",
+    "created-timestamp-zero-ingestion",
+    "delayed-compaction",
+    "exemplar-storage",
+    "expand-external-labels",
+    "extra-scrape-metrics",
+    "memory-snapshot-on-shutdown",
+    "native-histograms",
+    "old-ui",
+    "otlp-deltatocumulative,"
+    "promql-experimental-functions",
+    "promql-per-step-stats",
+  ]
+%}
 
 OPTIONS="
 {% if prometheus_service is defined %}
@@ -53,16 +61,38 @@ OPTIONS="
         prometheus_service.web.external_url | string | length > 0 %}
   --web.external-url={{ prometheus_service.web.external_url }} \
   {% endif %}
+  {% if prometheus_service.web.enable_lifecycle is defined and
+        prometheus_service.web.enable_lifecycle %}
+  --web.enable-lifecycle \
+  {% endif %}
   {% if prometheus_service.web.enable_admin_api is defined and
         prometheus_service.web.enable_admin_api %}
   --web.enable-admin-api \
-  {# feature configuration #}
   {% endif %}
+  {% if prometheus_service.web.enable_remote_write_receiver is defined and
+        prometheus_service.web.enable_remote_write_receiver %}
+  --web.enable-remote-write-receiver \
+  {% endif %}
+  {% if prometheus_service.web.remote_write_receiver is defined and
+        prometheus_service.web.remote_write_receiver.accepted_protobuf_messages is defined and
+        prometheus_service.web.remote_write_receiver.accepted_protobuf_messages | bodsch.core.type == 'list' %}
+    {% set attr_protobuf_messages = ["prometheus.WriteRequest", "io.prometheus.write.v2.Request"] %}
+    {% set _receiver = prometheus_service.web.remote_write_receiver.accepted_protobuf_messages | default([]) | bodsch.core.compare_list(attr_protobuf_messages) %}
+    {% if _receiver | count > 0 %}
+  --web.remote-write-receiver.accepted-protobuf-messages={{ _receiver | join(', ') }} \
+    {% endif %}
+  {% endif %}
+  {% if prometheus_service.web.enable_otlp_receiver is defined and
+        prometheus_service.web.enable_otlp_receiver %}
+  --web.enable-otlp-receiver \
+  {% endif %}
+  {# feature configuration #}
   {% if prometheus_service.features is defined and
-        prometheus_service.features | bodsch.core.type == "list" and
-        prometheus_service.features | count > 0 and
-        prometheus_service.features in attr_features %}
-  --enable-feature={{ prometheus_service.features | join(', ') }}
+        prometheus_service.features | bodsch.core.type == "list" %}
+    {% set _features = prometheus_service.features | default([]) | bodsch.core.compare_list(attr_features) %}
+    {% if _features | count > 0 %}
+  --enable-feature={{ _features | join(', ') }} \
+    {% endif %}
   {% endif %}
   {% if prometheus_service.raw_flags is defined %}
     {% for flag, flag_value in prometheus_service.raw_flags.items() %}

@@ -37,14 +37,7 @@
 
 - name: merge prometheus configuration between defaults and custom
   ansible.builtin.set_fact:
-    prometheus_service: "{{ prometheus_defaults_service | combine(prometheus_service, recursive=True) }}"
-    prometheus_global: "{{ prometheus_defaults_global | combine(prometheus_global, recursive=True) }}"
     prometheus_alerting: "{{ prometheus_defaults_alerting | combine(prometheus_alerting, recursive=True) }}"
-    prometheus_remote_write: "{{ prometheus_defaults_remote_write | combine(prometheus_remote_write, recursive=True) }}"
-    prometheus_remote_read: "{{ prometheus_defaults_remote_read | combine(prometheus_remote_read, recursive=True) }}"
-    prometheus_storage: "{{ prometheus_defaults_storage | combine(prometheus_storage, recursive=True) }}"
-    prometheus_tracing: "{{ prometheus_defaults_tracing | combine(prometheus_tracing, recursive=True) }}"
-    prometheus_rule_files: "{{ prometheus_defaults_rule_files | union(prometheus_rule_files) }}"
     prometheus_scrape_configs: "{{ prometheus_defaults_scrape_configs | union(prometheus_scrape_configs) }}"
 
 # -----------
@@ -73,7 +66,7 @@
 
     - name: Fail when the endpoints not present or not supported
       ansible.builtin.fail:
-        msg: "The Alertmanager endpoint ar not valid!\nPlease check your config!\n
+        msg: "The Alertmanager endpoint are not valid!\nPlease check your config!\n
              Currently supported endpoints are:\n
               - {{ validated_endpoints[2] | join('\n - ') }}\n
              found endpoints:\n

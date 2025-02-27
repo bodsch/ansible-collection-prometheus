@@ -40,6 +40,11 @@ prometheus_defaults_service:
     enable_lifecycle: false
     enable_remote_write_receiver: false
     enable_admin_api: false
+    remote_write_receiver:
+      accepted_protobuf_messages: []                # prometheus.WriteRequest... ...
+                                                    # List of the remote write protobuf messages to accept when receiving the remote writes. Supported values:
+                                                    # prometheus.WriteRequest, io.prometheus.write.v2.Request
+    enable_otlp_receiver: false
     external_url: ""
     listen_address: "0.0.0.0:9090"
     max_connection: ""
@@ -142,9 +147,9 @@ prometheus_defaults_alert_rules: []
 
 prometheus_defaults_scrape_configs: []
 
-prometheus_defaults_remote_write: {}
+prometheus_defaults_remote_write: []
 
-prometheus_defaults_remote_read: {}
+prometheus_defaults_remote_read: []
 
 prometheus_defaults_storage: {}
 

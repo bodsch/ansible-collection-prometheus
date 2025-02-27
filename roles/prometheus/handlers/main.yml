@@ -8,7 +8,7 @@
   when:
     - ansible_service_mgr | lower == "systemd"
 
-- name: validate config
+- name: validate prometheus config
   bodsch.prometheus.promtool:
     state: check
     config: "{{ prometheus_config_dir }}/prometheus.yml"
@@ -41,5 +41,11 @@
     - prometheus_valid_config is defined
     - prometheus_valid_config.rc is defined
     - prometheus_valid_config.rc == 0
+
+- name: simple restart prometheus
+  become: true
+  ansible.builtin.service:
+    name: prometheus
+    state: restarted
 
 ...

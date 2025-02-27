@@ -20,6 +20,10 @@
         createhome: false
         home: /nonexistent
 
+- name: merge prometheus configuration between defaults and custom
+  ansible.builtin.set_fact:
+    prometheus_service: "{{ prometheus_defaults_service | combine(prometheus_service, recursive=True) }}"
+
 - name: create install directory
   ansible.builtin.file:
     path: "{{ prometheus_install_path }}"
@@ -161,7 +165,7 @@
         group: "{{ prometheus_system_group }}"
         mode: 0640
       notify:
-        - reload prometheus
+        - simple restart prometheus
 
     - name: create systemd service unit
       ansible.builtin.template:
@@ -185,6 +189,8 @@
         owner: root
         group: root
         mode: 0644
+      notify:
+        - simple restart prometheus
 
     - name: create openrc init configuration
       ansible.builtin.template:

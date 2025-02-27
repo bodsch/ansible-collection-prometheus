@@ -1,0 +1,17 @@
+---
+
+- name: converge
+  hosts: remote_prom
+  any_errors_fatal: false
+  become: false
+
+  roles:
+    - role: bodsch.prometheus.prometheus
+
+- name: converge
+  hosts: instance
+  any_errors_fatal: false
+  become: false
+
+  roles:
+    - role: bodsch.prometheus.prometheus
