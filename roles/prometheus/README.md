@@ -79,9 +79,9 @@ prometheus_alert_rules: {}
 
 prometheus_scrape_configs: []
 
-prometheus_remote_write: {}
+prometheus_remote_write: []
 
-prometheus_remote_read: {}
+prometheus_remote_read: []
 
 prometheus_storage: {}
 
@@ -328,9 +328,18 @@ prometheus_scrape_configs:
 - [remote_write](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#remote_write)
 
 ```yaml
-# Settings related to the remote write feature.
-remote_write:
-  [ - <remote_write> ... ]
+prometheus_remote_write:
+  - url: http://10.18.0.2:9190/api/v1/write
+    basic_auth:
+      username: 'your-username'
+      password: 'your-password'
+    queue_config:
+      capacity: 5000
+      max_shards: 10
+      max_samples_per_send: 1000
+      batch_send_deadline: 5s
+      min_backoff: 30ms
+      max_backoff: 100ms
 ```
 
 ### `prometheus_remote_read`
@@ -338,9 +347,11 @@ remote_write:
 - [remote_read](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#remote_read)
 
 ```yaml
-# Settings related to the remote read feature.
-remote_read:
-  [ - <remote_read> ... ]
+prometheus_remote_read:
+  - url: 'https://10.18.0.2:9190/api/v1/read'
+    basic_auth:
+      username: 'your-username'
+      password: 'your-password'
 ```
 
 ### `prometheus_storage`

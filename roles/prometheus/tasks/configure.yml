@@ -1,5 +1,17 @@
 ---
 
+- name: merge prometheus configuration between defaults and custom
+  ansible.builtin.set_fact:
+    # prometheus_service: "{{ prometheus_defaults_service | combine(prometheus_service, recursive=True) }}"
+    prometheus_global: "{{ prometheus_defaults_global | combine(prometheus_global, recursive=True) }}"
+    prometheus_alerting: "{{ prometheus_defaults_alerting | combine(prometheus_alerting, recursive=True) }}"
+    prometheus_remote_write: "{{ prometheus_defaults_remote_write | union(prometheus_remote_write) }}"
+    prometheus_remote_read: "{{ prometheus_defaults_remote_read | union(prometheus_remote_read) }}"
+    prometheus_storage: "{{ prometheus_defaults_storage | combine(prometheus_storage, recursive=True) }}"
+    prometheus_tracing: "{{ prometheus_defaults_tracing | combine(prometheus_tracing, recursive=True) }}"
+    prometheus_rule_files: "{{ prometheus_defaults_rule_files | union(prometheus_rule_files) }}"
+    prometheus_scrape_configs: "{{ prometheus_defaults_scrape_configs | union(prometheus_scrape_configs) }}"
+
 - name: create static targets
   ansible.builtin.template:
     src: prometheus/file_sd/item.yml.j2
@@ -16,7 +28,7 @@
     - prometheus_file_sd_targets is defined
     - prometheus_file_sd_targets | count > 0
   notify:
-    - validate config
+    - validate prometheus config
     - reload prometheus
 
 - name: create alerting rules
@@ -30,7 +42,7 @@
     - prometheus_alert_rules | count > 0
   notify:
     - summary of changes or failed
-    - validate config
+    - validate prometheus config
     - reload prometheus
 
 - name: create prometheus.yml
@@ -43,7 +55,7 @@
     mode: 0640
   register: prometheus_config
   notify:
-    - validate config
+    - validate prometheus config
     - reload prometheus
 
 - name: create (experimental) prometheus web configuration

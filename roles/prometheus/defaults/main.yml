@@ -54,9 +54,9 @@ prometheus_scrape_configs:
         regex: "([^:]+)(:[0-9]+)?"
         replacement: "${1}"
 
-prometheus_remote_write: {}
+prometheus_remote_write: []
 
-prometheus_remote_read: {}
+prometheus_remote_read: []
 
 prometheus_storage: {}
 
