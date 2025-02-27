@@ -78,7 +78,7 @@
             owner: "{{ bind_exporter_system_user }}"
             group: "{{ bind_exporter_system_group }}"
 
-        - name: ensure json exporter binary has cap_net_raw capability
+        - name: ensure bind exporter binary has cap_net_raw capability
           capabilities:
             path: "{{ bind_exporter_install_path }}/{{ bind_exporter_release.binary }}"
             capability: cap_net_raw+ep
@@ -92,7 +92,7 @@
             force: true
             follow: false
           notify:
-            - restart json exporter
+            - restart bind exporter
 
       rescue:
         - name: delete install directory
@@ -118,7 +118,7 @@
         group: "{{ bind_exporter_system_group }}"
         mode: 0640
       notify:
-        - restart json exporter
+        - restart bind exporter
 
     - name: create systemd service unit
       ansible.builtin.template:
@@ -129,7 +129,7 @@
         mode: 0644
       notify:
         - daemon-reload
-        - restart json exporter
+        - restart bind exporter
 
 - name: openrc
   when:

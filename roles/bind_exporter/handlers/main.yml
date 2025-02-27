@@ -11,13 +11,11 @@
 - name: verify configuration  # noqa no-changed-when
   become: true
   ansible.builtin.command: |
-    bind_exporter \
-      --config.check \
-      --config.file={{ bind_exporter_service.config.file }}
+    /bin/true
   when:
     - not running_in_check_mode
 
-- name: reload json exporter
+- name: reload bind exporter
   become: true
   ansible.builtin.service:
     name: bind_exporter
@@ -25,7 +23,7 @@
   when:
     - not running_in_check_mode
 
-- name: restart json exporter
+- name: restart bind exporter
   become: true
   ansible.builtin.service:
     name: bind_exporter

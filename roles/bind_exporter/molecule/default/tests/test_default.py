@@ -102,7 +102,6 @@ def get_vars(host):
 
 @pytest.mark.parametrize("files", [
     "/usr/bin/bind_exporter",
-    "/etc/bind_exporter/config.yml",
     "/lib/systemd/system/bind_exporter.service"
 ])
 def test_files(host, files):
@@ -111,7 +110,7 @@ def test_files(host, files):
 
 
 @pytest.mark.parametrize("sockets", [
-    "tcp://127.0.0.1:7979",
+    "tcp://127.0.0.1:9119",
 ])
 def test_socket(host, sockets):
     s = host.socket(sockets)

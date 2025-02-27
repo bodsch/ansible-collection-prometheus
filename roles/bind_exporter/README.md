@@ -44,21 +44,16 @@ Tested on
 ## Usage
 
 ```
-bind_exporter_version: '0.6.0'
+bind_exporter_version: '0.8.0'
 
 bind_exporter_release: {}
 
 bind_exporter_system_group: bind-exporter
 bind_exporter_system_user: bind-exporter
-bind_exporter_config_dir: /etc/bind_exporter
 
 bind_exporter_direct_download: false
 
 bind_exporter_service: {}
-
-bind_exporter_config: []
-
-bind_exporter_modules: {}
 ```
 
 ### `bind_exporter_service`
@@ -67,134 +62,27 @@ bind_exporter_modules: {}
 
 ```yaml
 bind_exporter_service:
-  config:
-    file: "{{ bind_exporter_config_dir }}/config.yml"
-  log:
-    level: info
-    format: ""
   web:
-    listen_address: "0.0.0.0:7979"
+    listen_address: "127.0.0.1:9119"                # Addresses on which to expose metrics and web interface. Repeatable for multiple addresses.
+    telemetry_path: "/metrics"                      # Path under which to expose metrics
+    systemd_socket: false                           # Use systemd socket activation listeners instead of port listeners (Linux only).
+  bind:
+    stats_url: ""                                   # http://localhost:8053/
+    timeout: 10s                                    # Timeout for trying to get stats from BIND server
+    pid_file: "/run/named/named.pid"                # Path to BIND's pid file to export process information
+    stats_version: auto                             # BIND statistics version. Can be detected automatically.
+    stats_groups:                                   # List of statistics to collect
+      - server
+      - view
+      - tasks
 ```
 
-### `bind_exporter_config`
-
-> **This variable is OBSOLETE and has been replaced by `bind_exporter_modules`!**
-
-The entries of `bind_exporter_config` are currently being converted to the new format.
-
-#### defaults
-
-```yaml
-bind_exporter_config: []
-```
-
-#### example
-
-```yaml
-bind_exporter_config:
-  - name: example_global_value
-    help: Example of a top-level global value scrape in the json
-    path: "{ .counter }"
-    labels:
-      environment: beta                   # static label
-      location: "planet-{.location}"      # dynamic label
-
-  - name: mgob_backup
-    help: MongoDB Backup
-    type: object
-    path: "{}"
-    labels:
-      environment: DEV                    # static label
-      id: '{[].plan}'                     # dynamic label
-    values:
-      next_run: "{[].next_run}"
-      last_run: "{[].last_run}"
-      last_run_status: "{[].last_run_status}"
-```
-
-### `bind_exporter_modules`
-
-All possible parameters can be found in the [original documentation](https://github.com/prometheus-community/bind_exporter/blob/master/examples/config.yml).
-
-The [tests](molecule/configured/group_vras/all/vars.yml) run with an adapted version of this configuration.
-
-
-#### defaults
-
-```yaml
-bind_exporter_modules: {}
-```
-
-#### example
-
-```yaml
-bind_exporter_modules:
-
-  jellyfin:
-    headers:
-      Authorization: MediaBrowser Token=xxxxxxxxxxxxxxxxx
-      Content-Type: application/json
-      accept: application/json
-
-    metrics:
-      - name: jellyfin
-        type: object
-        help: User playback metrics from Jellyfin
-        path: '{ [*] }'
-        labels:
-          user_name: '{ .UserName }'
-          # User PromQL label_join and label_replace to concatenate
-          # these values into a nice item description
-          item_type: '{ .NowPlayingItem.Type }'
-          item_name: '{ .NowPlayingItem.Name }'
-          item_path: '{ .NowPlayingItem.Path }'
-          series_name: '{ .NowPlayingItem.SeriesName }'
-          episode_index: 'e{ .NowPlayingItem.IndexNumber }'
-          season_index: 's{ .NowPlayingItem.ParentIndexNumber }'
-          client_name: '{ .Client }'
-          device_name: '{ .DeviceName }'
-        values:
-          is_paused: '{ .PlayState.IsPaused }'
-
-  animals:
-    metrics:
-      - name: animal
-        type: object
-        help: Example of top-level lists in a separate module
-        path: '{ [*] }'
-        labels:
-          name: '{ .noun }'
-          predator: '{ .predator }'
-        values:
-          population: '{ .population }'
-    http_client_config:
-      tls_config:
-        insecure_skip_verify: true
-      basic_auth:
-        username: myuser
-        password: veryverysecret
-        # password_file: /tmp/mysecret.txt
-    valid_status_codes:
-      - 200
-      - 204
-    body:
-      content: !unsafe
-        '{"time_diff": "{{ duration `95` }}","anotherVar": "{{ .myVal | first }}"}'
-      templatize: true
-```
-
-You can also look at the [molecule](molecule/default/group_vars/all) test.
+You can also look at the [molecule](molecule/configured/group_vars/all) test.
 
 
 ## Contribution
 
 Please read [Contribution](CONTRIBUTING.md)
-
-## Development,  Branches (Git Tags)
-
-The `master` Branch is my *Working Horse* includes the "latest, hot shit" and can be complete broken!
-
-If you want to use something stable, please use a [Tagged Version](https://github.com/bodsch/ansible-bind-exporter/tags)!
 
 ---
 

@@ -104,12 +104,16 @@ def local_facts(host):
     """
       return local facts
     """
-    return host.ansible("setup").get("ansible_facts").get("ansible_local").get("bind_exporter")
+    local_fact = host.ansible("setup").get("ansible_facts").get("ansible_local")
+
+    if local_fact:
+        return local_fact.get("bind_exporter", {})
+    else:
+        return dict()
 
 
 @pytest.mark.parametrize("files", [
     "/usr/bin/bind_exporter",
-    "/etc/bind_exporter/config.yml",
     "/lib/systemd/system/bind_exporter.service"
 ])
 def test_files(host, files):
@@ -130,7 +134,6 @@ def test_version(host, get_vars):
 
     install_dir = get_vars.get("bind_exporter_install_path")
     defaults_dir = get_vars.get("bind_exporter_defaults_directory")
-    config_dir = get_vars.get("bind_exporter_config_dir")
 
     if 'latest' in install_dir:
         install_dir = install_dir.replace('latest', version)
@@ -142,8 +145,6 @@ def test_version(host, get_vars):
         files.append(f"{install_dir}/bind_exporter")
     if defaults_dir and not distribution == "artix":
         files.append(f"{defaults_dir}/bind_exporter")
-    if config_dir:
-        files.append(f"{config_dir}/config.yml")
 
     print(files)
 
@@ -183,7 +184,7 @@ def test_open_port(host, get_vars):
         listen_address = bind_exporter_web.get("listen_address")
 
     if not listen_address:
-        listen_address = "0.0.0.0:7979"
+        listen_address = "0.0.0.0:9119"
 
     print(listen_address)
 

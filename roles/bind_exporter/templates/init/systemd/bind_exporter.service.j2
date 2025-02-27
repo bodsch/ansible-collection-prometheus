@@ -2,7 +2,7 @@
 {{ ansible_managed | comment }}
 
 [Unit]
-Description       = Prometheus bind-exporter, scrapes remote JSON by JSONPath
+Description       = Export BIND (named/dns) v9+ service metrics to Prometheus.
 After             = network-online.target
 
 [Service]
@@ -13,7 +13,7 @@ User              = {{ bind_exporter_system_user }}
 Group             = {{ bind_exporter_system_group }}
 
 ExecReload        = /bin/kill -HUP $MAINPID
-ExecStartPre      = /usr/bin/{{ bind_exporter_release.binary }} --config.check --log.level debug --config.file {{ bind_exporter_service.config.file }}
+{#ExecStartPre      = /usr/bin/{{ bind_exporter_release.binary }} --config.check --log.level debug --config.file {{ bind_exporter_service.config.file }} #}
 ExecStart         = /usr/bin/{{ bind_exporter_release.binary }} $OPTIONS
 
 SyslogIdentifier  = bind_exporter
