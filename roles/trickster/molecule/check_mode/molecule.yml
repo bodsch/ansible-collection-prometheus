@@ -10,7 +10,7 @@ driver:
 
 platforms:
   - name: prometheus
-    image: "bodsch/ansible-debian:12"
+    image: "ghcr.io/bodsch/docker-ansible/ansible-debian:12"
     command: ${MOLECULE_DOCKER_COMMAND:-""}
     docker_host: "${DOCKER_HOST:-unix://run/docker.sock}"
     privileged: true
@@ -34,7 +34,7 @@ platforms:
         ipv4_address: "10.11.0.1"
 
   - name: redis
-    image: "bodsch/ansible-debian:12"
+    image: "ghcr.io/bodsch/docker-ansible/ansible-debian:12"
     command: ${MOLECULE_DOCKER_COMMAND:-""}
     docker_host: "${DOCKER_HOST:-unix://run/docker.sock}"
     privileged: true
@@ -53,7 +53,7 @@ platforms:
         ipv4_address: "10.11.0.2"
 
   - name: instance
-    image: "bodsch/ansible-${DISTRIBUTION:-debian:12}"
+    image: "ghcr.io/bodsch/docker-ansible/ansible-${DISTRIBUTION:-debian:12}"
     command: ${MOLECULE_DOCKER_COMMAND:-""}
     docker_host: "${DOCKER_HOST:-unix://run/docker.sock}"
     privileged: true
