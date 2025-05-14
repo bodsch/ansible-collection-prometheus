@@ -1,6 +1,6 @@
 ---
 
-promcheck_version: "1.2.27"
+promcheck_version: "1.2.34"
 
 promcheck_direct_download: false
 promcheck_release: {}
