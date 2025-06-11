@@ -32,7 +32,7 @@
   delegate_to: "{{ alertmanager_delegate_to }}"
   run_once: "{{ 'false' if alertmanager_direct_download else 'true' }}"
   ansible.builtin.stat:
-    path: "{{ alertmanager_local_tmp_directory }}/alertmanager-{{ alertmanager_version }}.{{ ansible_facts.system | lower }}-{{ system_architecture }}/alertmanager"
+    path: "{{ alertmanager_local_tmp_directory }}/alertmanager"
   register: stat_file_binary
 
 - name: fail when extracted binary are missing
@@ -63,7 +63,7 @@
       block:
         - name: propagate alertmanager binaries
           ansible.builtin.copy:
-            src: "{{ alertmanager_local_tmp_directory }}/alertmanager-{{ alertmanager_version }}.{{ ansible_facts.system | lower }}-{{ system_architecture }}/{{ item }}"
+            src: "{{ alertmanager_local_tmp_directory }}/{{ item }}"
             dest: "{{ alertmanager_install_path }}/{{ item }}"
             mode: 0755
             owner: "{{ alertmanager_system_user }}"

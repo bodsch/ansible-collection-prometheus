@@ -25,10 +25,14 @@
 - name: detect ansible check_mode
   bodsch.core.check_mode:
   register: _check_mode
+  tags:
+    - always
 
 - name: define running_in_check_mode
   ansible.builtin.set_fact:
     running_in_check_mode: '{{ _check_mode.check_mode }}'
+  tags:
+    - always
 
 - name: install dependency
   ansible.builtin.package:
@@ -38,3 +42,5 @@
     - silence_dependencies | default([]) | count > 0
   tags:
     - always
+    - silence_add
+    - silence_remove

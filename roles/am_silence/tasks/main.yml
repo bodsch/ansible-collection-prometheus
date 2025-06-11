@@ -3,7 +3,7 @@
 - name: prepare
   ansible.builtin.import_tasks: prepare.yml
   when:
-    - ansible_run_tags | intersect(["silence_add","silence_remove"]) | count > 0
+    - ansible_run_tags | intersect(["all","silence_add","silence_remove"]) | count > 0
   tags:
     - always
     - silence_add
