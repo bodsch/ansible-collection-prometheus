@@ -120,7 +120,7 @@ def local_facts(host):
 ])
 def test_files(host, files):
     f = host.file(files)
-    assert f.exists
+    assert not f.exists
 
 
 def test_version(host, get_vars):
@@ -152,25 +152,13 @@ def test_version(host, get_vars):
 
     for _file in files:
         f = host.file(_file)
-        assert f.is_file
-
-
-def test_user(host, get_vars):
-    """
-    """
-    user = get_vars.get("bind_exporter_system_user", "bind_exporter")
-    group = get_vars.get("bind_exporter_system_group", "bind_exporter")
-
-    assert host.group(group).exists
-    assert host.user(user).exists
-    assert group in host.user(user).groups
-    assert host.user(user).home == "/nonexistent"
+        assert not f.is_file
 
 
 def test_service(host, get_vars):
     service = host.service("bind_exporter")
-    assert service.is_enabled
-    assert service.is_running
+    assert not service.is_enabled
+    assert not service.is_running
 
 
 def test_open_port(host, get_vars):
@@ -191,11 +179,11 @@ def test_open_port(host, get_vars):
     print(listen_address)
 
     service = host.socket(f"tcp://{listen_address}")
-    assert service.is_listening
+    assert not service.is_listening
 
 @pytest.mark.parametrize("sockets", [
     "tcp://127.0.0.1:9119",
 ])
 def test_socket(host, sockets):
     s = host.socket(sockets)
-    assert s.is_listening
+    assert not s.is_listening
