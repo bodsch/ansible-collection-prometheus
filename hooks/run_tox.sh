@@ -16,6 +16,9 @@ then
     echo "- ${COLLECTION_ROLE} - ${COLLECTION_SCENARIO}"
     echo ""
 
+    cp test-requirements.txt "roles/${COLLECTION_ROLE}/"
+    cp tox.ini "roles/${COLLECTION_ROLE}/"
+
     pushd "roles/${COLLECTION_ROLE}" > /dev/null
 
     if [ -e collections.yml ]
@@ -35,6 +38,9 @@ else
   do
     echo "- ${role} - ${COLLECTION_SCENARIO}"
     echo ""
+
+    cp test-requirements.txt "roles/${COLLECTION_ROLE}/"
+    cp tox.ini "roles/${COLLECTION_ROLE}/"
 
     pushd roles/${role} > /dev/null
 
