@@ -3,7 +3,7 @@
 namespace: bodsch
 name: prometheus
 
-version: 1.4.0
+version: 1.4.1
 
 readme: README.md
 
@@ -24,7 +24,7 @@ tags:
 
 dependencies:
   bodsch.core: ">=2.5.0"
-  bodsch.scm: "*"
+  bodsch.scm: ">=1.4.3"
   bodsch.docker: "*"
   community.mysql: ">=3.10.0"
 
