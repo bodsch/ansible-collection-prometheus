@@ -9,6 +9,12 @@ current_dir=$(pwd)
 
 TOX_TEST="${1}"
 
+if [ -e collections.yml ]
+then
+  echo ""
+  ${current_dir}/hooks/manage_collections.py
+fi
+
 if [[ ! -z "${COLLECTION_ROLE// }" ]]
 then
   if [ -d "roles/${COLLECTION_ROLE}" ]

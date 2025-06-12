@@ -13,6 +13,7 @@ rsync \
   --exclude hooks \
   --exclude __pycache__ \
   --exclude molecule \
+  --exclude .github \
   --delete \
   ../ansible-collection-${COLLECTION_NAME}/* \
   "${COLLECTION_DIR}/"
