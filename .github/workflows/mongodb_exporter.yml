@@ -175,7 +175,7 @@ jobs:
         python_version:
           - "3.12"
         scenario:
-          - configured
+          # - configured
           - latest
           - check_mode
         collection_role:

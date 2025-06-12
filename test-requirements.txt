@@ -2,7 +2,7 @@ ansible-lint
 docker
 dnspython
 flake8
-molecule
+molecule==25.5.0
 molecule-docker
 netaddr
 pytest-testinfra
