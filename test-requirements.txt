@@ -9,4 +9,3 @@ pytest-testinfra
 tox
 tox-gh-actions
 yamllint
-python-dateutil
