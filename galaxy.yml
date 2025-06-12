@@ -23,9 +23,11 @@ tags:
   - exporters
 
 dependencies:
+  ansible.posix: "*"
   bodsch.core: ">=2.5.0"
   bodsch.scm: ">=1.4.4"
   bodsch.docker: "*"
+  community.general: "*"
   community.mysql: ">=3.10.0"
 
 repository: https://github.com/bodsch/ansible-collection-prometheus
