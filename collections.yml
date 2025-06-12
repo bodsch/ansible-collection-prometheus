@@ -5,8 +5,7 @@ collections:
   - name: bodsch.core
     version: ">=2.5.0"
   - name: bodsch.scm
-    version: ">=1.4.4"
-  - name: bodsch.docker
+    version: ">=1.4.5"
   - name: community.general
   - name: community.mysql
     version: ">=3.10.0"

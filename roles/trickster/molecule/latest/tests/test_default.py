@@ -118,6 +118,8 @@ def test_files(host, get_vars):
 
     version = local_facts(host).get("version")
 
+    # print(f"version     : {version}")
+
     install_dir = get_vars.get("trickster_install_path")
     defaults_dir = get_vars.get("trickster_defaults_directory")
     config_dir = get_vars.get("trickster_config_dir")
