@@ -104,19 +104,19 @@ jobs:
 
           unset ANSIBLE_RUN_TAGS
           make \
-            prepare "${OPTS[*]}"
+            prepare ${OPTS[*]}
 
           export ANSIBLE_RUN_TAGS=silence_add
           make \
-            converge "${OPTS[*]}"
+            converge ${OPTS[*]}
 
           export ANSIBLE_RUN_TAGS=silence_remove
           make \
-            converge "${OPTS[*]}"
+            converge ${OPTS[*]}
 
           unset ANSIBLE_RUN_TAGS
           make \
-            destroy "${OPTS[*]}"
+            destroy ${OPTS[*]}
 
   ubuntu:
     name: "${{ matrix.image }} / ${{ matrix.scenario }} / ${{ matrix.ansible-version }} / ${{ matrix.python_version }}"
@@ -176,16 +176,16 @@ jobs:
 
           unset ANSIBLE_RUN_TAGS
           make \
-            prepare "${OPTS[*]}"
+            prepare ${OPTS[*]}
 
           export ANSIBLE_RUN_TAGS=silence_add
           make \
-            converge "${OPTS[*]}"
+            converge ${OPTS[*]}
 
           export ANSIBLE_RUN_TAGS=silence_remove
           make \
-            converge "${OPTS[*]}"
+            converge ${OPTS[*]}
 
           unset ANSIBLE_RUN_TAGS
           make \
-            destroy "${OPTS[*]}"
+            destroy ${OPTS[*]}
