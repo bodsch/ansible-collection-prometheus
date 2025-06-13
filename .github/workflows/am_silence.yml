@@ -96,35 +96,27 @@ jobs:
 
       - name: test ${{ matrix.collection_role }} - ${{ matrix.scenario }}
         run: |
+          OPTS=()
+          OPTS+=(-e TOX_ANSIBLE="ansible_${{ matrix.ansible-version }}")
+          OPTS+=(-e DISTRIBUTION="${{ matrix.image }}")
+          OPTS+=(-e COLLECTION_ROLE="${{ matrix.collection_role }}")
+          OPTS+=(-e COLLECTION_SCENARIO="${{ matrix.scenario }}")
+
+          unset ANSIBLE_RUN_TAGS
           make \
-            prepare \
-              -e TOX_ANSIBLE="ansible_${{ matrix.ansible-version }}" \
-              -e DISTRIBUTION="${{ matrix.image }}" \
-              -e COLLECTION_ROLE="${{ matrix.collection_role }}" \
-              -e COLLECTION_SCENARIO="${{ matrix.scenario }}"
+            prepare "${OPTS[*]}"
 
           export ANSIBLE_RUN_TAGS=silence_add
           make \
-            converge \
-              -e TOX_ANSIBLE="ansible_${{ matrix.ansible-version }}" \
-              -e DISTRIBUTION="${{ matrix.image }}" \
-              -e COLLECTION_ROLE="${{ matrix.collection_role }}" \
-              -e COLLECTION_SCENARIO="${{ matrix.scenario }}"
+            converge "${OPTS[*]}"
 
           export ANSIBLE_RUN_TAGS=silence_remove
           make \
-            converge \
-              -e TOX_ANSIBLE="ansible_${{ matrix.ansible-version }}" \
-              -e DISTRIBUTION="${{ matrix.image }}" \
-              -e COLLECTION_ROLE="${{ matrix.collection_role }}" \
-              -e COLLECTION_SCENARIO="${{ matrix.scenario }}"
+            converge "${OPTS[*]}"
 
+          unset ANSIBLE_RUN_TAGS
           make \
-            destroy \
-              -e TOX_ANSIBLE="ansible_${{ matrix.ansible-version }}" \
-              -e DISTRIBUTION="${{ matrix.image }}" \
-              -e COLLECTION_ROLE="${{ matrix.collection_role }}" \
-              -e COLLECTION_SCENARIO="${{ matrix.scenario }}"
+            destroy "${OPTS[*]}"
 
   ubuntu:
     name: "${{ matrix.image }} / ${{ matrix.scenario }} / ${{ matrix.ansible-version }} / ${{ matrix.python_version }}"
@@ -176,32 +168,24 @@ jobs:
 
       - name: test ${{ matrix.collection_role }} - ${{ matrix.scenario }}
         run: |
+          OPTS=()
+          OPTS+=(-e TOX_ANSIBLE="ansible_${{ matrix.ansible-version }}")
+          OPTS+=(-e DISTRIBUTION="${{ matrix.image }}")
+          OPTS+=(-e COLLECTION_ROLE="${{ matrix.collection_role }}")
+          OPTS+=(-e COLLECTION_SCENARIO="${{ matrix.scenario }}")
+
+          unset ANSIBLE_RUN_TAGS
           make \
-            prepare \
-              -e TOX_ANSIBLE="ansible_${{ matrix.ansible-version }}" \
-              -e DISTRIBUTION="${{ matrix.image }}" \
-              -e COLLECTION_ROLE="${{ matrix.collection_role }}" \
-              -e COLLECTION_SCENARIO="${{ matrix.scenario }}"
+            prepare "${OPTS[*]}"
 
           export ANSIBLE_RUN_TAGS=silence_add
           make \
-            converge \
-              -e TOX_ANSIBLE="ansible_${{ matrix.ansible-version }}" \
-              -e DISTRIBUTION="${{ matrix.image }}" \
-              -e COLLECTION_ROLE="${{ matrix.collection_role }}" \
-              -e COLLECTION_SCENARIO="${{ matrix.scenario }}"
+            converge "${OPTS[*]}"
 
           export ANSIBLE_RUN_TAGS=silence_remove
           make \
-            converge \
-              -e TOX_ANSIBLE="ansible_${{ matrix.ansible-version }}" \
-              -e DISTRIBUTION="${{ matrix.image }}" \
-              -e COLLECTION_ROLE="${{ matrix.collection_role }}" \
-              -e COLLECTION_SCENARIO="${{ matrix.scenario }}"
+            converge "${OPTS[*]}"
 
+          unset ANSIBLE_RUN_TAGS
           make \
-            destroy \
-              -e TOX_ANSIBLE="ansible_${{ matrix.ansible-version }}" \
-              -e DISTRIBUTION="${{ matrix.image }}" \
-              -e COLLECTION_ROLE="${{ matrix.collection_role }}" \
-              -e COLLECTION_SCENARIO="${{ matrix.scenario }}"
+            destroy "${OPTS[*]}"
