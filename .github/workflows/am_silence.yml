@@ -96,6 +96,13 @@ jobs:
 
       - name: test ${{ matrix.collection_role }} - ${{ matrix.scenario }}
         run: |
+          make \
+            prepare \
+              -e TOX_ANSIBLE="ansible_${{ matrix.ansible-version }}" \
+              -e DISTRIBUTION="${{ matrix.image }}" \
+              -e COLLECTION_ROLE="${{ matrix.collection_role }}" \
+              -e COLLECTION_SCENARIO="${{ matrix.scenario }}"
+
           export ANSIBLE_RUN_TAGS=silence_add
           make \
             converge \
@@ -107,6 +114,13 @@ jobs:
           export ANSIBLE_RUN_TAGS=silence_remove
           make \
             converge \
+              -e TOX_ANSIBLE="ansible_${{ matrix.ansible-version }}" \
+              -e DISTRIBUTION="${{ matrix.image }}" \
+              -e COLLECTION_ROLE="${{ matrix.collection_role }}" \
+              -e COLLECTION_SCENARIO="${{ matrix.scenario }}"
+
+          make \
+            destroy \
               -e TOX_ANSIBLE="ansible_${{ matrix.ansible-version }}" \
               -e DISTRIBUTION="${{ matrix.image }}" \
               -e COLLECTION_ROLE="${{ matrix.collection_role }}" \
@@ -162,6 +176,13 @@ jobs:
 
       - name: test ${{ matrix.collection_role }} - ${{ matrix.scenario }}
         run: |
+          make \
+            prepare \
+              -e TOX_ANSIBLE="ansible_${{ matrix.ansible-version }}" \
+              -e DISTRIBUTION="${{ matrix.image }}" \
+              -e COLLECTION_ROLE="${{ matrix.collection_role }}" \
+              -e COLLECTION_SCENARIO="${{ matrix.scenario }}"
+
           export ANSIBLE_RUN_TAGS=silence_add
           make \
             converge \
@@ -173,6 +194,13 @@ jobs:
           export ANSIBLE_RUN_TAGS=silence_remove
           make \
             converge \
+              -e TOX_ANSIBLE="ansible_${{ matrix.ansible-version }}" \
+              -e DISTRIBUTION="${{ matrix.image }}" \
+              -e COLLECTION_ROLE="${{ matrix.collection_role }}" \
+              -e COLLECTION_SCENARIO="${{ matrix.scenario }}"
+
+          make \
+            destroy \
               -e TOX_ANSIBLE="ansible_${{ matrix.ansible-version }}" \
               -e DISTRIBUTION="${{ matrix.image }}" \
               -e COLLECTION_ROLE="${{ matrix.collection_role }}" \
