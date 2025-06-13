@@ -1,14 +1,13 @@
 ---
-
 name: am_silence
 
 on:
   workflow_dispatch:
     inputs:
       logLevel:
-        description: 'Log level'
+        description: "Log level"
         required: true
-        default: 'warning'
+        default: "warning"
         type: choice
         options:
           - info
@@ -16,36 +15,36 @@ on:
           - debug
   push:
     branches:
-      - 'main'
-      - 'feature/**'
-      - 'fix/**'
-      - '!doc/**'
+      - "main"
+      - "feature/**"
+      - "fix/**"
+      - "!doc/**"
     paths:
       - "!Makefile"
       - "!README.md"
-      - 'roles/am_silence/**'
-      - '.github/workflows/am_silence.yml'
-      - '.config/ansible-lint.yml'
-      - '.yamllint'
+      - "roles/am_silence/**"
+      - ".github/workflows/am_silence.yml"
+      - ".config/ansible-lint.yml"
+      - ".yamllint"
   pull_request:
     branches:
-      - 'main'
-      - 'feature/**'
-      - 'fix/**'
-      - '!doc/**'
+      - "main"
+      - "feature/**"
+      - "fix/**"
+      - "!doc/**"
     paths:
       - "!Makefile"
       - "!README.md"
-      - 'roles/am_silence/**'
-      - '.github/workflows/am_silence.yml'
-      - '.config/ansible-lint.yml'
-      - '.yamllint'
+      - "roles/am_silence/**"
+      - ".github/workflows/am_silence.yml"
+      - ".config/ansible-lint.yml"
+      - ".yamllint"
 
 env:
   COLLECTION_NAMESPACE: bodsch
   COLLECTION_NAME: prometheus
-  PY_COLORS: '1'
-  ANSIBLE_FORCE_COLOR: '1'
+  PY_COLORS: "1"
+  ANSIBLE_FORCE_COLOR: "1"
 
 jobs:
   debian:
@@ -57,7 +56,7 @@ jobs:
         image:
           - debian:12
         ansible-version:
-          - '9.5'
+          - "9.5"
         python_version:
           - "3.12"
         scenario:
@@ -129,7 +128,7 @@ jobs:
         image:
           - ubuntu:22.04
         ansible-version:
-          - '9.5'
+          - "9.5"
         python_version:
           - "3.12"
         scenario:
