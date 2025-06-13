@@ -103,7 +103,7 @@ jobs:
 
           unset ANSIBLE_RUN_TAGS
           make \
-            prepare ${OPTS[*]}
+            converge ${OPTS[*]}
 
           export ANSIBLE_RUN_TAGS=silence_add
           make \
@@ -175,7 +175,7 @@ jobs:
 
           unset ANSIBLE_RUN_TAGS
           make \
-            prepare ${OPTS[*]}
+            converge ${OPTS[*]}
 
           export ANSIBLE_RUN_TAGS=silence_add
           make \
