@@ -1,6 +1,0 @@
----
-
-collections:
-  - name: bodsch.core
-  - name: bodsch.scm
-  - name: bodsch.dns

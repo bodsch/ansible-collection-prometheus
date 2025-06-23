@@ -1,9 +1,0 @@
----
-
-collections:
-  - name: bodsch.docker
-    version: ">=1.2.0"
-  # - name: bodsch.core
-  #   version: ">=1.0.14"
-  # - name: bodsch.scm
-  # - name: bodsch.docker
