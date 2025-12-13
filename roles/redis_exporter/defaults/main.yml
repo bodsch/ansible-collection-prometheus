@@ -1,6 +1,6 @@
 ---
 
-redis_exporter_version: '1.71.0'
+redis_exporter_version: '1.80.1'
 
 redis_exporter_release: {}
 

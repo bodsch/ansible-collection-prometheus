@@ -1,6 +1,6 @@
 ---
 
-docker_sd_version: "1.0.0"
+docker_sd_version: "1.0.1"
 
 docker_sd_system_user: docker-sd
 docker_sd_system_group: docker-sd

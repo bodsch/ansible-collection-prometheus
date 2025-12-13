@@ -1,6 +1,6 @@
 ---
 
-alertmanager_version: 0.28.1
+alertmanager_version: 0.29.0
 
 # alertmanager_release_download_url: https://github.com/prometheus/alertmanager/releases
 

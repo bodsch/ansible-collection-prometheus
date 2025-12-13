@@ -1,6 +1,6 @@
 ---
 
-nginx_exporter_version: '1.4.2'
+nginx_exporter_version: '1.5.1'
 nginx_exporter_nginx_plus: false
 
 nginx_exporter_system_group: nginx-exporter

@@ -1,6 +1,6 @@
 ---
 
-mysql_exporter_version: "0.17.2"
+mysql_exporter_version: "0.18.0"
 
 mysql_exporter_system_user: mysql_exporter
 mysql_exporter_system_group: mysql_exporter

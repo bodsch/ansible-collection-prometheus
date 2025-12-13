@@ -1,6 +1,6 @@
 ---
 
-blackbox_exporter_version: '0.26.0'
+blackbox_exporter_version: '0.28.0'
 blackbox_exporter_blackbox_plus: false
 
 blackbox_exporter_system_group: blackbox-exporter

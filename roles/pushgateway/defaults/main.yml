@@ -1,6 +1,6 @@
 ---
 
-pushgateway_version: "1.11.1"
+pushgateway_version: "1.11.2"
 
 pushgateway_system_user: pushgateway
 pushgateway_system_group: pushgateway
