@@ -5,6 +5,8 @@
     path: "{{ promcheck_install_path }}"
     state: directory
     mode: 0755
+  when:
+    - not running_in_check_mode
 
 - name: detect extracted binary file for promcheck on '{{ promcheck_delegate_to }}'
   become: false
