@@ -32,27 +32,19 @@ provisioner:
     - -v
   config_options:
     defaults:
-      check_mode_markers: true
-      # display_skipped_hosts: true
-      # show_custom_stats: true
-      # show_per_host_start: true
-      # show_task_path_on_failure: true
       deprecation_warnings: true
       callback_result_format: yaml
-      # callbacks_enabled: profile_tasks
       gathering: smart
-      fact_caching: jsonfile
-      fact_caching_timeout: 8640
-      fact_caching_connection: ansible_facts
+      fact_caching_timeout: 320
 
 scenario:
   test_sequence:
     - destroy
     - dependency
-    - syntax
     - create
     - prepare
     - converge
+    - idempotence
     - verify
     - destroy
 
