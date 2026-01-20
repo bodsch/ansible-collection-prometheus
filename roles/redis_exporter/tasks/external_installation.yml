@@ -27,7 +27,7 @@
         state: absent
         path: /etc/systemd/system/redis_exporter.service
       when:
-        - ansible_service_mgr | lower == "systemd"
+        - ansible_facts.service_mgr | lower == "systemd"
 
     - name: remove installed redis_exporter
       ansible.builtin.file:

@@ -13,7 +13,7 @@
   {% set _disabled_collectors = promcheck_collectors.disabled %}
 {% endif %}
 
-GOMAXPROCS={{ ansible_processor_vcpus | default(ansible_processor_count) }}
+GOMAXPROCS={{ ansible_facts.processor_vcpus | default(ansible_facts.processor_count) }}
 
 OPTIONS="
   {# log configuration #}

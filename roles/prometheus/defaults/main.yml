@@ -68,7 +68,7 @@ prometheus_file_sd_targets:
         - 127.0.0.1:9090
       labels:
         service: prometheus
-        host: "{{ ansible_hostname }}"
+        host: "{{ ansible_facts.hostname }}"
 
 # prometheus_web:
 #   http_listen_address: "0.0.0.0"

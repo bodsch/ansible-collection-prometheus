@@ -1,7 +1,7 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
 # {{ ansible_managed }}
 
-# GOMAXPROCS={{ ansible_processor_vcpus | default(ansible_processor_count) }}
+# GOMAXPROCS={{ ansible_facts.processor_vcpus | default(ansible_facts.processor_count) }}
 {% set _loglevel = "info" %}
 {% set attr_features = [
   "expand-external-labels", "remote-write-receiver",
@@ -41,7 +41,7 @@ OPTIONS="
   {% endif %}
   {# web configuration #}
   {% if alertmanager_service.web.systemd_socket and
-        ansible_system | lower == "linux" %}
+        ansible_facts.system | lower == "linux" %}
   --web.systemd-socket \
   {% endif %}
   {% if alertmanager_service.web.listen_address is defined and

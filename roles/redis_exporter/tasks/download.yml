@@ -28,7 +28,7 @@
 
 - name: define delegate instance for download handling
   ansible.builtin.set_fact:
-    redis_exporter_delegate_to: "{{ ansible_host }}"
+    redis_exporter_delegate_to: "{{ ansible_facts.host }}"
     redis_exporter_local_tmp_directory: "{{
         lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
         default('/var/cache/ansible/redis_exporter', true) }}/{{ redis_exporter_version }}"
@@ -71,7 +71,7 @@
             checksum_file: sha256sums.txt
             user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
             password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
-            architecture: "{{ ansible_architecture }}"
+            architecture: "{{ ansible_facts.architecture }}"
             system: "{{ ansible_facts.system }}"
             version: "v{{ redis_exporter_version }}"
           register: _latest_checksum

@@ -5,26 +5,25 @@
 # BSD 2-clause (see LICENSE or https://opensource.org/licenses/BSD-2-Clause)
 
 from __future__ import absolute_import, division, print_function
-import os
-# import sys
-import hashlib
-import json
+
 import base64
 import binascii
 
-from pathlib import Path
+# import sys
+import hashlib
+import json
+import os
 from json.decoder import JSONDecodeError
+from pathlib import Path
 
 from ansible.module_utils.basic import AnsibleModule
 
 
 class PrometheusAlertRules(object):
-    """
-    """
+    """ """
 
     def __init__(self, module):
-        """
-        """
+        """ """
         self.module = module
 
         self.state = module.params.get("state")
@@ -38,13 +37,8 @@ class PrometheusAlertRules(object):
         self.checksum_directory = f"{Path.home()}/.ansible/cache/prometheus_alert_rules"
 
     def run(self):
-        """
-        """
-        result = dict(
-            changed=False,
-            failed=True,
-            msg="initial"
-        )
+        """ """
+        result = dict(changed=False, failed=True, msg="initial")
 
         self.module.log(msg=f" - {self.rules}")
 
@@ -53,33 +47,21 @@ class PrometheusAlertRules(object):
         except ValueError as e:  # includes simplejson.decoder.JSONDecodeError
             self.module.log(msg=f"ValueError - '{e}'")
 
-            return dict(
-                changed=False,
-                failed=True,
-                msg=f"can't decode json: '{e}'"
-            )
+            return dict(changed=False, failed=True, msg=f"can't decode json: '{e}'")
 
         except JSONDecodeError as e:
             self.module.log(msg=f"JSONDecodeError - '{e}'")
 
-            return dict(
-                changed=False,
-                failed=True,
-                msg=f"can't decode json: '{e}'"
-            )
+            return dict(changed=False, failed=True, msg=f"can't decode json: '{e}'")
         except TypeError as e:
             self.module.log(msg=f"TypeError - '{e}'")
 
-            return dict(
-                changed=False,
-                failed=True,
-                msg=f"can't decode json: '{e}'"
-            )
+            return dict(changed=False, failed=True, msg=f"can't decode json: '{e}'")
 
         if not os.path.exists(self.rules_directory):
             return dict(
                 failed=True,
-                msg=f"rules directory {self.rules_directory} does not exist."
+                msg=f"rules directory {self.rules_directory} does not exist.",
             )
 
         self.__create_directory(self.checksum_directory)
@@ -87,13 +69,11 @@ class PrometheusAlertRules(object):
         result_state = []
 
         if isinstance(self.rules, list):
-            """
-            """
+            """ """
             result_state = self._rules_as_list()
 
         if isinstance(self.rules, dict):
-            """
-            """
+            """ """
             result_state = self._rules_as_dict()
 
         # define changed for the running tasks
@@ -101,30 +81,24 @@ class PrometheusAlertRules(object):
         combined_d = {key: value for d in result_state for key, value in d.items()}
 
         # find all changed and define our variable
-        changed = (len({k: v for k, v in combined_d.items() if v.get('changed')}) > 0)
+        changed = len({k: v for k, v in combined_d.items() if v.get("changed")}) > 0
         # find all failed and define our variable
         # failed = (len({k: v for k, v in combined_d.items() if v.get('failed')}) > 0)
 
-        result_msg = {k: v.get('state') for k, v in combined_d.items()}
+        result_msg = {k: v.get("state") for k, v in combined_d.items()}
 
-        result = dict(
-            changed=changed,
-            failed=False,
-            state=result_msg
-        )
+        result = dict(changed=changed, failed=False, state=result_msg)
 
         return result
 
     def _rules_as_list(self):
-        """
-        """
+        """ """
         self.module.log(msg="_rules_as_list()")
 
         result_state = []
 
         for rule in self.rules:
-            """
-            """
+            """ """
             properties = []
             rules = rule.get("rules", {})
             file_name = rule.get("name", None)
@@ -138,8 +112,7 @@ class PrometheusAlertRules(object):
 
                 if changed:
                     res[file_name] = dict(
-                        changed=True,
-                        state="rule successful removed."
+                        changed=True, state="rule successful removed."
                     )
 
                 result_state.append(res)
@@ -147,16 +120,14 @@ class PrometheusAlertRules(object):
                 return result_state
 
             for rule_name, values in rules.items():
-                """
-                """
+                """ """
                 # self.module.log(msg=f" - rule: {rule_name}")
                 # state = values.get("state", "present")
 
                 properties.append(self.decode_values(values))
 
             if properties:
-                """
-                """
+                """ """
                 # self.module.log(msg=f" - write rule {file_name}")
 
                 res = {}
@@ -165,13 +136,11 @@ class PrometheusAlertRules(object):
 
                 if changed:
                     res[file_name] = dict(
-                        changed=True,
-                        state="rule successful written."
+                        changed=True, state="rule successful written."
                     )
                 else:
                     res[file_name] = dict(
-                        changed=False,
-                        state="rule has not been changed."
+                        changed=False, state="rule has not been changed."
                     )
 
                 # if state == "absent":
@@ -188,8 +157,7 @@ class PrometheusAlertRules(object):
         return result_state
 
     def _rules_as_dict(self):
-        """
-        """
+        """ """
         self.module.log(msg="_rules_as_dict()")
 
         result_state = []
@@ -197,47 +165,37 @@ class PrometheusAlertRules(object):
         properties = []
 
         for name, values in self.rules.items():
-            """
-            """
+            """ """
             state = values.get("state", "present")
 
             properties.append(self.decode_values(values))
 
             if properties:
-                """
-                """
+                """ """
                 res = {}
 
                 if state == "present":
                     changed = self._write_rule(name, properties)
 
                     if changed:
-                        res[name] = dict(
-                            changed=True,
-                            state="rule successful written."
-                        )
+                        res[name] = dict(changed=True, state="rule successful written.")
                     else:
                         res[name] = dict(
-                            changed=False,
-                            state="rule has not been changed."
+                            changed=False, state="rule has not been changed."
                         )
 
                 if state == "absent":
                     changed = self._delete_rule(name)
 
                     if changed:
-                        res[name] = dict(
-                            changed=True,
-                            state="rule successful removed."
-                        )
+                        res[name] = dict(changed=True, state="rule successful removed.")
 
                 result_state.append(res)
 
         return result_state
 
     def decode_values(self, values):
-        """
-        """
+        """ """
         self.module.log(msg="decode_values(values)")
 
         if isinstance(values, dict):
@@ -271,19 +229,18 @@ class PrometheusAlertRules(object):
                 alert=alert,
                 for_clause=for_clause,
                 expression=expression,
-                annotations=annotations
+                annotations=annotations,
             )
 
             if labels:
-                properties['labels'] = labels
+                properties["labels"] = labels
         else:
             properties = dict()
 
         return properties
 
     def _write_rule(self, name, properties={}):
-        """
-        """
+        """ """
         if len(properties) == 0:
             return False
 
@@ -293,8 +250,7 @@ class PrometheusAlertRules(object):
         return self.__write_file(name, properties, data_file, checksum_file)
 
     def _delete_rule(self, name):
-        """
-        """
+        """ """
         data_file = os.path.join(self.rules_directory, f"{name}.rules")
         checksum_file = os.path.join(self.checksum_directory, f"{name}.rules.checksum")
 
@@ -308,13 +264,11 @@ class PrometheusAlertRules(object):
         return False
 
     def __write_file(self, name, data, data_file, checksum_file):
-        """
-        """
+        """ """
         _old_checksum = ""
 
         if not os.path.exists(data_file) and os.path.exists(checksum_file):
-            """
-            """
+            """ """
             os.remove(checksum_file)
 
         if os.path.exists(checksum_file):
@@ -324,7 +278,7 @@ class PrometheusAlertRules(object):
         data = self.__template(name, data)
         checksum = self.__checksum(data)
 
-        data_up2date = (_old_checksum == checksum)
+        data_up2date = _old_checksum == checksum
 
         # self.module.log(msg=f" - new  checksum '{checksum}'")
         # self.module.log(msg=f" - curr checksum '{_old_checksum}'")
@@ -342,19 +296,18 @@ class PrometheusAlertRules(object):
         return True
 
     def __checksum(self, plaintext):
-        """
-        """
+        """ """
         if isinstance(plaintext, dict):
-            password_bytes = json.dumps(plaintext, sort_keys=True).encode('utf-8')
+            password_bytes = json.dumps(plaintext, sort_keys=True).encode("utf-8")
         else:
-            password_bytes = plaintext.encode('utf-8')
+            password_bytes = plaintext.encode("utf-8")
 
         password_hash = hashlib.sha256(password_bytes)
         return password_hash.hexdigest()
 
     def __template(self, name, data):
         """
-          generate data from dictionary
+        generate data from dictionary
         """
         tpl = """---
 # generated by ansible
@@ -397,8 +350,7 @@ groups:
         return d
 
     def __create_directory(self, dir):
-        """
-        """
+        """ """
         try:
             os.makedirs(dir, exist_ok=True)
         except FileExistsError:
@@ -410,10 +362,9 @@ groups:
             return False
 
     def is_base64(self, sb):
-        """
-        """
+        """ """
         try:
-            data = base64.b64decode(sb, validate=True).decode('utf-8')
+            data = base64.b64decode(sb, validate=True).decode("utf-8")
         except binascii.Error:
             data = sb
 
@@ -425,26 +376,15 @@ groups:
 
 
 def main():
-    """
-    """
+    """ """
     module = AnsibleModule(
         argument_spec=dict(
-            rules=dict(
-                required=True
-            ),
+            rules=dict(required=True),
             rules_directory=dict(
-                required=False,
-                type='path',
-                default="/etc/prometheus/rules"
+                required=False, type="path", default="/etc/prometheus/rules"
             ),
-            group=dict(
-                required=False,
-                type="str"
-            ),
-            mode=dict(
-                required=False,
-                type="str"
-            )
+            group=dict(required=False, type="str"),
+            mode=dict(required=False, type="str"),
         ),
         supports_check_mode=True,
     )
@@ -456,5 +396,5 @@ def main():
     module.exit_json(**result)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

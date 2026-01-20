@@ -28,7 +28,7 @@
 
 - name: define delegate instance for download handling
   ansible.builtin.set_fact:
-    mongodb_exporter_delegate_to: "{{ ansible_host }}"
+    mongodb_exporter_delegate_to: "{{ ansible_facts.host }}"
     mongodb_exporter_local_tmp_directory: "{{
         lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
         default('/var/cache/ansible/mongodb_exporter', true) }}/{{ mongodb_exporter_version }}"
@@ -71,7 +71,7 @@
             checksum_file: mongodb_exporter_{{ mongodb_exporter_version }}_checksums.txt
             user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
             password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
-            architecture: "{{ ansible_architecture }}"
+            architecture: "{{ ansible_facts.architecture }}"
             system: "{{ ansible_facts.system }}"
             version: "v{{ mongodb_exporter_version }}"
           register: _latest_checksum

@@ -1,8 +1,10 @@
 # python 3 headers, required if submitting to Ansible
 
-from __future__ import (absolute_import, print_function)
-import re
+from __future__ import absolute_import, print_function
+
 import operator as op
+import re
+
 from packaging.version import Version
 
 __metaclass__ = type
@@ -16,12 +18,11 @@ class FilterModule(object):
 
     def filters(self):
         return {
-            'promcheck_fix_release': self.fix_release,
+            "promcheck_fix_release": self.fix_release,
         }
 
     def fix_release(self, data, promcheck_version, version=None):
-        """
-        """
+        """ """
         display.v(f"fix_release(self, {data}, {promcheck_version}, {version})")
 
         if version:
@@ -31,15 +32,18 @@ class FilterModule(object):
                 display.v(f"  - file: {archiv_name} - {extracted_name}")
                 # 1.1.8: promcheck_linux_amd64.tar.gz - promcheck_linux_amd64
                 # 1.2.0: promcheck_linux-amd64 - promcheck_linux-amd64
-                data["file"] = re.sub(r'_linux_amd64.tar.gz', '_linux-amd64', archiv_name)
-                data["extracted"] = re.sub(r'_linux_amd64', '_linux-amd64', extracted_name)
+                data["file"] = re.sub(
+                    r"_linux_amd64.tar.gz", "_linux-amd64", archiv_name
+                )
+                data["extracted"] = re.sub(
+                    r"_linux_amd64", "_linux-amd64", extracted_name
+                )
 
         return data
 
     def version_compare(self, ver1, specifier, ver2):
-        """
-        """
-        lookup = {'<': op.lt, '<=': op.le, '==': op.eq, '>=': op.ge, '>': op.gt}
+        """ """
+        lookup = {"<": op.lt, "<=": op.le, "==": op.eq, ">=": op.ge, ">": op.gt}
 
         try:
             return lookup[specifier](Version(ver1), Version(ver2))

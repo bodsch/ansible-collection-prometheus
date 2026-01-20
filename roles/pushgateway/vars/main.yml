@@ -36,7 +36,7 @@ pushgateway_defaults_directory: /etc/default
 
 pushgateway_defaults_release:
   download_url: https://github.com/prometheus/pushgateway/releases/
-  file: pushgateway-{{ pushgateway_version }}.{{ ansible_system | lower }}-{{ system_architecture }}.tar.gz
+  file: pushgateway-{{ pushgateway_version }}.{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz
   binary: pushgateway
 
 go_arch_map:
@@ -45,7 +45,7 @@ go_arch_map:
   armv7l: 'armv7'
   armv6l: 'armv6'
 
-system_architecture: "{{ go_arch_map[ansible_architecture] | default(ansible_architecture) }}"
+system_architecture: "{{ go_arch_map[ansible_facts.architecture] | default(ansible_facts.architecture) }}"
 
 systemd_lib_directory: /lib/systemd/system
 

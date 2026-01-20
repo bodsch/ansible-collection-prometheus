@@ -1,19 +1,19 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import json
+import os
+
+import pytest
+import testinfra.utils.ansible_runner
 from ansible.parsing.dataloader import DataLoader
 from ansible.template import Templar
 
-import json
-import pytest
-import os
-
-import testinfra.utils.ansible_runner
-
-HOST = 'instance'
+HOST = "instance"
 
 testinfra_hosts = testinfra.utils.ansible_runner.AnsibleRunner(
-    os.environ['MOLECULE_INVENTORY_FILE']).get_hosts(HOST)
+    os.environ["MOLECULE_INVENTORY_FILE"]
+).get_hosts(HOST)
 
 
 def pp_json(json_thing, sort=True, indents=2):
@@ -25,11 +25,10 @@ def pp_json(json_thing, sort=True, indents=2):
 
 
 def base_directory():
-    """
-    """
+    """ """
     cwd = os.getcwd()
 
-    if 'group_vars' in os.listdir(cwd):
+    if "group_vars" in os.listdir(cwd):
         directory = "../.."
         molecule_directory = "."
     else:
@@ -40,8 +39,7 @@ def base_directory():
 
 
 def read_ansible_yaml(file_name, role_name):
-    """
-    """
+    """ """
     read_file = None
 
     for e in ["yml", "yaml"]:
@@ -56,21 +54,21 @@ def read_ansible_yaml(file_name, role_name):
 @pytest.fixture()
 def get_vars(host):
     """
-        parse ansible variables
-        - defaults/main.yml
-        - vars/main.yml
-        - vars/${DISTRIBUTION}.yaml
-        - molecule/${MOLECULE_SCENARIO_NAME}/group_vars/all/vars.yml
+    parse ansible variables
+    - defaults/main.yml
+    - vars/main.yml
+    - vars/${DISTRIBUTION}.yaml
+    - molecule/${MOLECULE_SCENARIO_NAME}/group_vars/all/vars.yml
     """
     base_dir, molecule_dir = base_directory()
     distribution = host.system_info.distribution
     operation_system = None
 
-    if distribution in ['debian', 'ubuntu']:
+    if distribution in ["debian", "ubuntu"]:
         operation_system = "debian"
-    elif distribution in ['redhat', 'ol', 'centos', 'rocky', 'almalinux']:
+    elif distribution in ["redhat", "ol", "centos", "rocky", "almalinux"]:
         operation_system = "redhat"
-    elif distribution in ['arch', 'artix']:
+    elif distribution in ["arch", "artix"]:
         operation_system = f"{distribution}linux"
 
     # print(" -> {} / {}".format(distribution, os))
@@ -78,14 +76,32 @@ def get_vars(host):
 
     file_defaults = read_ansible_yaml(f"{base_dir}/defaults/main", "role_defaults")
     file_vars = read_ansible_yaml(f"{base_dir}/vars/main", "role_vars")
-    file_distibution = read_ansible_yaml(f"{base_dir}/vars/{operation_system}", "role_distibution")
-    file_molecule = read_ansible_yaml(f"{molecule_dir}/group_vars/all/vars", "test_vars")
+    file_distibution = read_ansible_yaml(
+        f"{base_dir}/vars/{operation_system}", "role_distibution"
+    )
+    file_molecule = read_ansible_yaml(
+        f"{molecule_dir}/group_vars/all/vars", "test_vars"
+    )
     # file_host_molecule = read_ansible_yaml("{}/host_vars/{}/vars".format(base_dir, HOST), "host_vars")
 
-    defaults_vars = host.ansible("include_vars", file_defaults).get("ansible_facts").get("role_defaults")
-    vars_vars = host.ansible("include_vars", file_vars).get("ansible_facts").get("role_vars")
-    distibution_vars = host.ansible("include_vars", file_distibution).get("ansible_facts").get("role_distibution")
-    molecule_vars = host.ansible("include_vars", file_molecule).get("ansible_facts").get("test_vars")
+    defaults_vars = (
+        host.ansible("include_vars", file_defaults)
+        .get("ansible_facts")
+        .get("role_defaults")
+    )
+    vars_vars = (
+        host.ansible("include_vars", file_vars).get("ansible_facts").get("role_vars")
+    )
+    distibution_vars = (
+        host.ansible("include_vars", file_distibution)
+        .get("ansible_facts")
+        .get("role_distibution")
+    )
+    molecule_vars = (
+        host.ansible("include_vars", file_molecule)
+        .get("ansible_facts")
+        .get("test_vars")
+    )
     # host_vars          = host.ansible("include_vars", file_host_molecule).get("ansible_facts").get("host_vars")
 
     ansible_vars = defaults_vars
@@ -102,7 +118,7 @@ def get_vars(host):
 
 def local_facts(host):
     """
-      return local facts
+    return local facts
     """
     local_fact = host.ansible("setup").get("ansible_facts").get("ansible_local")
 
@@ -114,19 +130,21 @@ def local_facts(host):
         return dict()
 
 
-@pytest.mark.parametrize("files", [
-    "/usr/bin/redis_exporter",
-    "/etc/default/redis_exporter",
-    "/lib/systemd/system/redis_exporter.service"
-])
+@pytest.mark.parametrize(
+    "files",
+    [
+        "/usr/bin/redis_exporter",
+        "/etc/default/redis_exporter",
+        "/lib/systemd/system/redis_exporter.service",
+    ],
+)
 def test_files(host, files):
     f = host.file(files)
     assert f.exists
 
 
 def test_version(host, get_vars):
-    """
-    """
+    """ """
     distribution = host.system_info.distribution
     release = host.system_info.release
 
@@ -139,8 +157,8 @@ def test_version(host, get_vars):
     defaults_dir = get_vars.get("redis_exporter_defaults_directory")
     config_dir = get_vars.get("redis_exporter_config_dir")
 
-    if 'latest' in install_dir:
-        install_dir = install_dir.replace('latest', version)
+    if "latest" in install_dir:
+        install_dir = install_dir.replace("latest", version)
 
     files = []
     files.append("/usr/bin/redis_exporter")
@@ -160,8 +178,7 @@ def test_version(host, get_vars):
 
 
 def test_user(host, get_vars):
-    """
-    """
+    """ """
     user = get_vars.get("redis_exporter_system_user", "redis_exporter")
     group = get_vars.get("redis_exporter_system_group", "redis_exporter")
 
@@ -177,9 +194,12 @@ def test_service(host, get_vars):
     assert service.is_running
 
 
-@pytest.mark.parametrize("sockets", [
-    "tcp://127.0.0.1:9121",
-])
+@pytest.mark.parametrize(
+    "sockets",
+    [
+        "tcp://127.0.0.1:9121",
+    ],
+)
 def test_socket(host, sockets):
     s = host.socket(sockets)
     assert s.is_listening

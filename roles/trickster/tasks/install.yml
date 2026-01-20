@@ -33,7 +33,7 @@
   delegate_to: "{{ trickster_delegate_to }}"
   run_once: "{{ 'false' if trickster_direct_download else 'true' }}"
   ansible.builtin.stat:
-    path: "{{ trickster_local_tmp_directory }}/trickster-{{ trickster_version }}/bin/trickster-{{ trickster_version }}.{{ ansible_system | lower }}-{{ system_architecture }}"
+    path: "{{ trickster_local_tmp_directory }}/trickster-{{ trickster_version }}/bin/trickster-{{ trickster_version }}.{{ ansible_facts.system | lower }}-{{ system_architecture }}"
   register: stat_file_binary
 
 - name: fail when extracted binary are missing
@@ -64,7 +64,7 @@
       block:
         - name: propagate trickster binary
           ansible.builtin.copy:
-            src: "{{ trickster_local_tmp_directory }}/trickster-{{ trickster_version }}/bin/trickster-{{ trickster_version }}.{{ ansible_system | lower }}-{{ system_architecture }}"
+            src: "{{ trickster_local_tmp_directory }}/trickster-{{ trickster_version }}/bin/trickster-{{ trickster_version }}.{{ ansible_facts.system | lower }}-{{ system_architecture }}"
             dest: "{{ trickster_install_path }}/{{ trickster_release.binary }}"
             mode: 0755
             owner: "{{ trickster_system_user }}"
@@ -111,7 +111,7 @@
 
 - name: systemd
   when:
-    - ansible_service_mgr | lower == "systemd"
+    - ansible_facts.service_mgr | lower == "systemd"
     - not running_in_check_mode
   block:
     - name: create trickster run configuration
@@ -138,7 +138,7 @@
 
 - name: openrc
   when:
-    - ansible_service_mgr | lower == "openrc"
+    - ansible_facts.service_mgr | lower == "openrc"
     - not running_in_check_mode
   block:
     - name: create openrc service configuration

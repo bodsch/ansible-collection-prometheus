@@ -6,7 +6,7 @@ After             = network-online.target
 
 [Service]
 Type              = simple
-Environment       = "GOMAXPROCS={{ ansible_processor_vcpus | default(ansible_processor_count) }}"
+Environment       = "GOMAXPROCS={{ ansible_facts.processor_vcpus | default(ansible_facts.processor_count) }}"
 EnvironmentFile   = {{ docker_sd_defaults_directory }}/docker-sd
 
 User              = {{ docker_sd_system_user }}

@@ -103,7 +103,7 @@ bind_zones:
 
   - name: cm.local
     primaries:
-      - "{{ ansible_default_ipv4.address }}" # Primary server(s) for this zone
+      - "{{ ansible_facts.default_ipv4.address }}" # Primary server(s) for this zone
     name_servers:
       - 'dns'
     networks:
@@ -111,9 +111,9 @@ bind_zones:
     hosts:
       - name: '@'
         name_servers: 'dns.cm.local.'
-        ip: "{{ ansible_default_ipv4.address }}"
+        ip: "{{ ansible_facts.default_ipv4.address }}"
       - name: dns
-        ip: "{{ ansible_default_ipv4.address }}"
+        ip: "{{ ansible_facts.default_ipv4.address }}"
       - name: cms
         ip: 192.168.124.21
         aliases:

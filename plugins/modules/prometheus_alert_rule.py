@@ -5,24 +5,22 @@
 # BSD 2-clause (see LICENSE or https://opensource.org/licenses/BSD-2-Clause)
 
 from __future__ import absolute_import, division, print_function
-import os
-import hashlib
-import json
+
 import base64
 import binascii
-
+import hashlib
+import json
+import os
 from pathlib import Path
 
 from ansible.module_utils.basic import AnsibleModule
 
 
 class PrometheusAlertRule(object):
-    """
-    """
+    """ """
 
     def __init__(self, module):
-        """
-        """
+        """ """
         self.module = module
 
         self.state = module.params.get("state")
@@ -37,42 +35,37 @@ class PrometheusAlertRule(object):
 
         self.checksum_directory = f"{Path.home()}/.ansible/cache/prometheus_alert_rules"
 
-        annotations_title = annotations.get('title', None)
-        annotations_description = annotations.get('description', None)
-        annotations_summary = annotations.get('summary', None)
+        annotations_title = annotations.get("title", None)
+        annotations_description = annotations.get("description", None)
+        annotations_summary = annotations.get("summary", None)
 
         self.annotations = dict()
 
         if annotations_title and len(annotations_title) != 0:
-            self.annotations['title'] = self.is_base64(annotations_title)
+            self.annotations["title"] = self.is_base64(annotations_title)
 
         if annotations_description and len(annotations_description) != 0:
-            self.annotations['description'] = self.is_base64(annotations_description)
+            self.annotations["description"] = self.is_base64(annotations_description)
 
         if annotations_summary and len(annotations_summary) != 0:
-            self.annotations['summary'] = self.is_base64(annotations_summary)
+            self.annotations["summary"] = self.is_base64(annotations_summary)
 
     def run(self):
-        """
-        """
-        result = dict(
-            changed=False,
-            failed=True,
-            msg="initial"
-        )
+        """ """
+        result = dict(changed=False, failed=True, msg="initial")
 
         properties = dict(
             alert=self.alert,
             for_clause=self.for_clause,
             expression=self.expression,
             labels=self.labels,
-            annotations=self.annotations
+            annotations=self.annotations,
         )
 
         if not os.path.exists(self.rules_directory):
             return dict(
                 failed=True,
-                msg=f"rules directory {self.rules_directory} does not exist."
+                msg=f"rules directory {self.rules_directory} does not exist.",
             )
 
         result_state = []
@@ -112,19 +105,14 @@ class PrometheusAlertRule(object):
         combined_d = {key: value for d in result_state for key, value in d.items()}
         # find all changed and define our variable
         # changed = (len({k: v for k, v in combined_d.items() if v.get('changed') and v.get('changed') == True}) > 0) == True
-        changed = (len({k: v for k, v in combined_d.items() if v.get('state')}) > 0)
+        changed = len({k: v for k, v in combined_d.items() if v.get("state")}) > 0
 
-        result = dict(
-            changed=changed,
-            failed=False,
-            state=result_state
-        )
+        result = dict(changed=changed, failed=False, state=result_state)
 
         return result
 
     def _write_rule(self, name, properties={}):
-        """
-        """
+        """ """
         if len(properties) == 0:
             return False
 
@@ -134,10 +122,11 @@ class PrometheusAlertRule(object):
         return self.__write_file(properties, data_file, checksum_file)
 
     def _delete_rule(self, name):
-        """
-        """
+        """ """
         data_file = os.path.join(self.rules_directory, name, f"{name}.rules")
-        checksum_file = os.path.join(self.checksum_directory, name, f"{name}.rules.checksum")
+        checksum_file = os.path.join(
+            self.checksum_directory, name, f"{name}.rules.checksum"
+        )
 
         if os.path.exists(data_file):
             os.remove(data_file)
@@ -149,8 +138,7 @@ class PrometheusAlertRule(object):
         return False
 
     def __write_file(self, data, data_file, checksum_file):
-        """
-        """
+        """ """
         _old_checksum = ""
 
         if os.path.exists(checksum_file):
@@ -160,7 +148,7 @@ class PrometheusAlertRule(object):
         data = self.__template(data)
         checksum = self.__checksum(data)
 
-        data_up2date = (_old_checksum == checksum)
+        data_up2date = _old_checksum == checksum
 
         # self.module.log(msg=f" - new  checksum '{checksum}'")
         # self.module.log(msg=f" - curr checksum '{_old_checksum}'")
@@ -178,19 +166,18 @@ class PrometheusAlertRule(object):
         return True
 
     def __checksum(self, plaintext):
-        """
-        """
+        """ """
         if isinstance(plaintext, dict):
-            password_bytes = json.dumps(plaintext, sort_keys=True).encode('utf-8')
+            password_bytes = json.dumps(plaintext, sort_keys=True).encode("utf-8")
         else:
-            password_bytes = plaintext.encode('utf-8')
+            password_bytes = plaintext.encode("utf-8")
 
         password_hash = hashlib.sha256(password_bytes)
         return password_hash.hexdigest()
 
     def __template(self, data):
         """
-          generate data from dictionary
+        generate data from dictionary
         """
         tpl = """---
 # generated by ansible
@@ -237,8 +224,7 @@ groups:
         return d
 
     def __create_directory(self, dir):
-        """
-        """
+        """ """
         try:
             os.makedirs(dir, exist_ok=True)
         except FileExistsError:
@@ -250,10 +236,9 @@ groups:
             return False
 
     def is_base64(self, sb):
-        """
-        """
+        """ """
         try:
-            data = base64.b64decode(sb, validate=True).decode('utf-8')
+            data = base64.b64decode(sb, validate=True).decode("utf-8")
         except binascii.Error:
             data = sb
 
@@ -265,45 +250,22 @@ groups:
 
 
 def main():
-    """
-    """
+    """ """
     module = AnsibleModule(
         argument_spec=dict(
-            state=dict(
-                default="present", choices=["absent", "present"]
-            ),
-            name=dict(
-                required=True,
-                type='str'
-            ),
+            state=dict(default="present", choices=["absent", "present"]),
+            name=dict(required=True, type="str"),
             # rules=dict(
             #     required=False,
             #     type='list'
             # ),
-            alert=dict(
-                required=True,
-                type="str"
-            ),
-            for_clause=dict(
-                required=True,
-                type="str"
-            ),
-            expression=dict(
-                required=True,
-                type="str"
-            ),
-            labels=dict(
-                required=False,
-                type="dict"
-            ),
-            annotations=dict(
-                required=False,
-                type="dict"
-            ),
+            alert=dict(required=True, type="str"),
+            for_clause=dict(required=True, type="str"),
+            expression=dict(required=True, type="str"),
+            labels=dict(required=False, type="dict"),
+            annotations=dict(required=False, type="dict"),
             rules_directory=dict(
-                required=False,
-                type='path',
-                default="/etc/prometheus/rules"
+                required=False, type="path", default="/etc/prometheus/rules"
             ),
         ),
         supports_check_mode=True,
@@ -316,5 +278,5 @@ def main():
     module.exit_json(**result)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -27,7 +27,7 @@
         state: absent
         path: /etc/systemd/system/bind_exporter.service
       when:
-        - ansible_service_mgr | lower == "systemd"
+        - ansible_facts.service_mgr | lower == "systemd"
 
     - name: remove installed bind_exporter
       ansible.builtin.file:

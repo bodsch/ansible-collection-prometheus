@@ -9,11 +9,11 @@
 
     - name: set local fact for silencer
       ansible.builtin.set_fact:
-        latest_silence_id: "{{ ansible_local.silence.id }}"
+        latest_silence_id: "{{ ansible_facts.local.silence.id }}"
       when:
-        - ansible_local.silence is defined
-        - ansible_local.silence.id is defined
-        - ansible_local.silence.id | string | length != 0
+        - ansible_facts.local.silence is defined
+        - ansible_facts.local.silence.id is defined
+        - ansible_facts.local.silence.id | string | length != 0
 
     - name: delete latest silence
       when:
