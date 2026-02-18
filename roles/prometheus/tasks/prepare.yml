@@ -33,6 +33,7 @@
     name: "{{ prometheus_requirements }}"
     state: present
   when:
+    - not running_in_check_mode
     - prometheus_requirements | default([]) | count > 0
 
 - name: merge prometheus configuration between defaults and custom

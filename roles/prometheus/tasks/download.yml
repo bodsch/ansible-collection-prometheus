@@ -1,11 +1,12 @@
 ---
 
 - name: get latest release
+  when:
+    - not running_in_check_mode
+    - prometheus_version == "latest"
   delegate_to: localhost
   become: false
   run_once: true
-  when:
-    - prometheus_version == "latest"
   block:
     - name: get latest release
       delegate_to: localhost
@@ -36,6 +37,8 @@
     - prometheus_direct_download
 
 - name: create download directory
+  when:
+    - not running_in_check_mode
   become: false
   delegate_to: "{{ prometheus_delegate_to }}"
   run_once: "{{ 'false' if prometheus_direct_download else 'true' }}"
@@ -46,6 +49,8 @@
   check_mode: false
 
 - name: detect the downloaded prometheus archive
+  when:
+    - not running_in_check_mode
   become: false
   delegate_to: "{{ prometheus_delegate_to }}"
   run_once: "{{ 'false' if prometheus_direct_download else 'true' }}"
@@ -55,9 +60,9 @@
 
 - name: download
   when:
+    - not running_in_check_mode
     - stat_prometheus_archive.stat is defined
     - not stat_prometheus_archive.stat.exists | default('false')
-    - not running_in_check_mode
   block:
     - name: checksum
       become: false
@@ -113,6 +118,8 @@
         msg: A serious error occurred when downloading the archive.
 
 - name: detect extracted binary
+  when:
+    - not running_in_check_mode
   become: false
   delegate_to: "{{ prometheus_delegate_to }}"
   run_once: "{{ 'false' if prometheus_direct_download else 'true' }}"
@@ -121,6 +128,10 @@
   register: stat_prometheus_binary
 
 - name: extract prometheus archive
+  when:
+    - not running_in_check_mode
+    - stat_prometheus_binary.stat is defined
+    - not stat_prometheus_binary.stat.exists | default('false')
   become: false
   delegate_to: "{{ prometheus_delegate_to }}"
   run_once: "{{ 'false' if prometheus_direct_download else 'true' }}"
@@ -130,9 +141,5 @@
     copy: false
     extra_opts:
       - --strip-components=1
-  when:
-    - not running_in_check_mode
-    - stat_prometheus_binary.stat is defined
-    - not stat_prometheus_binary.stat.exists | default('false')
 
 ...

@@ -1,6 +1,8 @@
 ---
 
 - name: detect external installation
+  when:
+    - not running_in_check_mode
   ansible.builtin.stat:
     path: /usr/local/bin/prometheus
     get_checksum: false
@@ -9,6 +11,7 @@
 
 - name: old installation
   when:
+    - not running_in_check_mode
     - stat_prometheus_path is defined
     - stat_prometheus_path.stat is defined
     - stat_prometheus_path.stat.isdir is defined

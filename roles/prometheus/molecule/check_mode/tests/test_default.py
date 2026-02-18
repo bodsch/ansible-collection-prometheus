@@ -116,7 +116,7 @@ def get_vars(host):
     return result
 
 
-def local_facts(host):
+def local_facts(host=host, fact="prometheus"):
     """
     return local facts
     """
@@ -149,7 +149,7 @@ def test_files(host, get_vars):
     print(f"distribution: {distribution}")
     print(f"release     : {release}")
 
-    version = local_facts(host).get("version")
+    version = local_facts(host=host, fact="prometheus").get("version")
 
     install_dir = get_vars.get("prometheus_install_path")
     defaults_dir = get_vars.get("prometheus_defaults_directory")

@@ -13,6 +13,10 @@
     prometheus_scrape_configs: "{{ prometheus_defaults_scrape_configs | union(prometheus_scrape_configs) }}"
 
 - name: create static targets
+  when:
+    - not running_in_check_mode
+    - prometheus_file_sd_targets is defined
+    - prometheus_file_sd_targets | count > 0
   ansible.builtin.template:
     src: prometheus/file_sd/item.yml.j2
     dest: "{{ prometheus_config_dir }}/file_sd/{{ item.key }}.yml"
@@ -23,29 +27,27 @@
   with_dict: "{{ prometheus_file_sd_targets }}"
   loop_control:
     label: "{{ item.key }}.yml"
-  when:
-    - not running_in_check_mode
-    - prometheus_file_sd_targets is defined
-    - prometheus_file_sd_targets | count > 0
   notify:
     - validate prometheus config
     - reload prometheus
 
 - name: create alerting rules
-  bodsch.prometheus.prometheus_alert_rules:
-    rules: "{{ prometheus_alert_rules | bodsch.prometheus.jinja_encode }}"
-    group: "{{ prometheus_system_group }}"
-  register: _created_alert_rules
   when:
     - not running_in_check_mode
     - prometheus_alert_rules is defined
     - prometheus_alert_rules | count > 0
+  bodsch.prometheus.prometheus_alert_rules:
+    rules: "{{ prometheus_alert_rules | bodsch.prometheus.jinja_encode }}"
+    group: "{{ prometheus_system_group }}"
+  register: _created_alert_rules
   notify:
     - summary of changes or failed
     - validate prometheus config
     - reload prometheus
 
 - name: create prometheus.yml
+  when:
+    - not running_in_check_mode
   ansible.builtin.template:
     src: prometheus/prometheus.yml.j2
     dest: "{{ prometheus_config_dir }}/prometheus.yml"
@@ -59,6 +61,9 @@
     - reload prometheus
 
 - name: create (experimental) prometheus web configuration
+  when:
+    - not running_in_check_mode
+    - prometheus_enable_experimental
   ansible.builtin.template:
     src: prometheus/web.yml.j2
     dest: "{{ prometheus_config_dir }}/web.yml"
@@ -66,8 +71,6 @@
     owner: root
     group: "{{ prometheus_system_group }}"
     mode: 0640
-  when:
-    - prometheus_enable_experimental
   notify:
     - reload prometheus
 
