@@ -29,6 +29,8 @@
     running_in_check_mode: '{{ _check_mode.check_mode }}'
 
 - name: install dependency
+  when:
+    - not running_in_check_mode
   ansible.builtin.package:
     name: "{{ bind_exporter_requirements }}"
     state: present

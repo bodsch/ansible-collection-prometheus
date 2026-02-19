@@ -35,11 +35,12 @@
     - always
 
 - name: install dependency
+  when:
+    - not running_in_check_mode
+    - silence_dependencies | default([]) | count > 0
   ansible.builtin.package:
     name: "{{ silence_dependencies }}"
     state: present
-  when:
-    - silence_dependencies | default([]) | count > 0
   tags:
     - always
     - silence_add
