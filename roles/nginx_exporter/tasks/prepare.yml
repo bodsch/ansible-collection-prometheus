@@ -29,11 +29,12 @@
     running_in_check_mode: '{{ _check_mode.check_mode }}'
 
 - name: install dependency
+  when:
+    - not running_in_check_mode
+    - nginx_exporter_requirements | default([]) | count > 0
   ansible.builtin.package:
     name: "{{ nginx_exporter_requirements }}"
     state: present
-  when:
-    - nginx_exporter_requirements | default([]) | count > 0
 
 - name: merge nginx_exporter configuration between defaults and custom
   set_fact:
