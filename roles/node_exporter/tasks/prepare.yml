@@ -29,11 +29,12 @@
     running_in_check_mode: '{{ _check_mode.check_mode }}'
 
 - name: install dependency
+  when:
+    - not running_in_check_mode
+    - node_exporter_requirements | default([]) | count > 0
   ansible.builtin.package:
     name: "{{ node_exporter_requirements }}"
     state: present
-  when:
-    - node_exporter_requirements | default([]) | count > 0
 
 - name: merge node_exporter configuration between defaults and custom
   ansible.builtin.set_fact:

@@ -1,11 +1,12 @@
 ---
 
 - name: get latest release
+  when:
+    - not running_in_check_mode
+    - node_exporter_version == "latest"
   delegate_to: localhost
   become: false
   run_once: true
-  when:
-    - node_exporter_version == "latest"
   block:
     - name: get latest release
       delegate_to: localhost
@@ -23,19 +24,24 @@
         node_exporter_version: "{{ _latest_release.latest_release }}"
 
 - name: define download information
+  when:
+    - not running_in_check_mode
   ansible.builtin.set_fact:
     node_exporter_release: "{{ node_exporter_defaults_release | combine(node_exporter_release, recursive=True) }}"
 
 - name: define delegate instance for download handling
+  when:
+    - not running_in_check_mode
+    - node_exporter_direct_download
   ansible.builtin.set_fact:
     node_exporter_delegate_to: "{{ ansible_facts.host }}"
     node_exporter_local_tmp_directory: "{{
         lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
         default('/var/cache/ansible/node_exporter', true) }}/{{ node_exporter_version }}"
-  when:
-    - node_exporter_direct_download
 
 - name: create download directory
+  when:
+    - not running_in_check_mode
   become: false
   delegate_to: "{{ node_exporter_delegate_to }}"
   run_once: "{{ 'false' if node_exporter_direct_download else 'true' }}"
@@ -46,6 +52,8 @@
   check_mode: false
 
 - name: detect the downloaded node_exporter archive
+  when:
+    - not running_in_check_mode
   become: false
   delegate_to: "{{ node_exporter_delegate_to }}"
   run_once: "{{ 'false' if node_exporter_direct_download else 'true' }}"
@@ -55,9 +63,9 @@
 
 - name: download
   when:
+    - not running_in_check_mode
     - stat_node_exporter_archive.stat is defined
     - not stat_node_exporter_archive.stat.exists | default('false')
-    - not running_in_check_mode
   block:
     - name: checksum
       become: false
@@ -113,6 +121,8 @@
         msg: A serious error occurred when downloading the archive.
 
 - name: detect extracted binary
+  when:
+    - not running_in_check_mode
   become: false
   delegate_to: "{{ node_exporter_delegate_to }}"
   run_once: "{{ 'false' if node_exporter_direct_download else 'true' }}"
@@ -121,6 +131,10 @@
   register: stat_node_exporter_binary
 
 - name: extract node_exporter archive
+  when:
+    - not running_in_check_mode
+    - stat_node_exporter_binary.stat is defined
+    - not stat_node_exporter_binary.stat.exists | default('false')
   become: false
   delegate_to: "{{ node_exporter_delegate_to }}"
   run_once: "{{ 'false' if node_exporter_direct_download else 'true' }}"
@@ -130,9 +144,5 @@
     copy: false
     extra_opts:
       - --strip-components=1
-  when:
-    - not running_in_check_mode
-    - stat_node_exporter_binary.stat is defined
-    - not stat_node_exporter_binary.stat.exists | default('false')
 
 ...
