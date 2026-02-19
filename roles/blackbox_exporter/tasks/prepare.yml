@@ -29,11 +29,12 @@
     running_in_check_mode: '{{ _check_mode.check_mode }}'
 
 - name: install dependency
+  when:
+    - not running_in_check_mode
+    - blackbox_exporter_requirements | default([]) | count > 0
   ansible.builtin.package:
     name: "{{ blackbox_exporter_requirements }}"
     state: present
-  when:
-    - blackbox_exporter_requirements | default([]) | count > 0
 
 - name: merge blackbox_exporter configuration between defaults and custom
   set_fact:
