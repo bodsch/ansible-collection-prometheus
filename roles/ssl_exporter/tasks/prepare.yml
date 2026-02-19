@@ -29,11 +29,12 @@
     running_in_check_mode: '{{ _check_mode.check_mode }}'
 
 - name: install dependency
+  when:
+    - not running_in_check_mode
+    - ssl_exporter_requirements | default([]) | count > 0
   ansible.builtin.package:
     name: "{{ ssl_exporter_requirements }}"
     state: present
-  when:
-    - ssl_exporter_requirements | default([]) | count > 0
 
 - name: merge ssl_exporter configuration between defaults and custom
   set_fact:

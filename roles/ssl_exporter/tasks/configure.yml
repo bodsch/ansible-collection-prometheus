@@ -1,6 +1,8 @@
 ---
 
 - name: create ssl exporter configuration directory
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     state: directory
     path: "{{ ssl_exporter_service.config.file | dirname }}"
@@ -8,6 +10,8 @@
     mode: 0750
 
 - name: configure ssl exporter
+  when:
+    - not running_in_check_mode
   ansible.builtin.template:
     src: ssl_exporter/ssl_exporter.yml.j2
     dest: "{{ ssl_exporter_service.config.file }}"

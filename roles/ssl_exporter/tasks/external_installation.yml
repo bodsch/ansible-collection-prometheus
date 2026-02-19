@@ -1,6 +1,8 @@
 ---
 
 - name: detect external installation
+  when:
+    - not running_in_check_mode
   ansible.builtin.stat:
     path: /usr/local/bin/ssl_exporter
     get_checksum: false
@@ -9,6 +11,7 @@
 
 - name: old installation
   when:
+    - not running_in_check_mode
     - stat_ssl_exporter_path is defined
     - stat_ssl_exporter_path.stat is defined
     - stat_ssl_exporter_path.stat.isdir is defined
