@@ -33,6 +33,7 @@
     name: "{{ alertmanager_requirements }}"
     state: present
   when:
+    - not running_in_check_mode
     - alertmanager_requirements | default([]) | count > 0
 
 - name: merge alertmanager configuration between defaults and custom

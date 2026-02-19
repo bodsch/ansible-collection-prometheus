@@ -4,6 +4,8 @@
   ansible.builtin.meta: flush_handlers
 
 - name: validate alertmanager config
+  when:
+    - not running_in_check_mode
   bodsch.prometheus.amtool:
     verbose: true
     state: check

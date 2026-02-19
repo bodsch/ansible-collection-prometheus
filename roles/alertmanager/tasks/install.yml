@@ -1,6 +1,7 @@
 ---
 - name: user and group handling
   when:
+    - not running_in_check_mode
     - alertmanager_system_user != "root"
   block:
     - name: create alertmanager group
@@ -20,6 +21,8 @@
         home: /nonexistent
 
 - name: create install directory
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     path: "{{ alertmanager_install_path }}"
     state: directory
@@ -28,6 +31,8 @@
     mode: 0755
 
 - name: detect extracted binary file for alertmanager on '{{ alertmanager_delegate_to }}'
+  when:
+    - not running_in_check_mode
   become: false
   delegate_to: "{{ alertmanager_delegate_to }}"
   run_once: "{{ 'false' if alertmanager_direct_download else 'true' }}"
@@ -36,18 +41,22 @@
   register: stat_file_binary
 
 - name: fail when extracted binary are missing
-  ansible.builtin.fail:
-    msg: "missing extracted binary on ansible controller"
   when:
     - not running_in_check_mode
     - not stat_file_binary.stat.exists
+  ansible.builtin.fail:
+    msg: "missing extracted binary on ansible controller"
 
 - name: detect installed alertmanager binary
+  when:
+    - not running_in_check_mode
   ansible.builtin.stat:
     path: "{{ alertmanager_install_path }}/{{ alertmanager_release.binary }}"
   register: stat_alertmanager_binary
 
 - name: detect activated alertmanager binary
+  when:
+    - not running_in_check_mode
   ansible.builtin.stat:
     path: /usr/bin/{{ alertmanager_release.binary }}
   register: stat_alertmanager_activated
@@ -107,6 +116,8 @@
             msg: A serious error occurred during the installation of the binary.
 
 - name: create alertmanager data directory
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     path: "{{ alertmanager_data_dir }}"
     state: directory
@@ -115,6 +126,8 @@
     mode: 0755
 
 - name: create alertmanager configuration directory
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     path: "{{ alertmanager_config_dir }}"
     state: directory
@@ -123,6 +136,8 @@
     mode: 0770
 
 - name: create amtool configuration directory
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     path: "{{ alertmanager_amtool.config_dir }}"
     state: directory
@@ -131,6 +146,8 @@
     mode: 0770
 
 - name: create alertmanager templates directory
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     path: "{{ item | dirname }}"
     state: directory
@@ -143,8 +160,8 @@
 
 - name: systemd
   when:
-    - ansible_facts.service_mgr | lower == "systemd"
     - not running_in_check_mode
+    - ansible_facts.service_mgr | lower == "systemd"
   block:
     - name: create alertmanager run configuration
       ansible.builtin.template:
@@ -169,8 +186,8 @@
 
 - name: openrc
   when:
-    - ansible_facts.service_mgr | lower == "openrc"
     - not running_in_check_mode
+    - ansible_facts.service_mgr | lower == "openrc"
   block:
     - name: create openrc service configuration
       ansible.builtin.template:
