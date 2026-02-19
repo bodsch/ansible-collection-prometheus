@@ -29,11 +29,12 @@
     running_in_check_mode: '{{ _check_mode.check_mode }}'
 
 - name: install dependency
+  when:
+    - not running_in_check_mode
+    - json_exporter_requirements | default([]) | count > 0
   ansible.builtin.package:
     name: "{{ json_exporter_requirements }}"
     state: present
-  when:
-    - json_exporter_requirements | default([]) | count > 0
 
 - name: merge json_exporter configuration between defaults and custom
   ansible.builtin.set_fact:
