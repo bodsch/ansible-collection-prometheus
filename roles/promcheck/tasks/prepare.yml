@@ -29,10 +29,11 @@
     running_in_check_mode: '{{ _check_mode.check_mode }}'
 
 - name: install dependency
+  when:
+    - not running_in_check_mode
+    - promcheck_requirements | default([]) | count > 0
   ansible.builtin.package:
     name: "{{ promcheck_requirements }}"
     state: present
-  when:
-    - promcheck_requirements | default([]) | count > 0
 
 ...

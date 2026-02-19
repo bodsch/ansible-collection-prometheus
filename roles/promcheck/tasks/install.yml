@@ -1,14 +1,16 @@
 ---
 
 - name: create install directory
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     path: "{{ promcheck_install_path }}"
     state: directory
     mode: 0755
-  when:
-    - not running_in_check_mode
 
 - name: detect extracted binary file for promcheck on '{{ promcheck_delegate_to }}'
+  when:
+    - not running_in_check_mode
   become: false
   delegate_to: "{{ promcheck_delegate_to }}"
   run_once: "{{ 'false' if promcheck_direct_download else 'true' }}"
@@ -17,18 +19,22 @@
   register: stat_file_binary
 
 - name: fail when extracted binary are missing
-  ansible.builtin.fail:
-    msg: "missing extracted binary on ansible controller"
   when:
     - not running_in_check_mode
     - not stat_file_binary.stat.exists
+  ansible.builtin.fail:
+    msg: "missing extracted binary on ansible controller"
 
 - name: detect installed promcheck binary
+  when:
+    - not running_in_check_mode
   ansible.builtin.stat:
     path: "{{ promcheck_install_path }}/{{ promcheck_release.binary }}"
   register: stat_promcheck_binary
 
 - name: detect activated promcheck binary
+  when:
+    - not running_in_check_mode
   ansible.builtin.stat:
     path: "/usr/bin/{{ promcheck_release.binary }}"
   register: stat_promcheck_activated
