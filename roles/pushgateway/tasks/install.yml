@@ -2,6 +2,7 @@
 
 - name: user and group handling
   when:
+    - not running_in_check_mode
     - pushgateway_system_user != "root" or pushgateway_system_group != "root"
   block:
     - name: create pushgateway group
@@ -25,6 +26,8 @@
         - pushgateway_system_user != "root"
 
 - name: create install directory
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     path: "{{ pushgateway_install_path }}"
     state: directory
@@ -33,6 +36,8 @@
     mode: 0755
 
 - name: detect extracted binary file for pushgateway on '{{ pushgateway_delegate_to }}'
+  when:
+    - not running_in_check_mode
   become: false
   delegate_to: "{{ pushgateway_delegate_to }}"
   run_once: "{{ 'false' if pushgateway_direct_download else 'true' }}"
@@ -41,18 +46,22 @@
   register: stat_file_binary
 
 - name: fail when extracted binary are missing
-  ansible.builtin.fail:
-    msg: "missing extracted binary on ansible controller"
   when:
     - not running_in_check_mode
     - not stat_file_binary.stat.exists
+  ansible.builtin.fail:
+    msg: "missing extracted binary on ansible controller"
 
 - name: detect installed pushgateway binary
+  when:
+    - not running_in_check_mode
   ansible.builtin.stat:
     path: "{{ pushgateway_install_path }}/{{ pushgateway_release.binary }}"
   register: stat_pushgateway_binary
 
 - name: detect activated pushgateway binary
+  when:
+    - not running_in_check_mode
   ansible.builtin.stat:
     path: /usr/bin/{{ pushgateway_release.binary }}
   register: stat_pushgateway_activated
@@ -103,20 +112,21 @@
             msg: A serious error occurred during the installation of the binary.
 
 - name: create persistence directory
+  when:
+    - not running_in_check_mode
+    - pushgateway_service.persistence.file is defined
+    - pushgateway_service.persistence.file | string | length > 0
   ansible.builtin.file:
     state: directory
     owner: "{{ pushgateway_system_user }}"
     group: "{{ pushgateway_system_group }}"
     mode: 0750
     path: "{{ pushgateway_service.persistence.file | dirname }}"
-  when:
-    - pushgateway_service.persistence.file is defined
-    - pushgateway_service.persistence.file | string | length > 0
 
 - name: systemd
   when:
-    - ansible_facts.service_mgr | lower == "systemd"
     - not running_in_check_mode
+    - ansible_facts.service_mgr | lower == "systemd"
   block:
     - name: create pushgateway run configuration
       ansible.builtin.template:
@@ -142,8 +152,8 @@
 
 - name: openrc
   when:
-    - ansible_facts.service_mgr | lower == "openrc"
     - not running_in_check_mode
+    - ansible_facts.service_mgr | lower == "openrc"
   block:
     - name: create openrc service configuration
       ansible.builtin.template:
