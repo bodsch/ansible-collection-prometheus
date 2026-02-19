@@ -11,20 +11,19 @@ testinfra_hosts = infra_hosts(host_name="instance")
 # --- tests -----------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    "files", ["/usr/bin/redis_exporter", "/lib/systemd/system/redis_exporter.service"]
-)
+@pytest.mark.parametrize("files", [
+    "/usr/bin/redis_exporter",
+    "/etc/redis_exporter/config.yml",
+    "/lib/systemd/system/redis_exporter.service"
+])
 def test_files(host, files):
     f = host.file(files)
     assert f.exists
 
 
-@pytest.mark.parametrize(
-    "sockets",
-    [
-        "tcp://127.0.0.1:9121",
-    ],
-)
+@pytest.mark.parametrize("sockets", [
+    "tcp://127.0.0.1:7979",
+])
 def test_socket(host, sockets):
     s = host.socket(sockets)
     assert s.is_listening
