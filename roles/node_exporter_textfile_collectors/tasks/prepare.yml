@@ -1,13 +1,24 @@
 ---
 
+- name: detect ansible check_mode
+  bodsch.core.check_mode:
+  register: _check_mode
+
+- name: define running_in_check_mode
+  ansible.builtin.set_fact:
+    running_in_check_mode: '{{ _check_mode.check_mode }}'
+
 - name: install dependency
+  when:
+    - not running_in_check_mode
+    - node_exporter_requirements | default([]) | count > 0
   package:
     name: "{{ node_exporter_requirements }}"
     state: present
-  when:
-    - node_exporter_requirements | default([]) | count > 0
 
 - name: create configurations directory for collector scripts
+  when:
+    - not running_in_check_mode
   file:
     state: directory
     path: "{{ node_exporter_config_dir }}/collector-scripts"
@@ -16,6 +27,8 @@
     mode: 0750
 
 - name: create env directory for configurations
+  when:
+    - not running_in_check_mode
   file:
     state: directory
     path: "{{ node_exporter_config_dir }}/.env"
