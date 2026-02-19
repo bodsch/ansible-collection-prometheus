@@ -41,7 +41,7 @@ nginx_exporter_defaults_directory: /etc/default
 nginx_exporter_defaults_release:
   # https://github.com/nginxinc/nginx-prometheus-exporter/releases/download/v1.0.0/nginx-prometheus-exporter_1.0.0_checksums.txt
   download_url: https://github.com/nginxinc/nginx-prometheus-exporter/releases
-  file: nginx-prometheus-exporter_{{ nginx_exporter_version }}_{{ ansible_system | lower }}_{{ system_architecture }}.tar.gz
+  file: nginx-prometheus-exporter_{{ nginx_exporter_version }}_{{ ansible_facts.system | lower }}_{{ system_architecture }}.tar.gz
   binary: nginx_exporter
   checksum_file: "nginx-prometheus-exporter_{{ nginx_exporter_version }}_checksums.txt"
   # checksum: "sha256sums.txt"
@@ -50,7 +50,7 @@ go_arch_map:
   i386: '386'
   x86_64: 'amd64'
 
-system_architecture: "{{ go_arch_map[ansible_architecture] | default(ansible_architecture) }}"
+system_architecture: "{{ go_arch_map[ansible_facts.architecture] | default(ansible_facts.architecture) }}"
 
 systemd_lib_directory: /lib/systemd/system
 

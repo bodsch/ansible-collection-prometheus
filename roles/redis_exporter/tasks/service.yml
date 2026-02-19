@@ -4,9 +4,9 @@
   ansible.builtin.meta: flush_handlers
 
 - name: Ensure redis_exporter is enabled on boot
-  become: true
   when:
     - not running_in_check_mode
+  become: true
   ansible.builtin.service:
     name: redis_exporter
     enabled: true

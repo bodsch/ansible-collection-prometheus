@@ -11,7 +11,7 @@ nginx_exporter_direct_download: false
 
 nginx_exporter_release:
   download_url: https://github.com/nginxinc/nginx-prometheus-exporter/releases
-  file: nginx-prometheus-exporter_{{ nginx_exporter_version }}_{{ ansible_system | lower }}_{{ system_architecture }}.tar.gz
+  file: nginx-prometheus-exporter_{{ nginx_exporter_version }}_{{ ansible_facts.system | lower }}_{{ system_architecture }}.tar.gz
 
 nginx_exporter_service: {}
 #   nginx:

@@ -21,7 +21,7 @@ mysql_exporter_defaults_directory: /etc/default
 
 mysql_exporter_defaults_release:
   download_url: https://github.com/prometheus/mysqld_exporter/releases
-  file: mysqld_exporter-{{ mysql_exporter_version }}.{{ ansible_system | lower }}-{{ system_architecture }}.tar.gz
+  file: mysqld_exporter-{{ mysql_exporter_version }}.{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz
   binary: mysqld_exporter
 
 mysql_exporter_defaults_credentials:
@@ -57,7 +57,7 @@ go_arch_map:
   armv7l: 'armv7'
   armv6l: 'armv6'
 
-system_architecture: "{{ go_arch_map[ansible_architecture] | default(ansible_architecture) }}"
+system_architecture: "{{ go_arch_map[ansible_facts.architecture] | default(ansible_facts.architecture) }}"
 
 systemd_lib_directory: /lib/systemd/system
 

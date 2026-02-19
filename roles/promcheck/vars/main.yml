@@ -15,7 +15,7 @@ promcheck_requirements:
 
 promcheck_defaults_release:
   download_url: https://github.com/cbrgm/promcheck/releases
-  file: promcheck_{{ ansible_system | lower }}_{{ system_architecture }}.tar.gz
+  file: promcheck_{{ ansible_facts.system | lower }}_{{ system_architecture }}.tar.gz
   extracted: promcheck_linux_amd64
   binary: promcheck
 
@@ -26,7 +26,7 @@ go_arch_map:
   aarch64: 'arm64'
   armv7l: 'armv7'
 
-system_architecture: "{{ go_arch_map[ansible_architecture] | default(ansible_architecture) }}"
+system_architecture: "{{ go_arch_map[ansible_facts.architecture] | default(ansible_facts.architecture) }}"
 
 systemd_lib_directory: /lib/systemd/system
 

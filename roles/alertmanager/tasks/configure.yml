@@ -1,6 +1,8 @@
 ---
 
 - name: detect alertmanager templates
+  when:
+    - not running_in_check_mode
   ansible.builtin.set_fact:
     _alertmanager_templates: "{{ lookup('bodsch.core.file_glob', '.tmpl').split(',') }}"
   vars:
@@ -9,6 +11,8 @@
       - "../.."
 
 - name: copy alertmanager templates
+  when:
+    - not running_in_check_mode
   become: true
   ansible.builtin.copy:
     src: "{{ item }}"
@@ -19,19 +23,19 @@
   loop: "{{ _alertmanager_templates }}"
   loop_control:
     label: "{{ item | basename }}"
-  when:
-    - not running_in_check_mode
 
 - name: remove unused templates
+  when:
+    - not running_in_check_mode
+    - _alertmanager_templates is defined
+    - _alertmanager_templates | count > 0
   bodsch.prometheus.alertmanager_templates:
     templates_directory: "{{ alertmanager_config_dir }}/templates"
     templates: "{{ _alertmanager_templates }}"
-  when:
-    - _alertmanager_templates is defined
-    - _alertmanager_templates | count > 0
-    - not running_in_check_mode
 
 - name: create amtool config
+  when:
+    - not running_in_check_mode
   ansible.builtin.template:
     force: true
     src: alertmanager/amtool.yml.j2
@@ -39,10 +43,10 @@
     owner: alertmanager
     group: "{{ alertmanager_system_group }}"
     mode: "0640"
-  when:
-    - not running_in_check_mode
 
 - name: create alertmanager.yml
+  when:
+    - not running_in_check_mode
   ansible.builtin.template:
     force: true
     src: alertmanager/alertmanager.yml.j2
@@ -53,7 +57,5 @@
   register: alertmanger_config
   notify:
     - validate config
-  when:
-    - not running_in_check_mode
 
 ...

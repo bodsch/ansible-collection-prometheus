@@ -2,6 +2,7 @@
 
 - name: user and group handling
   when:
+    - not running_in_check_mode
     - docker_sd_system_user != "root" or docker_sd_system_group != "root"
   block:
     - name: create docker-sd group
@@ -25,6 +26,8 @@
         - docker_sd_system_user != "root"
 
 - name: create install directory
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     path: "{{ docker_sd_install_path }}"
     state: directory
@@ -33,6 +36,8 @@
     mode: 0755
 
 - name: detect extracted binary file for docker_sd on '{{ docker_sd_delegate_to }}'
+  when:
+    - not running_in_check_mode
   become: false
   delegate_to: "{{ docker_sd_delegate_to }}"
   run_once: "{{ 'false' if docker_sd_direct_download else 'true' }}"
@@ -41,18 +46,22 @@
   register: stat_file_binary
 
 - name: fail when extracted binary are missing
-  ansible.builtin.fail:
-    msg: "missing extracted binary on ansible controller"
   when:
     - not running_in_check_mode
     - not stat_file_binary.stat.exists
+  ansible.builtin.fail:
+    msg: "missing extracted binary on ansible controller"
 
 - name: detect installed docker_sd binary
+  when:
+    - not running_in_check_mode
   ansible.builtin.stat:
     path: "{{ docker_sd_install_path }}/{{ docker_sd_release.binary }}"
   register: stat_docker_sd_binary
 
 - name: detect activated docker_sd binary
+  when:
+    - not running_in_check_mode
   ansible.builtin.stat:
     path: /usr/bin/{{ docker_sd_release.binary }}
   register: stat_docker_sd_activated
@@ -96,6 +105,8 @@
             msg: A serious error occurred during the installation of the binary.
 
 - name: create docker_sd configuration directory
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     path: "{{ docker_sd_config_dir }}"
     state: directory
@@ -105,8 +116,8 @@
 
 - name: systemd
   when:
-    - ansible_service_mgr | lower == "systemd"
     - not running_in_check_mode
+    - ansible_facts.service_mgr | lower == "systemd"
   block:
     - name: create docker-sd system configuration
       ansible.builtin.template:
@@ -131,8 +142,8 @@
 
 - name: openrc
   when:
-    - ansible_service_mgr | lower == "openrc"
     - not running_in_check_mode
+    - ansible_facts.service_mgr | lower == "openrc"
   block:
     - name: create openrc service configuration
       ansible.builtin.template:

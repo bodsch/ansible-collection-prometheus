@@ -28,7 +28,7 @@ ssl_exporter_defaults_directory: /etc/default
 
 ssl_exporter_defaults_release:
   download_url: https://github.com/ribbybibby/ssl_exporter/releases
-  file: ssl_exporter_{{ ssl_exporter_version }}_{{ ansible_system | lower }}_{{ system_architecture }}.tar.gz
+  file: ssl_exporter_{{ ssl_exporter_version }}_{{ ansible_facts.system | lower }}_{{ system_architecture }}.tar.gz
   binary: ssl_exporter
   checksum_file: ssl_exporter_{{ ssl_exporter_version }}_checksums.txt
 
@@ -36,7 +36,7 @@ go_arch_map:
   i386: '386'
   x86_64: 'amd64'
 
-system_architecture: "{{ go_arch_map[ansible_architecture] | default(ansible_architecture) }}"
+system_architecture: "{{ go_arch_map[ansible_facts.architecture] | default(ansible_facts.architecture) }}"
 
 systemd_lib_directory: /lib/systemd/system
 

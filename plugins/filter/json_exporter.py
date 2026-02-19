@@ -1,6 +1,7 @@
 # python 3 headers, required if submitting to Ansible
 
-from __future__ import (absolute_import, print_function)
+from __future__ import absolute_import, print_function
+
 __metaclass__ = type
 
 from ansible.utils.display import Display
@@ -9,17 +10,15 @@ display = Display()
 
 
 class FilterModule(object):
-    """
-    """
+    """ """
 
     def filters(self):
         return {
-            'convert_to_modules': self.convert_to_modules,
+            "convert_to_modules": self.convert_to_modules,
         }
 
     def convert_to_modules(self, data, modules={}):
-        """
-        """
+        """ """
         result = None
         # display.v(f"convert_to_modules({data}, {modules})")
 
@@ -29,7 +28,7 @@ class FilterModule(object):
 
             if "default" in keys:
                 """
-                    default already exists
+                default already exists
                 """
                 # display.v("use 'defaut' entry")
 
@@ -46,13 +45,13 @@ class FilterModule(object):
 
             else:
                 """
-                    create 'defaut' entry
+                create 'defaut' entry
                 """
                 # display.v("create 'defaut' entry")
 
-                modules['default'] = dict()
-                modules['default']['metrics'] = []
-                modules['default']['metrics'] = data
+                modules["default"] = dict()
+                modules["default"]["metrics"] = []
+                modules["default"]["metrics"] = data
 
         result = modules
 

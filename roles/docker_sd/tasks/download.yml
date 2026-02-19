@@ -1,11 +1,12 @@
 ---
 
 - name: get latest release
+  when:
+    - not running_in_check_mode
+    - docker_sd_version == "latest"
   delegate_to: localhost
   become: false
   run_once: true
-  when:
-    - docker_sd_version == "latest"
   block:
     - name: get latest release
       bodsch.scm.github_latest:
@@ -20,19 +21,24 @@
         docker_sd_version: "{{ _latest_release.latest_release }}"
 
 - name: define download information
+  when:
+    - not running_in_check_mode
   ansible.builtin.set_fact:
     docker_sd_release: "{{ docker_sd_defaults_release | combine(docker_sd_release, recursive=True) }}"
 
 - name: define delegate instance for download handling
+  when:
+    - not running_in_check_mode
+    - docker_sd_direct_download
   ansible.builtin.set_fact:
-    docker_sd_delegate_to: "{{ ansible_host }}"
+    docker_sd_delegate_to: "{{ ansible_facts.host }}"
     docker_sd_local_tmp_directory: "{{
         lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
         default('/var/cache/ansible/docker-sd', true) }}/{{ docker_sd_version }}"
-  when:
-    - docker_sd_direct_download
 
 - name: create download directory
+  when:
+    - not running_in_check_mode
   become: false
   delegate_to: "{{ docker_sd_delegate_to }}"
   run_once: "{{ 'false' if docker_sd_direct_download else 'true' }}"
@@ -43,6 +49,8 @@
   check_mode: false
 
 - name: detect the downloaded docker_sd archive
+  when:
+    - not running_in_check_mode
   become: false
   delegate_to: "{{ docker_sd_delegate_to }}"
   run_once: "{{ 'false' if docker_sd_direct_download else 'true' }}"
@@ -52,9 +60,9 @@
 
 - name: download
   when:
+    - not running_in_check_mode
     - stat_docker_sd_archive.stat is defined
     - not stat_docker_sd_archive.stat.exists | default('false')
-    - not running_in_check_mode
   block:
     - name: checksum
       become: false
@@ -68,7 +76,7 @@
             checksum_file: "{{ docker_sd_release.checksum }}"
             user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
             password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
-            architecture: "{{ ansible_architecture }}"
+            architecture: "{{ ansible_facts.architecture }}"
             system: "{{ ansible_facts.system }}"
             version: "{{ docker_sd_version }}"
           register: _latest_checksum
@@ -109,6 +117,8 @@
         msg: A serious error occurred when downloading the archive.
 
 - name: detect extracted binary
+  when:
+    - not running_in_check_mode
   become: false
   delegate_to: "{{ docker_sd_delegate_to }}"
   run_once: "{{ 'false' if docker_sd_direct_download else 'true' }}"
@@ -117,6 +127,10 @@
   register: stat_docker_sd_binary
 
 - name: extract docker_sd archive
+  when:
+    - not running_in_check_mode
+    - stat_docker_sd_binary.stat is defined
+    - not stat_docker_sd_binary.stat.exists | default('false')
   become: false
   delegate_to: "{{ docker_sd_delegate_to }}"
   run_once: "{{ 'false' if docker_sd_direct_download else 'true' }}"
@@ -126,9 +140,5 @@
     copy: false
     #extra_opts:
     #  - --strip-components=1
-  when:
-    - not running_in_check_mode
-    - stat_docker_sd_binary.stat is defined
-    - not stat_docker_sd_binary.stat.exists | default('false')
 
 ...

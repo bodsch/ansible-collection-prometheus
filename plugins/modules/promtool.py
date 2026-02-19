@@ -10,32 +10,29 @@ from ansible.module_utils.basic import AnsibleModule
 
 class Promtool(object):
     """
-      Main Class
+    Main Class
     """
+
     module = None
 
     def __init__(self, module):
         """
-          Initialize all needed Variables
+        Initialize all needed Variables
         """
         self.module = module
 
-        self.promtool_bin = module.get_bin_path('promtool', False)
+        self.promtool_bin = module.get_bin_path("promtool", False)
         self.state = module.params.get("state")
         self.config = module.params.get("config")
 
     def run(self):
         """
-          runner
+        runner
         """
         if self.module.check_mode:
             self.module.debug("In check mode.")
 
-            return dict(
-                failed=False,
-                changed=False,
-                msg="In check mode."
-            )
+            return dict(failed=False, changed=False, msg="In check mode.")
 
         result = dict(
             failed=True,
@@ -63,8 +60,7 @@ class Promtool(object):
         return result
 
     def _exec(self, args):
-        """
-        """
+        """ """
         rc, out, err = self.module.run_command(args, check_rc=False)
         self.module.log(msg=f"  rc : '{rc}'")
 
@@ -83,13 +79,8 @@ def main():
 
     module = AnsibleModule(
         argument_spec=dict(
-            state=dict(
-                default="check",
-                choices=["check"]
-            ),
-            config=dict(
-                type=str
-            ),
+            state=dict(default="check", choices=["check"]),
+            config=dict(type=str),
         ),
         supports_check_mode=True,
     )
@@ -103,5 +94,5 @@ def main():
 
 
 # import module snippets
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -1,6 +1,8 @@
 ---
 
 - name: create mysql_exporter configuration directories
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     path: "{{ mysql_exporter_config_dir }}"
     state: directory
@@ -9,6 +11,10 @@
     mode: 0775
 
 - name: create mysql credentials file
+  when:
+    - not running_in_check_mode
+    - mysql_exporter_service.config.my_cnf is defined
+    - mysql_exporter_service.config.my_cnf | string | length > 0
   ansible.builtin.template:
     src: my.cnf.j2
     dest: "{{ mysql_exporter_service.config.my_cnf }}"
@@ -16,8 +22,5 @@
     group: "{{ mysql_exporter_system_group }}"
     mode: 0666
   no_log: true
-  when:
-    - mysql_exporter_service.config.my_cnf is defined
-    - mysql_exporter_service.config.my_cnf | string | length > 0
 
 ...

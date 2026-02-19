@@ -1,11 +1,12 @@
 ---
 
 - name: get latest release
+  when:
+    - not running_in_check_mode
+    - bind_exporter_version == "latest"
   delegate_to: localhost
   become: false
   run_once: true
-  when:
-    - bind_exporter_version == "latest"
   block:
     - name: get latest release
       delegate_to: localhost
@@ -23,19 +24,24 @@
         bind_exporter_version: "{{ _latest_release.latest_release }}"
 
 - name: define download information
+  when:
+    - not running_in_check_mode
   ansible.builtin.set_fact:
     bind_exporter_release: "{{ bind_exporter_defaults_release | combine(bind_exporter_release, recursive=True) }}"
 
 - name: define delegate instance for download handling
+  when:
+    - not running_in_check_mode
+    - bind_exporter_direct_download
   ansible.builtin.set_fact:
-    bind_exporter_delegate_to: "{{ ansible_host }}"
+    bind_exporter_delegate_to: "{{ ansible_facts.host }}"
     bind_exporter_local_tmp_directory: "{{
         lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
         default('/var/cache/ansible/bind_exporter', true) }}/{{ bind_exporter_version }}"
-  when:
-    - bind_exporter_direct_download
 
 - name: create download directory
+  when:
+    - not running_in_check_mode
   become: false
   delegate_to: "{{ bind_exporter_delegate_to }}"
   run_once: "{{ 'false' if bind_exporter_direct_download else 'true' }}"
@@ -46,6 +52,8 @@
   check_mode: false
 
 - name: detect the downloaded bind_exporter archive
+  when:
+    - not running_in_check_mode
   become: false
   delegate_to: "{{ bind_exporter_delegate_to }}"
   run_once: "{{ 'false' if bind_exporter_direct_download else 'true' }}"
@@ -55,9 +63,9 @@
 
 - name: download
   when:
+    - not running_in_check_mode
     - stat_bind_exporter_archive.stat is defined
     - not stat_bind_exporter_archive.stat.exists | default('false')
-    - not running_in_check_mode
   block:
     - name: checksum
       become: false
@@ -71,7 +79,7 @@
             checksum_file: sha256sums.txt
             user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
             password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
-            architecture: "{{ ansible_architecture }}"
+            architecture: "{{ ansible_facts.architecture }}"
             system: "{{ ansible_facts.system }}"
             version: "v{{ bind_exporter_version }}"
           register: _latest_checksum
@@ -114,6 +122,8 @@
         msg: A serious error occurred when downloading the archive.
 
 - name: detect extracted binary
+  when:
+    - not running_in_check_mode
   become: false
   delegate_to: "{{ bind_exporter_delegate_to }}"
   run_once: "{{ 'false' if bind_exporter_direct_download else 'true' }}"
@@ -122,6 +132,10 @@
   register: stat_bind_exporter_binary
 
 - name: extract bind_exporter archive
+  when:
+    - not running_in_check_mode
+    - stat_bind_exporter_binary.stat is defined
+    - not stat_bind_exporter_binary.stat.exists | default('false')
   become: false
   delegate_to: "{{ bind_exporter_delegate_to }}"
   run_once: "{{ 'false' if bind_exporter_direct_download else 'true' }}"
@@ -131,9 +145,5 @@
     copy: false
     extra_opts:
       - --strip-components=1
-  when:
-    - not running_in_check_mode
-    - stat_bind_exporter_binary.stat is defined
-    - not stat_bind_exporter_binary.stat.exists | default('false')
 
 ...

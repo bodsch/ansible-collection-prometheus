@@ -1,6 +1,8 @@
 ---
 
 - name: create node_exporter configuration directory
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     path: "{{ node_exporter_config_dir }}"
     state: directory
@@ -10,6 +12,7 @@
 
 - name: custom directories
   when:
+    - not running_in_check_mode
     - node_exporter_collectors is defined
     - node_exporter_collectors.enabled is defined
     - node_exporter_collectors.enabled
@@ -30,6 +33,9 @@
         label: "{{ item }}"
 
 - name: create node_exporter configuration
+  when:
+    - not running_in_check_mode
+    - node_exporter_enable_experimental
   ansible.builtin.template:
     src: "node_exporter/config.yml.j2"
     dest: "{{ node_exporter_config_dir }}/config.yml"
@@ -37,8 +43,6 @@
     owner: root
     group: "{{ node_exporter_system_group }}"
     mode: 0640
-  when:
-    - node_exporter_enable_experimental
   notify:
     - restart node_exporter
 

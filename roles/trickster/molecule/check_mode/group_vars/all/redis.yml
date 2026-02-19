@@ -1,5 +1,5 @@
 ---
 
-redis_bind_interface: "{{ ansible_default_ipv4.address }}"
+redis_bind_interface: "{{ ansible_facts.default_ipv4.address }}"
 
 ...

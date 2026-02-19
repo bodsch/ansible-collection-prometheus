@@ -5,22 +5,24 @@
 
 from __future__ import absolute_import, division, print_function
 
-import json
 import datetime
+import json
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.bodsch.prometheus.plugins.module_utils.alertmanager import Alertmanager
+from ansible_collections.bodsch.prometheus.plugins.module_utils.alertmanager import (
+    Alertmanager,
+)
 
 
-class AlertmanagerSilence():
+class AlertmanagerSilence:
     """
-      Main Class
+    Main Class
     """
+
     module = None
 
     def __init__(self, module):
-        """
-        """
+        """ """
         self.module = module
 
         self.state = module.params.get("state")
@@ -35,7 +37,7 @@ class AlertmanagerSilence():
 
     def run(self):
         """
-          runner
+        runner
         """
         result = dict(
             failed=False,
@@ -58,17 +60,31 @@ class AlertmanagerSilence():
                 if isinstance(message, str):
                     message = json.loads(message)
 
-                alerts_expired = [x.get("id") for x in message if x.get("status", {}).get("state") == "expired"]
-                alerts_active = [x.get("id") for x in message if x.get("status", {}).get("state") == "active"]
-                alerts_pending = [x.get("id") for x in message if x.get("status", {}).get("state") == "pending"]
+                alerts_expired = [
+                    x.get("id")
+                    for x in message
+                    if x.get("status", {}).get("state") == "expired"
+                ]
+                alerts_active = [
+                    x.get("id")
+                    for x in message
+                    if x.get("status", {}).get("state") == "active"
+                ]
+                alerts_pending = [
+                    x.get("id")
+                    for x in message
+                    if x.get("status", {}).get("state") == "pending"
+                ]
 
-                result.update({
-                    "alerts": dict(
-                        expired=alerts_expired,
-                        active=alerts_active,
-                        pending=alerts_pending
-                    )
-                })
+                result.update(
+                    {
+                        "alerts": dict(
+                            expired=alerts_expired,
+                            active=alerts_active,
+                            pending=alerts_pending,
+                        )
+                    }
+                )
 
             if self.state == "add":
                 silence_downtime = self.current_datetime(self.silence_downtime)
@@ -82,9 +98,7 @@ class AlertmanagerSilence():
                     "endsAt": ends_at,
                     "createdBy": "automation",
                     "comment": self.comment,
-                    "status": {
-                        "state": "active"
-                    }
+                    "status": {"state": "active"},
                 }
 
                 # self.module.log(msg=f"= payload: {payload}")
@@ -96,18 +110,20 @@ class AlertmanagerSilence():
 
                 silenceId = message.get("silenceID")
 
-                result.update({
-                    "changed": True,
-                    "silence_id": silenceId,
-                    "silence_start": starts_at,
-                    "silence_end": ends_at
-                })
+                result.update(
+                    {
+                        "changed": True,
+                        "silence_id": silenceId,
+                        "silence_start": starts_at,
+                        "silence_end": ends_at,
+                    }
+                )
 
             if self.state == "remove":
                 if self.silence_id == "":
                     return dict(
                         failed=True,
-                        msg="Missing silence_id to delete a active alertmanager silence."
+                        msg="Missing silence_id to delete a active alertmanager silence.",
                     )
 
                 code, message = alertmanager.silence()
@@ -118,31 +134,38 @@ class AlertmanagerSilence():
                     if isinstance(message, str):
                         message = json.loads(message)
 
-                    alerts_active = [x.get("id") for x in message if x.get("status", {}).get("state") == "active"]
-                    alerts_expired = [x.get("id") for x in message if x.get("status", {}).get("state") == "expired"]
+                    alerts_active = [
+                        x.get("id")
+                        for x in message
+                        if x.get("status", {}).get("state") == "active"
+                    ]
+                    alerts_expired = [
+                        x.get("id")
+                        for x in message
+                        if x.get("status", {}).get("state") == "expired"
+                    ]
 
                     if self.silence_id in alerts_expired:
                         msg = "silence already expired"
 
                     else:
-                        code, message = alertmanager.delete_silence(silence_id=self.silence_id)
+                        code, message = alertmanager.delete_silence(
+                            silence_id=self.silence_id
+                        )
                         self.module.log(msg=f"= code: {code}, status: {message}")
 
-                result.update({
-                    "msg": msg
-                })
+                result.update({"msg": msg})
 
         else:
             result = dict(
                 failed=True,
-                msg=f"The alertmanager is not accessible under the URL {self.url}."
+                msg=f"The alertmanager is not accessible under the URL {self.url}.",
             )
 
         return result
 
     def current_datetime(self, add_time):
-        """
-        """
+        """ """
         add_minutes = add_time.get("minutes", 10)
         add_hours = add_time.get("hours", 0)
 
@@ -156,10 +179,8 @@ class AlertmanagerSilence():
         end_date_time = (current_date_time + datetime_delta).isoformat()
         begin_date_time = current_date_time.isoformat()
 
-        return dict(
-            begin=begin_date_time,
-            end=end_date_time
-        )
+        return dict(begin=begin_date_time, end=end_date_time)
+
 
 # ===========================================
 # Module execution.
@@ -169,43 +190,15 @@ class AlertmanagerSilence():
 def main():
 
     argument_spec = dict(
-        state=dict(
-            default="check",
-            choices=["check", "add", "remove"]
-        ),
-        verbose=dict(
-            type=bool,
-            default=True
-        ),
-        url=dict(
-            type=str,
-            required=True
-        ),
-        silence_downtime=dict(
-            type=dict,
-            required=False,
-            default=dict(minutes=10)
-        ),
-        silence_id=dict(
-            type=str,
-            required=False
-        ),
-        starts_at=dict(
-            type=str,
-            required=False
-        ),
-        ends_at=dict(
-            type=str,
-            required=False
-        ),
-        comment=dict(
-            type=str,
-            required=False
-        ),
-        matchers=dict(
-            type=list,
-            required=False
-        ),
+        state=dict(default="check", choices=["check", "add", "remove"]),
+        verbose=dict(type=bool, default=True),
+        url=dict(type=str, required=True),
+        silence_downtime=dict(type=dict, required=False, default=dict(minutes=10)),
+        silence_id=dict(type=str, required=False),
+        starts_at=dict(type=str, required=False),
+        ends_at=dict(type=str, required=False),
+        comment=dict(type=str, required=False),
+        matchers=dict(type=list, required=False),
     )
 
     module = AnsibleModule(
@@ -222,5 +215,5 @@ def main():
 
 
 # import module snippets
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

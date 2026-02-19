@@ -10,7 +10,7 @@ mongodb_user_update_password: "on_create"        # MongoDB user password update 
 
 mongodb_disable_transparent_hugepages: true
 
-mongodb_net_bindip: "127.0.0.1,{{ ansible_default_ipv4.address }}"        # Comma separated list of ip addresses to listen on
+mongodb_net_bindip: "127.0.0.1,{{ ansible_facts.default_ipv4.address }}"        # Comma separated list of ip addresses to listen on
 
 mongodb_storage_dirperdb: true                  # Use one directory per DB
 

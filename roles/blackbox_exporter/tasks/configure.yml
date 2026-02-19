@@ -1,6 +1,8 @@
 ---
 
 - name: create blackbox exporter configuration directory
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     state: directory
     path: "{{ blackbox_exporter_service.config.file | dirname }}"
@@ -8,6 +10,8 @@
     mode: 0750
 
 - name: configure blackbox exporter
+  when:
+    - not running_in_check_mode
   ansible.builtin.template:
     src: blackbox_exporter/blackbox_exporter.yml.j2
     dest: "{{ blackbox_exporter_service.config.file }}"

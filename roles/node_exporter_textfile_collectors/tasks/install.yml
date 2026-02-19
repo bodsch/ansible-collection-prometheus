@@ -1,6 +1,8 @@
 ---
 
 - name: create directory for collector scripts
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     state: directory
     path: "{{ node_exporter_install_path }}/collector-scripts"
@@ -10,6 +12,7 @@
 
 - name: install external collector scripts
   when:
+    - not running_in_check_mode
     - node_exporter_external_repository.enabled
   block:
     - name: create temporary directory for external collector scripts
@@ -80,6 +83,8 @@
         label: "{{ item }}"
 
 - name: detect node_exporter collector scripts
+  when:
+    - not running_in_check_mode
   ansible.builtin.set_fact:
     node_exporter_int_collector_scripts: "{{ query('bodsch.core.file_glob', '.sh', '.py') }}"
   vars:
@@ -88,6 +93,8 @@
       - "../.."
 
 - name: syncronize internal collector scripts
+  when:
+    - not running_in_check_mode
   become: true
   ansible.posix.synchronize:
     src: "{{ item }}/"
@@ -106,6 +113,8 @@
     label: "{{ item }}"
 
 - name: fix file rights for collector scripts
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     path: "{{ node_exporter_install_path }}/collector-scripts"
     owner: "{{ node_exporter_system_user }}"

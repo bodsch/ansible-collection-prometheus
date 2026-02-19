@@ -10,15 +10,16 @@ import os
 from ansible.module_utils.basic import AnsibleModule
 
 
-class AlertmanagerTemplates():
+class AlertmanagerTemplates:
     """
-      Main Class
+    Main Class
     """
+
     module = None
 
     def __init__(self, module):
         """
-          Initialize all needed Variables
+        Initialize all needed Variables
         """
         self.module = module
 
@@ -29,7 +30,7 @@ class AlertmanagerTemplates():
         self.templates = []
 
         if isinstance(templates, str):
-            templates = templates.split(',')
+            templates = templates.split(",")
 
         if isinstance(templates, list):
             for x in templates:
@@ -37,7 +38,7 @@ class AlertmanagerTemplates():
 
     def run(self):
         """
-          runner
+        runner
         """
         result = dict(
             failed=False,
@@ -46,7 +47,8 @@ class AlertmanagerTemplates():
         exists_template_files = [
             f
             for f in os.listdir(self.templates_directory)
-            if os.path.isfile(os.path.join(self.templates_directory, f)) and f.endswith(".tmpl")
+            if os.path.isfile(os.path.join(self.templates_directory, f))
+            and f.endswith(".tmpl")
         ]
 
         _exists = set(self.templates)
@@ -56,16 +58,12 @@ class AlertmanagerTemplates():
         if len(templates_diff) > 0:
             self.remove_templates(templates_diff)
 
-            result.update({
-                "changed": True,
-                "removed_templates": templates_diff
-            })
+            result.update({"changed": True, "removed_templates": templates_diff})
 
         return result
 
     def remove_templates(self, templates):
-        """
-        """
+        """ """
         os.chdir(self.templates_directory)
 
         for t in templates:
@@ -81,22 +79,10 @@ class AlertmanagerTemplates():
 def main():
 
     argument_spec = dict(
-        state=dict(
-            default="check",
-            choices=["check", "remove"]
-        ),
-        verbose=dict(
-            type=bool,
-            default=True
-        ),
-        templates_directory=dict(
-            type=str,
-            default="/etc/alertmanager/templates"
-        ),
-        templates=dict(
-            type=list,
-            required=True
-        ),
+        state=dict(default="check", choices=["check", "remove"]),
+        verbose=dict(type=bool, default=True),
+        templates_directory=dict(type=str, default="/etc/alertmanager/templates"),
+        templates=dict(type=list, required=True),
     )
 
     module = AnsibleModule(
@@ -113,5 +99,5 @@ def main():
 
 
 # import module snippets
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

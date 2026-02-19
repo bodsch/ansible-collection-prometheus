@@ -52,7 +52,7 @@ node_exporter_defaults_directory: /etc/default
 
 node_exporter_defaults_release:
   download_url: https://github.com/prometheus/node_exporter/releases
-  file: node_exporter-{{ node_exporter_version }}.{{ ansible_system | lower }}-{{ system_architecture }}.tar.gz
+  file: node_exporter-{{ node_exporter_version }}.{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz
   binary: node_exporter
 
 # ---------------------------------------------
@@ -62,7 +62,7 @@ go_arch_map:
   aarch64: 'arm64'
   armv7l: 'armv7'
 
-system_architecture: "{{ go_arch_map[ansible_architecture] | default(ansible_architecture) }}"
+system_architecture: "{{ go_arch_map[ansible_facts.architecture] | default(ansible_facts.architecture) }}"
 
 systemd_lib_directory: /lib/systemd/system
 

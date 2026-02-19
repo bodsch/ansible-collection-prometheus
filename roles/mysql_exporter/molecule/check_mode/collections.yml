@@ -1,0 +1,6 @@
+---
+
+collections:
+  - name: https://github.com/bodsch/ansible-collection-database
+    type: git
+    version: main

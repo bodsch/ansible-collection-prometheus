@@ -6,6 +6,10 @@
     node_exporter_cron_disabled: "{{ node_exporter_collector_scripts | default([]) | bodsch.prometheus.cron_jobs(enabled=False) }}"
 
 - name: create crontab entry
+  when:
+    - not running_in_check_mode
+    - node_exporter_cron_enabled is defined
+    - node_exporter_cron_enabled | count > 0
   ansible.builtin.cron:
     state: present
     name: ne_text-collector_{{ item.name }}
@@ -17,11 +21,12 @@
   loop: "{{ node_exporter_cron_enabled }}"
   loop_control:
     label: "{{ item.name }}"
-  when:
-    - node_exporter_cron_enabled is defined
-    - node_exporter_cron_enabled | count > 0
 
 - name: remove crontab entry
+  when:
+    - not running_in_check_mode
+    - node_exporter_cron_disabled is defined
+    - node_exporter_cron_disabled | count > 0
   ansible.builtin.cron:
     state: absent
     name: ne_text-collector_{{ item.name }}
@@ -33,8 +38,5 @@
   loop: "{{ node_exporter_cron_disabled }}"
   loop_control:
     label: "{{ item.name }}"
-  when:
-    - node_exporter_cron_disabled is defined
-    - node_exporter_cron_disabled | count > 0
 
 ...

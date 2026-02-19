@@ -5,10 +5,12 @@
 # Apache-2.0 (see LICENSE or https://opensource.org/license/apache-2-0)
 # SPDX-License-Identifier: Apache-2.0
 
-from __future__ import (absolute_import, print_function)
+from __future__ import absolute_import, print_function
+
 __metaclass__ = type
 
 import re
+
 from ansible.utils.display import Display
 
 display = Display()
@@ -16,17 +18,16 @@ display = Display()
 
 class FilterModule(object):
     """
-        Ansible file jinja2 tests
+    Ansible file jinja2 tests
     """
 
     def filters(self):
         return {
-            'parse_checksum': self.parse_checksum,
+            "parse_checksum": self.parse_checksum,
         }
 
     def parse_checksum(self, data, application, os, arch, file_extension="tar.gz"):
-        """
-        """
+        """ """
         # display.v(f"parse_checksum(self, data, {application}, {os}, {arch})")
 
         checksum = None
@@ -37,8 +38,12 @@ class FilterModule(object):
             # 2b8b693ce006406db200c7bd9987453b7055e4e98511fd7b36d492fc68bfc0f4  nginx-prometheus-exporter_0.11.0_linux_amd64.tar.gz
             # (?P<checksum>[a-zA-Z0-9]+).*alertmanager[-_].*linux-amd64\.tar\.gz$
             checksum = [
-                x for x in data
-                if re.search(fr"(?P<checksum>[a-zA-Z0-9]+).*{application}[-_].*{os}[-_]{arch}\.{file_extension}", x)
+                x
+                for x in data
+                if re.search(
+                    rf"(?P<checksum>[a-zA-Z0-9]+).*{application}[-_].*{os}[-_]{arch}\.{file_extension}",
+                    x,
+                )
             ][0]
 
             display.v(f"  found checksum: {checksum}")

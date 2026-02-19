@@ -36,16 +36,27 @@ on:
       - '.config/pycodestyle.cfg'
 
 jobs:
-  pep8:
+  pycodestyle:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python_version:
+          - "3.10"
+          - "3.11"
+          - "3.12"
+          - "3.13"
+
     steps:
       - name: Check out the codebase.
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.
-        uses: actions/setup-python@v5
+        uses: actions/checkout@v6.0.1
         with:
-          python-version: '3.x'
+          ref: ${{ github.event.workflow_run.head_branch }}
+
+      - name: 🐍 set up python
+        uses: actions/setup-python@v6.1.0
+        with:
+          python-version: "${{ matrix.python_version }}"
 
       - name: Install test dependencies.
         run: |
@@ -54,4 +65,4 @@ jobs:
 
       - name: Lint code.
         run: |
-          pycodestyle plugins/ --config=.config/pycodestyle.cfg --statistics --count
+          pycodestyle plugins/ --config=.config/pycodestyle.cfg --statistics --count --exclude=test_*.py --exclude=hooks/*.py

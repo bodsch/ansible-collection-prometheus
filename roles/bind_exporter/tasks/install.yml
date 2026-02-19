@@ -2,6 +2,7 @@
 
 - name: user and group handling
   when:
+    - not running_in_check_mode
     - bind_exporter_system_user != "root"
   block:
     - name: create bind_exporter group
@@ -21,6 +22,8 @@
         home: /nonexistent
 
 - name: create install directory
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     path: "{{ bind_exporter_install_path }}"
     state: directory
@@ -29,6 +32,8 @@
     mode: 0755
 
 - name: detect extracted binary file for bind_exporter on '{{ bind_exporter_delegate_to }}'
+  when:
+    - not running_in_check_mode
   become: false
   delegate_to: "{{ bind_exporter_delegate_to }}"
   run_once: "{{ 'false' if bind_exporter_direct_download else 'true' }}"
@@ -37,18 +42,22 @@
   register: stat_file_binary
 
 - name: fail when extracted binary are missing
-  ansible.builtin.fail:
-    msg: "missing extracted binary on ansible controller"
   when:
     - not running_in_check_mode
     - not stat_file_binary.stat.exists
+  ansible.builtin.fail:
+    msg: "missing extracted binary on ansible controller"
 
 - name: detect installed bind_exporter binary
+  when:
+    - not running_in_check_mode
   ansible.builtin.stat:
     path: "{{ bind_exporter_install_path }}/{{ bind_exporter_release.binary }}"
   register: stat_bind_exporter_binary
 
 - name: detect activated bind_exporter binary
+  when:
+    - not running_in_check_mode
   ansible.builtin.stat:
     path: /usr/bin/{{ bind_exporter_release.binary }}
   register: stat_bind_exporter_activated
@@ -106,8 +115,8 @@
 
 - name: systemd
   when:
-    - ansible_service_mgr | lower == "systemd"
     - not running_in_check_mode
+    - ansible_facts.service_mgr | lower == "systemd"
   block:
     - name: create bind_exporter run configuration
       ansible.builtin.template:
@@ -133,8 +142,8 @@
 
 - name: openrc
   when:
-    - ansible_service_mgr | lower == "openrc"
     - not running_in_check_mode
+    - ansible_facts.service_mgr | lower == "openrc"
   block:
     - name: create openrc service configuration
       ansible.builtin.template:

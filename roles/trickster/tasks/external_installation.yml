@@ -1,6 +1,8 @@
 ---
 
 - name: detect our installation path '{{ trickster_install_path | dirname }}'
+  when:
+    - not running_in_check_mode
   ansible.builtin.stat:
     path: "{{ trickster_install_path | dirname }}"
     get_checksum: false
@@ -9,6 +11,7 @@
 
 - name: old installation
   when:
+    - not running_in_check_mode
     - stat_trickster_path is defined
     - stat_trickster_path.stat is defined
     - stat_trickster_path.stat.isdir is defined
@@ -27,7 +30,7 @@
         state: absent
         path: /etc/systemd/system/trickster.service
       when:
-        - ansible_service_mgr | lower == "systemd"
+        - ansible_facts.service_mgr | lower == "systemd"
 
     - name: remove installed trickster
       ansible.builtin.file:

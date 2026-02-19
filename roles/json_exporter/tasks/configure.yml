@@ -2,6 +2,7 @@
 
 - name: warn against the use of obsolete variables
   when:
+    - not running_in_check_mode
     - json_exporter_config | default([]) | count > 0
   block:
     - name: warn against the use of obsolete variables  # noqa ignore-errors
@@ -28,6 +29,8 @@
     json_exporter_modules: "{{ json_exporter_defaults_modules | combine(json_exporter_modules, recursive=True) }}"
 
 - name: create json_exporter configuration directory
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     path: "{{ json_exporter_config_dir }}"
     state: directory
@@ -36,6 +39,8 @@
     mode: 0770
 
 - name: create json_exporter configuration
+  when:
+    - not running_in_check_mode
   ansible.builtin.template:
     src: "config.yml.j2"
     dest: "{{ json_exporter_config_dir }}/config.yml"

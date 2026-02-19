@@ -2,6 +2,7 @@
 
 - name: user and group handling
   when:
+    - not running_in_check_mode
     - prometheus_system_user != "root"
   block:
     - name: create prometheus group
@@ -25,6 +26,8 @@
     prometheus_service: "{{ prometheus_defaults_service | combine(prometheus_service, recursive=True) }}"
 
 - name: create install directory
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     path: "{{ prometheus_install_path }}"
     state: directory
@@ -33,6 +36,8 @@
     mode: 0755
 
 - name: detect extracted binary file for prometheus on '{{ prometheus_delegate_to }}'
+  when:
+    - not running_in_check_mode
   become: false
   delegate_to: "{{ prometheus_delegate_to }}"
   run_once: "{{ 'false' if prometheus_direct_download else 'true' }}"
@@ -41,11 +46,11 @@
   register: stat_file_binary
 
 - name: fail when extracted binary are missing
-  ansible.builtin.fail:
-    msg: "missing extracted binary on ansible controller"
   when:
     - not running_in_check_mode
     - not stat_file_binary.stat.exists
+  ansible.builtin.fail:
+    msg: "missing extracted binary on ansible controller"
 
 - name: detect installed prometheus binary
   ansible.builtin.stat:
@@ -112,6 +117,8 @@
             msg: A serious error occurred during the installation of the binary.
 
 - name: create prometheus data directory
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     path: "{{ prometheus_data_dir }}"
     state: directory
@@ -120,6 +127,8 @@
     mode: 0755
 
 - name: create prometheus configuration directory
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     path: "{{ prometheus_config_dir }}"
     state: directory
@@ -128,6 +137,8 @@
     mode: 0770
 
 - name: create rules directory
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     state: directory
     path: "{{ prometheus_config_dir }}/rules"
@@ -136,6 +147,8 @@
     mode: 0750
 
 - name: create targets directory
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     state: directory
     path: "{{ prometheus_config_dir }}/targets"
@@ -144,6 +157,8 @@
     mode: 0750
 
 - name: create file_sd directory
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     state: directory
     path: "{{ prometheus_config_dir }}/file_sd"
@@ -153,8 +168,8 @@
 
 - name: systemd
   when:
-    - ansible_service_mgr | lower == "systemd"
     - not running_in_check_mode
+    - ansible_facts.service_mgr | lower == "systemd"
   block:
     - name: create prometheus run configuration
       ansible.builtin.template:
@@ -179,8 +194,8 @@
 
 - name: openrc
   when:
-    - ansible_service_mgr | lower == "openrc"
     - not running_in_check_mode
+    - ansible_facts.service_mgr | lower == "openrc"
   block:
     - name: create openrc service configuration
       ansible.builtin.template:

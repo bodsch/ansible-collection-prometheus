@@ -1,6 +1,7 @@
 # python 3 headers, required if submitting to Ansible
 
-from __future__ import (absolute_import, print_function)
+from __future__ import absolute_import, print_function
+
 __metaclass__ = type
 
 from ansible.utils.display import Display
@@ -9,19 +10,18 @@ display = Display()
 
 
 class FilterModule(object):
-    """
-    """
+    """ """
 
     def filters(self):
         return {
-            'valid_credentials': self.valid_credentials,
-            'has_credentials': self.has_credentials,
+            "valid_credentials": self.valid_credentials,
+            "has_credentials": self.has_credentials,
         }
 
     def valid_credentials(self, data):
         """
-            input: dict ''
-            output: dict or None
+        input: dict ''
+        output: dict or None
         """
         result = None
         display.v(f"valid_credentials({data})")
@@ -49,8 +49,7 @@ class FilterModule(object):
         return result
 
     def has_credentials(self, data):
-        """
-        """
+        """ """
         result = {}
 
         if isinstance(data, dict):

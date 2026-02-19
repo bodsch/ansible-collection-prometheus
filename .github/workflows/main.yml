@@ -67,12 +67,12 @@ jobs:
           - trickster
     steps:
       - name: check out the codebase.
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.1
         with:
           ref: ${{ github.event.workflow_run.head_branch }}
 
       - name: 🐍 set up python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6.1.0
         with:
           python-version: "${{ matrix.python_version }}"
 
@@ -134,12 +134,12 @@ jobs:
           - bind_exporter
     steps:
       - name: check out the codebase.
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.1
         with:
           ref: ${{ github.event.workflow_run.head_branch }}
 
       - name: 🐍 set up python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6.1.0
         with:
           python-version: "${{ matrix.python_version }}"
 

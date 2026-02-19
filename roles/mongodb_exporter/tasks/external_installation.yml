@@ -1,6 +1,8 @@
 ---
 
 - name: detect external installation
+  when:
+    - not running_in_check_mode
   ansible.builtin.stat:
     path: /usr/local/bin/mongodb_exporter
     get_checksum: false
@@ -9,6 +11,7 @@
 
 - name: old installation
   when:
+    - not running_in_check_mode
     - stat_mongodb_exporter_path is defined
     - stat_mongodb_exporter_path.stat is defined
     - stat_mongodb_exporter_path.stat.isdir is defined
@@ -27,7 +30,7 @@
         state: absent
         path: /etc/systemd/system/mongodb_exporter.service
       when:
-        - ansible_service_mgr | lower == "systemd"
+        - ansible_facts.service_mgr | lower == "systemd"
 
     - name: remove installed mongodb_exporter
       ansible.builtin.file:
