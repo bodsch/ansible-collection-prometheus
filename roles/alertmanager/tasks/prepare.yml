@@ -29,12 +29,12 @@
     running_in_check_mode: '{{ _check_mode.check_mode }}'
 
 - name: install dependency
-  ansible.builtin.package:
-    name: "{{ alertmanager_requirements }}"
-    state: present
   when:
     - not running_in_check_mode
     - alertmanager_requirements | default([]) | count > 0
+  ansible.builtin.package:
+    name: "{{ alertmanager_requirements }}"
+    state: present
 
 - name: merge alertmanager configuration between defaults and custom
   ansible.builtin.set_fact:

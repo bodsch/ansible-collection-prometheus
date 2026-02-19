@@ -1,6 +1,7 @@
 from __future__ import annotations, unicode_literals
 
 import os
+
 import pytest
 import testinfra.utils.ansible_runner
 from helper.molecule import get_vars, infra_hosts, local_facts

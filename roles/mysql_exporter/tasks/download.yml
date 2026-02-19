@@ -1,12 +1,12 @@
 ---
 
 - name: get latest release
-  delegate_to: localhost
-  become: false
-  run_once: true
   when:
     - not running_in_check_mode
     - mysql_exporter_version == "latest"
+  delegate_to: localhost
+  become: false
+  run_once: true
   block:
     - name: get latest release
       delegate_to: localhost
