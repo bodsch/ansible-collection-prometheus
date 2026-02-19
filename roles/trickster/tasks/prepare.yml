@@ -29,11 +29,12 @@
     running_in_check_mode: '{{ _check_mode.check_mode }}'
 
 - name: install dependency
+  when:
+    - not running_in_check_mode
+    - trickster_requirements | default([]) | count > 0
   ansible.builtin.package:
     name: "{{ trickster_requirements }}"
     state: present
-  when:
-    - trickster_requirements | default([]) | count > 0
 
 - name: merge trickster configuration between defaults and custom
   ansible.builtin.set_fact:

@@ -1,6 +1,8 @@
 ---
 
 - name: create trickster config directory
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     path: "{{ trickster_service_config.config_file | dirname }}"
     state: directory
@@ -9,6 +11,8 @@
     mode: 0755
 
 - name: create trickster config
+  when:
+    - not running_in_check_mode
   ansible.builtin.template:
     src: trickster.conf.j2
     dest: "{{ trickster_service_config.config_file }}"
