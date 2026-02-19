@@ -29,11 +29,12 @@
     running_in_check_mode: '{{ _check_mode.check_mode }}'
 
 - name: install dependency
+  when:
+    - not running_in_check_mode
+    - docker_sd_requirements | default([]) | count > 0
   ansible.builtin.package:
     name: "{{ docker_sd_requirements }}"
     state: present
-  when:
-    - docker_sd_requirements | default([]) | count > 0
 
 - name: merge docker-sd configuration between defaults and custom
   ansible.builtin.set_fact:

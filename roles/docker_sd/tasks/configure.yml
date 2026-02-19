@@ -1,6 +1,8 @@
 ---
 
 - name: create docker-sd configuration directory
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     path: "{{ docker_sd_config_dir }}"
     state: directory
@@ -9,6 +11,8 @@
     mode: 0770
 
 - name: create docker-sd configuration
+  when:
+    - not running_in_check_mode
   ansible.builtin.template:
     src: "docker-sd/config.yml.j2"
     dest: "{{ docker_sd_config_dir }}/docker-sd.yml"
