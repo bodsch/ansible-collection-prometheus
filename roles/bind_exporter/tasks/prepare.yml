@@ -31,11 +31,10 @@
 - name: install dependency
   when:
     - not running_in_check_mode
+    - bind_exporter_requirements | default([]) | count > 0
   ansible.builtin.package:
     name: "{{ bind_exporter_requirements }}"
     state: present
-  when:
-    - bind_exporter_requirements | default([]) | count > 0
 
 - name: merge bind_exporter configuration between defaults and custom
   ansible.builtin.set_fact:
