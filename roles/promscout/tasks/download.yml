@@ -1,0 +1,142 @@
+---
+
+- name: get latest release
+  when:
+    - not running_in_check_mode
+    - promscout_version == "latest"
+  delegate_to: localhost
+  become: false
+  run_once: true
+  block:
+    - name: get latest release
+      bodsch.scm.github_latest:
+        project: bodsch
+        repository: promscout
+        user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+        password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+      register: _latest_release
+
+    - name: set promscout version
+      ansible.builtin.set_fact:
+        promscout_version: "{{ _latest_release.latest_release }}"
+
+- name: define download information
+  ansible.builtin.set_fact:
+    promscout_release: "{{ promscout_defaults_release | combine(promscout_release, recursive=True) }}"
+
+- name: define delegate instance for download handling
+  when:
+    - not running_in_check_mode
+    - promscout_direct_download
+  ansible.builtin.set_fact:
+    promscout_delegate_to: "{{ ansible_facts.host }}"
+    promscout_local_tmp_directory: "{{
+        lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
+        default('/var/cache/ansible/promscout', true) }}/{{ promscout_version }}"
+
+- name: create download directory
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ promscout_delegate_to }}"
+  run_once: "{{ 'false' if promscout_direct_download else 'true' }}"
+  ansible.builtin.file:
+    path: "{{ promscout_local_tmp_directory }}"
+    state: directory
+    mode: "0750"
+  check_mode: false
+
+- name: detect the downloaded promscout archive
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ promscout_delegate_to }}"
+  run_once: "{{ 'false' if promscout_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ promscout_local_tmp_directory }}/{{ promscout_release.file }}"
+  register: stat_promscout_archive
+
+- name: download
+  when:
+    - not running_in_check_mode
+    - stat_promscout_archive.stat is defined
+    - not stat_promscout_archive.stat.exists | default('false')
+  block:
+    - name: checksum
+      become: false
+      delegate_to: localhost
+      run_once: true
+      block:
+        - name: get checksum list
+          bodsch.scm.github_checksum:
+            project: bodsch
+            repository: promscout
+            checksum_file: "{{ promscout_release.checksum }}"
+            user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+            password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+            architecture: "{{ ansible_facts.architecture }}"
+            system: "{{ ansible_facts.system }}"
+            version: "{{ promscout_version }}"
+          register: _latest_checksum
+
+        - name: define checksum for {{ system_architecture }} architecture
+          ansible.builtin.set_fact:
+            __promscout_checksum: "sha256:{{ _latest_checksum.checksum }}"
+          when:
+            - _latest_checksum.rc == 0
+            - _latest_checksum.checksum is defined
+            - _latest_checksum.checksum | string | length > 0
+
+    - name: download promscout binary archive
+      become: false
+      delegate_to: "{{ promscout_delegate_to }}"
+      run_once: "{{ 'false' if promscout_direct_download else 'true' }}"
+      ansible.builtin.get_url:
+        url: "{{ promscout_release.download_url }}/download/{{ promscout_version }}/{{ promscout_release.file }}"
+        dest: "{{ promscout_local_tmp_directory }}/{{ promscout_release.file }}"
+        checksum: "{{ __promscout_checksum | default(omit) }}"
+        mode: 0660
+      register: _download_archive
+      until: _download_archive is succeeded
+      retries: 5
+      delay: 2
+
+  rescue:
+    - name: delete download directory
+      become: false
+      delegate_to: "{{ promscout_delegate_to }}"
+      run_once: "{{ 'false' if promscout_direct_download else 'true' }}"
+      ansible.builtin.file:
+        path: "{{ promscout_local_tmp_directory }}"
+        state: absent
+
+    - name: exit with fail
+      ansible.builtin.fail:
+        msg: A serious error occurred when downloading the archive.
+
+- name: detect extracted binary
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ promscout_delegate_to }}"
+  run_once: "{{ 'false' if promscout_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ promscout_local_tmp_directory }}/{{ promscout_release.binary }}"
+  register: stat_promscout_binary
+
+- name: extract promscout archive
+  when:
+    - not running_in_check_mode
+    - stat_promscout_binary.stat is defined
+    - not stat_promscout_binary.stat.exists | default('false')
+  become: false
+  delegate_to: "{{ promscout_delegate_to }}"
+  run_once: "{{ 'false' if promscout_direct_download else 'true' }}"
+  ansible.builtin.unarchive:
+    src: "{{ promscout_local_tmp_directory }}/{{ promscout_release.file }}"
+    dest: "{{ promscout_local_tmp_directory }}/"
+    copy: false
+    #extra_opts:
+    #  - --strip-components=1
+
+...

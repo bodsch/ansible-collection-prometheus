@@ -1,0 +1,15 @@
+---
+
+- name: flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: ensure promscout is enabled on boot
+  when:
+    - not running_in_check_mode
+  become: true
+  ansible.builtin.service:
+    name: promscout
+    enabled: true
+    state: started
+
+...

@@ -1,0 +1,32 @@
+---
+
+promscout_version: latest
+
+# CIDR network that will be scanned for Prometheus exporters.
+# Example: 192.168.0.0/24, 10.10.0.0/16
+promscout_network_cidr: "192.168.0.10/32"
+
+# List of TCP ports that should be scanned.
+# Extend this list for custom exporters.
+promscout_ports:
+  - 9100
+
+# Ordered list of paths to check for Prometheus metrics.
+# The first successful match will be used.
+promscout_metrics_paths:
+  - /metrics
+
+# Interval between discovery cycles.
+# Uses Go duration format.
+promscout_interval: "15m"
+
+# Timeout for TCP dial and HTTP validation.
+promscout_timeout: 1s
+
+# HTTP address where this service exposes the HTTP-SD endpoint.
+promscout_listen: "127.0.0.1:9099"
+
+# Maximum number of parallel scanning workers.
+promscout_max_workers: 50
+
+...

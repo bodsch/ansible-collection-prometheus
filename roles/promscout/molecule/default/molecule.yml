@@ -1,7 +1,4 @@
 ---
-
-role_name_check: 1
-
 dependency:
   name: galaxy
 
@@ -24,8 +21,6 @@ platforms:
     tmpfs:
       - /run
       - /tmp
-    published_ports:
-      - 9090:9090
 
 provisioner:
   name: ansible
