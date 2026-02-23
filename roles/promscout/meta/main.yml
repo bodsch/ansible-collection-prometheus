@@ -1,0 +1,31 @@
+---
+
+galaxy_info:
+  role_name: promscout
+  namespace: bodsch
+
+  author: Bodo Schulz
+  description: ansible role to setup prometheus service discovery for native installed exporters
+  license: Apache
+  min_ansible_version: "2.11"
+
+  platforms:
+    - name: ArchLinux
+    - name: Debian
+      versions:
+        # 10
+        - buster
+        # 11
+        - bullseye
+        # 12
+        - bookworm
+
+  galaxy_tags:
+    - monitoring
+    - prometheus
+    - service
+    - discovery
+
+dependencies: []
+
+...

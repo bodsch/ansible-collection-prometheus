@@ -1,0 +1,45 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+---
+# {{ ansible_managed }}
+
+{% if promscout_network_cidr is defined and
+      promscout_network_cidr | string | length > 0 %}
+network_cidr: {{ promscout_network_cidr }}
+{% endif %}
+{% if promscout_ports is defined and
+      promscout_ports | count > 0 %}
+ports:
+  {% for x in promscout_ports %}
+  - {{ x }}
+  {% endfor %}
+{% endif %}
+{% if promscout_metrics_paths is defined and
+      promscout_metrics_paths | count > 0 %}
+metrics_paths:
+  {% for x in promscout_metrics_paths %}
+  - {{ x }}
+  {% endfor %}
+{% endif %}
+{% if promscout_interval is defined and
+      promscout_interval | string | length > 0 %}
+interval: {{ promscout_interval }}
+{% endif %}
+{% if promscout_timeout is defined and
+      promscout_timeout | string | length > 0 %}
+timeout: {{ promscout_timeout }}
+{% endif %}
+{% if promscout_listen is defined and
+      promscout_listen | string | length > 0 %}
+listen_address: "{{ promscout_listen }}"
+{% endif %}
+
+log_format: json
+
+{% if promscout_log_level is defined and
+      promscout_log_level | string | length > 0 %}
+log_level: {{ promscout_log_level }}
+{% endif %}
+{% if promscout_max_workers is defined and
+      promscout_max_workers | string | length > 0 %}
+max_workers: {{ promscout_max_workers }}
+{% endif %}

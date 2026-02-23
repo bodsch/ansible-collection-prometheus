@@ -1,0 +1,6 @@
+---
+
+promscout_requirements:
+  - iproute
+
+...

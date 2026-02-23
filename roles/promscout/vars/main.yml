@@ -1,0 +1,38 @@
+---
+
+promscout_main_version: "{{ promscout_version[0:3] }}"
+
+promscout_install_path: /usr/local/bin/promscout/{{ promscout_version }}
+
+promscout_delegate_to: localhost
+
+promscout_local_tmp_directory: "{{
+  lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
+  default(lookup('env', 'HOME') ~ '/.cache/ansible/promscout', true) }}/{{ promscout_version }}"
+
+promscout_requirements:
+  - iproute2
+  - gzip
+
+promscout_defaults_directory: /etc/default
+
+promscout_defaults_release:
+  download_url: https://github.com/bodsch/promscout/releases
+  file: "promscout-{{ promscout_version }}-{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz"
+  checksum: "promscout-{{ promscout_version }}-{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz.sha256"
+  binary: promscout
+
+# ---------------------------------------------
+
+go_arch_map:
+  x86_64: 'amd64'
+  aarch64: 'arm64'
+  armv7l: 'armv7'
+  armv6l: 'armv6'
+
+system_architecture: "{{ go_arch_map[ansible_facts.architecture] | default(ansible_facts.architecture) }}"
+
+systemd_lib_directory: /lib/systemd/system
+
+
+...
