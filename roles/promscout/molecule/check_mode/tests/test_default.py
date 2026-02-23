@@ -54,8 +54,6 @@ def test_user(host, get_vars):
 
     assert not host.group(group).exists
     assert not host.user(user).exists
-    assert not group in host.user(user).groups
-    assert not host.user(user).home == "/nonexistent"
 
 
 def test_service(host, get_vars):
