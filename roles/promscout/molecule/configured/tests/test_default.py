@@ -25,6 +25,8 @@ def test_directories(host, dirs):
 
 def test_files(host, get_vars):
     """ """
+    version = local_facts(host=host, fact="promscout").get("version")
+
     install_dir = get_vars.get("promscout_install_path")
     defaults_dir = get_vars.get("promscout_defaults_directory")
     config_dir = get_vars.get("promscout_config_dir")
