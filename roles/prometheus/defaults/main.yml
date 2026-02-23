@@ -2,6 +2,16 @@
 
 prometheus_version: 3.8.0
 
+prometheus_scm:
+  use_tags: true
+  without_beta: false
+  version_filter:
+    - "test"
+    - "preview"
+    - "beta"
+    - "rc"
+
+
 # prometheus_release_download_url: https://github.com/prometheus/prometheus/releases
 
 prometheus_system_user: prometheus

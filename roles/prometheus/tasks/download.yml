@@ -15,6 +15,9 @@
       bodsch.scm.github_latest:
         project: prometheus
         repository: prometheus
+        github_tags: "{{ prometheus_scm.use_tags | default('false') }}"
+        without_beta: "{{ prometheus_scm.without_beta | default('false') }}"
+        filter_elements: "{{ prometheus_scm.version_filter | default([]) }}"
         user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
         password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
       register: _latest_release
