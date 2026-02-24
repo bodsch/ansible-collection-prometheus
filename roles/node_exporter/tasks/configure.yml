@@ -15,7 +15,7 @@
     - not running_in_check_mode
     - node_exporter_collectors is defined
     - node_exporter_collectors.enabled is defined
-    - node_exporter_collectors.enabled
+    - node_exporter_collectors.enabled | default([]) | count > 0
   block:
     - name: define custom directories
       ansible.builtin.set_fact:

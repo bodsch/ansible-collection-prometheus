@@ -3,8 +3,7 @@
 from __future__ import absolute_import, print_function
 
 import os
-
-__metaclass__ = type
+from typing import Any
 
 from ansible.utils.display import Display
 
@@ -20,28 +19,67 @@ class FilterModule(object):
             "cron_jobs": self.cron_jobs,
         }
 
-    def custom_dirs(self, data, custom_directory="textfile"):
-        """ """
-        # display.v(f"custom_dirs(self, {data})")
-        directories = []
-        _enabled = data.get("enabled", None)
+    def custom_dirs(
+        self, data: dict[str, Any], custom_directory: str = "textfile"
+    ) -> list[str]:
+        """
+        Return directory paths for a specific collector from the ``enabled`` section.
 
-        display.v(f"_enabled: {_enabled}")
+        The function is intentionally defensive and tolerates mixed/invalid entries in
+        the input structure (e.g. strings, incomplete dicts, missing keys).
 
-        if isinstance(_enabled, list) and _enabled:
-            directories = [
-                v.get("directory")
-                for e in _enabled
-                if type(e).__name__ == "dict"
-                for k, v in e.items()
-                if k == custom_directory and v.get("directory", None)
-            ]
+        Expected input shape (simplified example):
+            {
+                "enabled": [
+                    {"textfile": {"directory": "/var/lib/node_exporter"}},
+                    {"filesystem": {"mount-points-exclude": "..."}},
+                    "cpu",
+                    "meminfo",
+                ]
+            }
 
+        Args:
+            data: Filter input dictionary that may contain an ``enabled`` list.
+            custom_directory: Collector key to inspect (default: ``"textfile"``).
+
+        Returns:
+            A list of directory paths (strings). Invalid or missing values are ignored.
+            Duplicates are removed while preserving order.
+        """
+        display.vv(
+            f"bodsch.prometheus.custom_dirs(self, data: {data}, custom_directory: {custom_directory})"
+        )
+        # bodsch.prometheus.custom_dirs(self, data: {'enabled': [{'textfile': {'directory': '/var/lib/node_exporter'}}, {'filesystem': {'mount-points-exclude': '^/(sys|proc|dev)($|/)', 'fs-types-exclude': '^(sys|proc|auto)fs$'}}, 'processes', 'cpu', 'xfs', 'meminfo', 'netstat'], 'disabled': ['systemd', 'zfs', 'tapestats', 'mdadm']}, custom_directory: textfile)
+
+        directories: list[str] = []
+
+        if not isinstance(data, dict):
+            display.vvv("  - invalid input: 'data' is not a dict")
+            return directories
+
+        if not isinstance(custom_directory, str) or not custom_directory.strip():
+            display.vvv(
+                "  - invalid input: 'custom_directory' must be a non-empty string"
+            )
+            return directories
+
+        enabled = data.get("enabled", [])
+        if not isinstance(enabled, list):
+            display.vvv("  - invalid input: 'enabled' is not a list")
+            return directories
+
+        dicts = {k: v for e in enabled if isinstance(e, dict) for k, v in e.items()}
+        display.vv(f"  - dicts: {dicts}")
+
+        directories.append(dicts.get(custom_directory).get("directory"))
+
+        display.vv(f"= result: {directories}")
         return directories
 
     def unique_dirs(self, data):
         """ """
-        # display.v(f"unique_dirs(self, {data})")
+        display.vv(f"bodsch.prometheus.unique_dirs(self, data: {data})")
+
         directories = [os.path.dirname(x) for x in data]
 
         if len(directories) > 0:
@@ -52,12 +90,14 @@ class FilterModule(object):
 
     def cron_jobs(self, data, enabled=True):
         """ """
-        # display.v(f"cron_jobs(self, {data}, {enabled})")
+        display.vv(
+            f"bodsch.prometheus.cron_jobs(self, data: {data}, enabled: {enabled})"
+        )
+
         if isinstance(data, list):
             if enabled:
                 result = [x for x in data if x.get("cron", {}).get("enabled", True)]
             else:
                 result = [x for x in data if not x.get("cron", {}).get("enabled", True)]
 
-        # display.v(f"  = {result}")
         return result
