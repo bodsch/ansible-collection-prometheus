@@ -7,31 +7,6 @@
     logstream_exporter_logging: "{{ logstream_exporter_defaults_logging | combine(logstream_exporter_logging, recursive=True) }}"
     logstream_exporter_metrics: "{{ logstream_exporter_defaults_metrics | combine(logstream_exporter_metrics, recursive=True) }}"
 
-
-# - name: warn against the use of obsolete variables
-#   when:
-#     - not running_in_check_mode
-#     - logstream_exporter_config | default([]) | count > 0
-#   block:
-#     - name: warn against the use of obsolete variables  # noqa ignore-errors
-#       ansible.builtin.fail:
-#         msg: |
-#           The use of `logstream_exporter_config` is obsolete!
-#           Please use `logstream_exporter_modules` instead!
-#           The obsolete variable is automatically converted internally.
-#           The conversion will be removed in one of the next releases!
-#       ignore_errors: true
-#
-#     - name: wait 5 seconds to realise the message
-#       delegate_to: localhost
-#       ansible.builtin.wait_for:
-#         timeout: 10
-#
-#     - name: convert obsolete variable ...
-#       ansible.builtin.set_fact:
-#         logstream_exporter_modules: "{{ logstream_exporter_config | bodsch.prometheus.convert_to_modules(logstream_exporter_modules) }}"
-#         logstream_exporter_config: []
-
 - name: create logstream_exporter configuration directory
   when:
     - not running_in_check_mode

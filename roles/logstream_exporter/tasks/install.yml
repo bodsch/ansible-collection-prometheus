@@ -87,7 +87,7 @@
             owner: "{{ logstream_exporter_system_user }}"
             group: "{{ logstream_exporter_system_group }}"
 
-        - name: ensure json exporter binary has cap_net_raw capability
+        - name: ensure logstream exporter binary has cap_net_raw capability
           capabilities:
             path: "{{ logstream_exporter_install_path }}/{{ logstream_exporter_release.binary }}"
             capability: cap_net_raw+ep
@@ -101,7 +101,7 @@
             force: true
             follow: false
           notify:
-            - restart json exporter
+            - restart logstream exporter
 
       rescue:
         - name: delete install directory
