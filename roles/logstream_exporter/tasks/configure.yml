@@ -1,0 +1,58 @@
+---
+
+- name: merge logstream_exporter configuration between defaults and custom
+  ansible.builtin.set_fact:
+    logstream_exporter_server: "{{ logstream_exporter_defaults_server | combine(logstream_exporter_server, recursive=True) }}"
+    logstream_exporter_parser: "{{ logstream_exporter_defaults_parser | combine(logstream_exporter_parser, recursive=True) }}"
+    logstream_exporter_logging: "{{ logstream_exporter_defaults_logging | combine(logstream_exporter_logging, recursive=True) }}"
+    logstream_exporter_metrics: "{{ logstream_exporter_defaults_metrics | combine(logstream_exporter_metrics, recursive=True) }}"
+
+
+# - name: warn against the use of obsolete variables
+#   when:
+#     - not running_in_check_mode
+#     - logstream_exporter_config | default([]) | count > 0
+#   block:
+#     - name: warn against the use of obsolete variables  # noqa ignore-errors
+#       ansible.builtin.fail:
+#         msg: |
+#           The use of `logstream_exporter_config` is obsolete!
+#           Please use `logstream_exporter_modules` instead!
+#           The obsolete variable is automatically converted internally.
+#           The conversion will be removed in one of the next releases!
+#       ignore_errors: true
+#
+#     - name: wait 5 seconds to realise the message
+#       delegate_to: localhost
+#       ansible.builtin.wait_for:
+#         timeout: 10
+#
+#     - name: convert obsolete variable ...
+#       ansible.builtin.set_fact:
+#         logstream_exporter_modules: "{{ logstream_exporter_config | bodsch.prometheus.convert_to_modules(logstream_exporter_modules) }}"
+#         logstream_exporter_config: []
+
+- name: create logstream_exporter configuration directory
+  when:
+    - not running_in_check_mode
+  ansible.builtin.file:
+    path: "{{ logstream_exporter_config_dir }}"
+    state: directory
+    owner: root
+    group: "{{ logstream_exporter_system_group }}"
+    mode: 0770
+
+- name: create logstream_exporter configuration
+  when:
+    - not running_in_check_mode
+  ansible.builtin.template:
+    src: "config.yml.j2"
+    dest: "{{ logstream_exporter_config_dir }}/config.yml"
+    force: true
+    owner: root
+    group: "{{ logstream_exporter_system_group }}"
+    mode: 0644
+  notify:
+    - restart logstream exporter
+
+...

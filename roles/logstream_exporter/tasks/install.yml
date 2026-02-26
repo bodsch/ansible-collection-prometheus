@@ -1,0 +1,172 @@
+---
+
+- name: user and group handling
+  when:
+    - not running_in_check_mode
+    - logstream_exporter_system_user != "root"
+  block:
+    - name: create logstream_exporter group
+      ansible.builtin.group:
+        name: "{{ logstream_exporter_system_group }}"
+        state: present
+        system: true
+
+    - name: create logstream_exporter user
+      ansible.builtin.user:
+        name: "{{ logstream_exporter_system_user }}"
+        groups: "{{ logstream_exporter_system_group }}"
+        append: true
+        shell: /usr/sbin/nologin
+        system: true
+        createhome: false
+        home: /nonexistent
+
+- name: create install directory
+  when:
+    - not running_in_check_mode
+  ansible.builtin.file:
+    path: "{{ logstream_exporter_install_path }}"
+    state: directory
+    owner: "{{ logstream_exporter_system_user }}"
+    group: "{{ logstream_exporter_system_group }}"
+    mode: 0755
+
+- name: detect extracted binary file for logstream_exporter on '{{ logstream_exporter_delegate_to }}'
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ logstream_exporter_delegate_to }}"
+  run_once: "{{ 'false' if logstream_exporter_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ logstream_exporter_local_tmp_directory }}/{{ logstream_exporter_release.binary }}"
+  register: stat_file_binary
+
+- name: fail when extracted binary are missing
+  when:
+    - not running_in_check_mode
+    - not stat_file_binary.stat.exists
+  ansible.builtin.fail:
+    msg: "missing extracted binary on ansible controller"
+
+- name: detect installed logstream_exporter binary
+  when:
+    - not running_in_check_mode
+  ansible.builtin.stat:
+    path: "{{ logstream_exporter_install_path }}/{{ logstream_exporter_release.binary }}"
+  register: stat_logstream_exporter_binary
+
+- name: detect activated logstream_exporter binary
+  when:
+    - not running_in_check_mode
+  ansible.builtin.stat:
+    path: /usr/bin/{{ logstream_exporter_release.binary }}
+  register: stat_logstream_exporter_activated
+
+- name: install and activate logstream_exporter
+  when:
+    - not running_in_check_mode
+    - stat_file_binary.stat.exists
+    - (stat_logstream_exporter_binary.stat is defined and not stat_logstream_exporter_binary.stat.exists | default('false')) or
+      not stat_logstream_exporter_activated.stat | bodsch.prometheus.linked_version(logstream_exporter_install_path, logstream_exporter_version)
+  block:
+    - name: propagate files
+      block:
+        - name: propagate logstream_exporter binary
+          ansible.builtin.copy:
+            src: "{{ logstream_exporter_local_tmp_directory }}/{{ logstream_exporter_release.binary }}"
+            dest: "{{ logstream_exporter_install_path }}/{{ logstream_exporter_release.binary }}"
+            mode: 0755
+            owner: "{{ logstream_exporter_system_user }}"
+            group: "{{ logstream_exporter_system_group }}"
+            remote_src: "{{ 'true' if logstream_exporter_direct_download else 'false' }}"
+
+        - name: make files executable
+          ansible.builtin.file:
+            path: "{{ logstream_exporter_install_path }}/{{ logstream_exporter_release.binary }}"
+            mode: 0755
+            owner: "{{ logstream_exporter_system_user }}"
+            group: "{{ logstream_exporter_system_group }}"
+
+        - name: ensure json exporter binary has cap_net_raw capability
+          capabilities:
+            path: "{{ logstream_exporter_install_path }}/{{ logstream_exporter_release.binary }}"
+            capability: cap_net_raw+ep
+            state: present
+
+        - name: create link to binary
+          ansible.builtin.file:
+            src: "{{ logstream_exporter_install_path }}/{{ logstream_exporter_release.binary }}"
+            dest: /usr/bin/{{ logstream_exporter_release.binary }}
+            state: link
+            force: true
+            follow: false
+          notify:
+            - restart json exporter
+
+      rescue:
+        - name: delete install directory
+          ansible.builtin.file:
+            path: "{{ logstream_exporter_install_path }}"
+            state: absent
+
+        - name: exit with fail
+          ansible.builtin.fail:
+            msg: A serious error occurred during the installation of the binary.
+
+- name: systemd
+  when:
+    - not running_in_check_mode
+    - ansible_facts.service_mgr | lower == "systemd"
+  block:
+    - name: create logstream_exporter run configuration
+      ansible.builtin.template:
+        src: "default/logstream_exporter.j2"
+        dest: "{{ logstream_exporter_defaults_directory }}/logstream_exporter"
+        force: true
+        owner: root
+        group: "{{ logstream_exporter_system_group }}"
+        mode: 0640
+      notify:
+        - restart logstream exporter
+
+    - name: create systemd service unit
+      ansible.builtin.template:
+        src: "init/systemd/logstream_exporter.service.j2"
+        dest: "{{ systemd_lib_directory }}/logstream_exporter.service"
+        owner: root
+        group: root
+        mode: 0644
+      notify:
+        - daemon-reload
+        - restart logstream exporter
+
+- name: openrc
+  when:
+    - not running_in_check_mode
+    - ansible_facts.service_mgr | lower == "openrc"
+  block:
+    - name: create openrc service configuration
+      ansible.builtin.template:
+        src: "init/openrc/conf.d/logstream_exporter.j2"
+        dest: "/etc/conf.d/logstream_exporter"
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: create openrc init configuration
+      ansible.builtin.template:
+        src: "init/openrc/init.d/logstream_exporter.j2"
+        dest: "/etc/init.d/logstream_exporter"
+        owner: root
+        group: root
+        mode: 0750
+
+- name: create custom fact file
+  when:
+    - not running_in_check_mode
+  bodsch.core.facts:
+    name: logstream_exporter
+    facts:
+      version: "{{ logstream_exporter_version }}"
+
+...

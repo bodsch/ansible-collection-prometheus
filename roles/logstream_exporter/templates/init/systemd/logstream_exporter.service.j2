@@ -1,0 +1,22 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{{ ansible_managed | comment }}
+
+[Unit]
+Description       = Prometheus logstream-exporter for line-based log streams.
+After             = network-online.target
+
+[Service]
+Type              = simple
+EnvironmentFile   = {{ logstream_exporter_defaults_directory }}/logstream_exporter
+
+User              = {{ logstream_exporter_system_user }}
+Group             = {{ logstream_exporter_system_group }}
+
+ExecReload        = /bin/kill -HUP $MAINPID
+ExecStart         = /usr/bin/{{ logstream_exporter_release.binary }} $OPTIONS
+
+SyslogIdentifier  = logstream_exporter
+Restart           = always
+
+[Install]
+WantedBy          = multi-user.target

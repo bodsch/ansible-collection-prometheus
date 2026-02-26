@@ -37,7 +37,6 @@ class FilterModule(object):
                     "meminfo",
                 ]
             }
-
         Args:
             data: Filter input dictionary that may contain an ``enabled`` list.
             custom_directory: Collector key to inspect (default: ``"textfile"``).
@@ -49,8 +48,6 @@ class FilterModule(object):
         display.vv(
             f"bodsch.prometheus.custom_dirs(self, data: {data}, custom_directory: {custom_directory})"
         )
-        # bodsch.prometheus.custom_dirs(self, data: {'enabled': [{'textfile': {'directory': '/var/lib/node_exporter'}}, {'filesystem': {'mount-points-exclude': '^/(sys|proc|dev)($|/)', 'fs-types-exclude': '^(sys|proc|auto)fs$'}}, 'processes', 'cpu', 'xfs', 'meminfo', 'netstat'], 'disabled': ['systemd', 'zfs', 'tapestats', 'mdadm']}, custom_directory: textfile)
-
         directories: list[str] = []
 
         if not isinstance(data, dict):

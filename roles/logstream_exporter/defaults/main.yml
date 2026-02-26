@@ -1,0 +1,50 @@
+---
+
+logstream_exporter_version: '1.0.0'
+
+logstream_exporter_release: {}
+
+logstream_exporter_system_group: logstream-exporter
+logstream_exporter_system_user: logstream-exporter
+logstream_exporter_config_dir: /etc/logstream_exporter
+
+logstream_exporter_direct_download: false
+
+logstream_exporter_server:
+  log_listen_address: "127.0.0.1:2212"                #
+  log_transport: "udp"                                # tcp | udp
+  metrics_listen_address: "127.0.0.1:9212"            #
+  read_timeout: "30s"                                 #
+  line_max_bytes: 1048576                             #
+
+logstream_exporter_parser:
+  format: "auto"                                      # auto | json | syslog_rfc3164 | syslog_ng_json
+  payload_format: "json"                              # json | raw (used for syslog-based payloads)
+
+logstream_exporter_logging:
+  level: "info"                                       #
+  format: "json"                                      #
+
+logstream_exporter_metrics:
+  const_labels:                                       #
+    app: "logstream-exporter"                         #
+  event_counter:
+    name: ""                                          #
+    help: ""                                          #
+    labels: []                                        #
+                                                      #
+  definitions: []
+    # - name: ""                                      #
+    #   help: ""                                      #
+    #   field: ""                                     #
+    #   type: ""                                      #
+    #   labels: []                                    #
+    #   buckets:                                      #
+    #     - 0.1                                       #
+    #     - 0.25                                      #
+    #     - 0.5                                       #
+    #     - 1                                         #
+    #     - 2                                         #
+    #     - 5                                         #
+
+...
