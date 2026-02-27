@@ -42,10 +42,10 @@ def test_version(host, get_vars):
         install_dir = install_dir.replace("latest", version)
 
     files = []
-    files.append("/usr/bin/logstream_exporter")
+    files.append("/usr/bin/logstream-exporter")
 
     if install_dir:
-        files.append(f"{install_dir}/logstream_exporter")
+        files.append(f"{install_dir}/logstream-exporter")
     if defaults_dir and not distribution == "artix":
         files.append(f"{defaults_dir}/logstream_exporter")
     if config_dir:

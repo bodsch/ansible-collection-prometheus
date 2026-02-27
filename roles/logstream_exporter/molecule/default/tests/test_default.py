@@ -23,6 +23,21 @@ def test_files(host, files):
     f = host.file(files)
     assert f.exists
 
+def test_user(host, get_vars):
+    """ """
+    user = get_vars.get("logstream_exporter_system_user", "logstream_exporter")
+    group = get_vars.get("logstream_exporter_system_group", "logstream_exporter")
+
+    assert host.group(group).exists
+    assert host.user(user).exists
+    assert group in host.user(user).groups
+    assert host.user(user).home == "/nonexistent"
+
+
+def test_service(host, get_vars):
+    service = host.service("logstream_exporter")
+    assert service.is_enabled
+    assert service.is_running
 
 @pytest.mark.parametrize(
     "sockets",
