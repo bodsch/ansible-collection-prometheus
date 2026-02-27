@@ -71,7 +71,7 @@
     - not running_in_check_mode
     - stat_file_binary.stat.exists
     - (stat_promscout_binary.stat is defined and not stat_promscout_binary.stat.exists | default('false')) or
-      not stat_promscout_activated.stat | bodsch.prometheus.linked_version(promscout_install_path, promscout_version)
+      not stat_promscout_activated.stat | bodsch.core.linked_version(promscout_install_path, promscout_version)
   block:
     - name: propagate files
       block:

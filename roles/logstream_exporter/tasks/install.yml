@@ -67,7 +67,7 @@
     - not running_in_check_mode
     - stat_file_binary.stat.exists
     - (stat_logstream_exporter_binary.stat is defined and not stat_logstream_exporter_binary.stat.exists | default('false')) or
-      not stat_logstream_exporter_activated.stat | bodsch.prometheus.linked_version(logstream_exporter_install_path, logstream_exporter_version)
+      not stat_logstream_exporter_activated.stat | bodsch.core.linked_version(logstream_exporter_install_path, logstream_exporter_version)
   block:
     - name: propagate files
       block:
@@ -88,7 +88,7 @@
             group: "{{ logstream_exporter_system_group }}"
 
         - name: ensure logstream exporter binary has cap_net_raw capability
-          capabilities:
+          ansible.builtin.capabilities:
             path: "{{ logstream_exporter_install_path }}/{{ logstream_exporter_release.binary }}"
             capability: cap_net_raw+ep
             state: present

@@ -66,7 +66,7 @@
     - not running_in_check_mode
     - stat_file_binary.stat.exists
     - (stat_alertmanager_binary.stat is defined and not stat_alertmanager_binary.stat.exists | default('false')) or
-      not stat_alertmanager_activated.stat | bodsch.prometheus.linked_version(alertmanager_install_path, alertmanager_version)
+      not stat_alertmanager_activated.stat | bodsch.core.linked_version(alertmanager_install_path, alertmanager_version)
   block:
     - name: propagate files
       block:
