@@ -133,6 +133,7 @@ jobs:
           - redis_exporter
           - ssl_exporter
           - bind_exporter
+          - logstream_exporter
     steps:
       - name: check out the codebase.
         uses: actions/checkout@v6.0.1

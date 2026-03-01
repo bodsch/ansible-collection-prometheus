@@ -69,7 +69,7 @@
     - not running_in_check_mode
     - stat_file_binary.stat.exists
     - (stat_nginx_exporter_binary.stat is defined and not stat_nginx_exporter_binary.stat.exists | default('false')) or
-      not stat_nginx_exporter_activated.stat | bodsch.prometheus.linked_version(nginx_exporter_install_path, nginx_exporter_version)
+      not stat_nginx_exporter_activated.stat | bodsch.core.linked_version(nginx_exporter_install_path, nginx_exporter_version)
   block:
     - name: propagate files
       block:

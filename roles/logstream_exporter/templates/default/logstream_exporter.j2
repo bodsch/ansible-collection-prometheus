@@ -1,0 +1,8 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+# GOMAXPROCS={{ ansible_facts.processor_vcpus | default(ansible_facts.processor_count) }}
+
+OPTIONS="
+  -config {{ logstream_exporter_config_dir }}/config.yml
+"
