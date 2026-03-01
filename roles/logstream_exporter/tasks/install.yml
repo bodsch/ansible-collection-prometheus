@@ -32,6 +32,8 @@
     mode: "0755"
 
 - name: deploy and activate logstream_exporter version {{ logstream_exporter_version }}
+  when:
+    - not running_in_check_mode
   bodsch.core.deploy_and_activate:
     src_dir: "{{ logstream_exporter_local_tmp_directory }}"
     install_dir: "{{ logstream_exporter_install_path }}"
