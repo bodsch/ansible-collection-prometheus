@@ -1,0 +1,43 @@
+---
+
+- name: detect external installation
+  when:
+    - not running_in_check_mode
+  ansible.builtin.stat:
+    path: /usr/local/bin/logstream_exporter
+    get_checksum: false
+  register: stat_logstream_exporter_path
+  ignore_errors: true
+
+- name: old installation
+  when:
+    - not running_in_check_mode
+    - stat_logstream_exporter_path is defined
+    - stat_logstream_exporter_path.stat is defined
+    - stat_logstream_exporter_path.stat.isdir is defined
+    - not stat_logstream_exporter_path.stat.isdir
+  block:
+    - name: stop old service
+      ansible.builtin.service:
+        name: logstream_exporter
+        state: stopped
+        enabled: false
+      notify:
+        - daemon-reload
+
+    - name: remove installed systemd unit
+      ansible.builtin.file:
+        state: absent
+        path: /etc/systemd/system/logstream_exporter.service
+      when:
+        - ansible_facts.service_mgr | lower == "systemd"
+
+    - name: remove installed logstream_exporter
+      ansible.builtin.file:
+        state: absent
+        path: /usr/local/bin/logstream_exporter
+
+- name: flush handlers
+  ansible.builtin.meta: flush_handlers
+
+...

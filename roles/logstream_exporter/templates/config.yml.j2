@@ -1,0 +1,131 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+---
+# {{ ansible_managed }}
+
+{% if logstream_exporter_server.keys() | length > 0 %}
+server:
+  {% if logstream_exporter_server.log_listen_address is defined and
+        logstream_exporter_server.log_listen_address | string | length > 0 %}
+  log_listen_address: {{ logstream_exporter_server.log_listen_address }}
+  {% endif %}
+  {% if logstream_exporter_server.log_transport is defined and
+        logstream_exporter_server.log_transport | string | length > 0 and
+        logstream_exporter_server.log_transport in ["tcp","udp"] %}
+  log_transport: {{ logstream_exporter_server.log_transport }}
+  {% endif %}
+  {% if logstream_exporter_server.metrics_listen_address is defined and
+        logstream_exporter_server.metrics_listen_address | string | length > 0 %}
+  metrics_listen_address: {{ logstream_exporter_server.metrics_listen_address }}
+  {% endif %}
+  {% if logstream_exporter_server.read_timeout is defined and
+        logstream_exporter_server.read_timeout | string | length > 0 %}
+  read_timeout: {{ logstream_exporter_server.read_timeout }}
+  {% endif %}
+  {% if logstream_exporter_server.line_max_bytes is defined and
+        logstream_exporter_server.line_max_bytes | string | length > 0 %}
+  line_max_bytes: {{ logstream_exporter_server.line_max_bytes }}
+  {% endif %}
+{% endif %}
+
+{% if logstream_exporter_parser.keys() | length > 0 %}
+parser:
+  {% if logstream_exporter_parser.format is defined and
+        logstream_exporter_parser.format | string | length > 0 and
+        logstream_exporter_parser.format in ["auto","json", "syslog_rfc3164", "syslog_ng_json"] %}
+  format: {{ logstream_exporter_parser.format }}
+  {% endif %}
+  {% if logstream_exporter_parser.payload_format is defined and
+        logstream_exporter_parser.payload_format | string | length > 0 and
+        logstream_exporter_parser.payload_format in ["json", "raw"] %}
+  payload_format: {{ logstream_exporter_parser.payload_format }}
+  {% endif %}
+{% endif %}
+
+{% if logstream_exporter_logging.keys() | length > 0 %}
+logging:
+  {% if logstream_exporter_logging.level is defined and
+        logstream_exporter_logging.level | string | length > 0 and
+        logstream_exporter_logging.level in ["debug","info", "warn", "error"] %}
+  level: {{ logstream_exporter_logging.level }}
+  {% endif %}
+  {% if logstream_exporter_logging.format is defined and
+        logstream_exporter_logging.format | string | length > 0 and
+        logstream_exporter_logging.format in ["text","json"] %}
+  format: {{ logstream_exporter_logging.format }}
+  {% endif %}
+{% endif %}
+
+
+{% if logstream_exporter_metrics.keys() | length > 0 %}
+metrics:
+  {% if logstream_exporter_metrics.const_labels is defined and
+        logstream_exporter_metrics.const_labels.app is defined and
+        logstream_exporter_metrics.const_labels.app | string | length > 0 %}
+  const_labels:
+    app: {{ logstream_exporter_metrics.const_labels.app }}
+  {% endif %}
+  {% if logstream_exporter_metrics.event_counter is defined %}
+    {% set _clean = logstream_exporter_metrics.event_counter | bodsch.core.remove_empty_values() %}
+    {% if _clean | count > 0 %}
+  event_counter:
+    {{ _clean | to_nice_yaml(indent=2,sort_keys=False) | indent(4, False) }}
+    {% endif %}
+  {% endif %}
+  {% if logstream_exporter_metrics.definitions is defined and
+        logstream_exporter_metrics.definitions | default([]) | count > 0 %}
+    {% set _clean = logstream_exporter_metrics.definitions | bodsch.core.remove_empty_values() %}
+    {% if _clean | count > 0 %}
+  definitions:
+    {{ _clean | to_nice_yaml(indent=2,sort_keys=False) | indent(4, False) }}
+    {% endif %}
+  {% endif %}
+{% endif %}
+
+{#
+server:
+  log_listen_address: "127.0.0.1:2212"
+  log_transport: "udp"       # tcp | udp
+  metrics_listen_address: "127.0.0.1:9212"
+  read_timeout: "30s"
+  line_max_bytes: 1048576
+
+parser:
+  format: "auto"            # auto | json | syslog_rfc3164 | syslog_ng_json
+  payload_format: "json"    # json | raw (used for syslog-based payloads)
+
+logging:
+  level: "debug"
+  format: "json"
+
+metrics:
+  const_labels:
+    app: "logstream-exporter"
+
+  event_counter:
+    name: "logstream_events_total"
+    help: "Total processed log events."
+    labels: ["status", "request_method", "request_uri", "remote_addr", "server_name", "syslog_host", "syslog_tag", "geoip_country_code", "geoip_city"]
+
+  definitions:
+    - name: "logstream_request_time_seconds"
+      help: "Observed request_time values."
+      field: "request_time"
+      type: "histogram"
+      labels: ["status", "request_method", "server_name", "syslog_host"]
+      # buckets: [0.001, 0.005, 0.01, 0.05, 0.1, 0.25, 0.5, 1, 2, 5]
+      buckets: [0.1, 0.25, 0.5, 1, 2, 5]
+
+    - name: "logstream_bytes_sent_total"
+      help: "Accumulated bytes_sent values."
+      field: "bytes_sent"
+      type: "counter_add"
+      labels: ["status", "server_name", "syslog_host"]
+
+    - name: "logstream_upstream_response_time_seconds"
+      help: "Observed upstream response time values."
+      field: "upstream_response_time"
+      type: "histogram"
+      labels: ["status", "server_name", "syslog_host"]
+      # buckets: [0.001, 0.01, 0.05, 0.1, 0.25, 0.5, 1, 2, 5]
+      buckets: [0.1, 0.25, 0.5, 1, 2, 5]
+#}

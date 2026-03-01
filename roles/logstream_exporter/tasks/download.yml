@@ -1,0 +1,144 @@
+---
+
+- name: get latest release
+  when:
+    - not running_in_check_mode
+    - logstream_exporter_version == "latest"
+  delegate_to: localhost
+  become: false
+  run_once: true
+  block:
+    - name: get latest release
+      bodsch.scm.github_latest:
+        project: bodsch
+        repository: logstream-exporter
+        user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+        password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+      register: _latest_release
+
+    - name: re-define logstream_exporter_version
+      ansible.builtin.set_fact:
+        logstream_exporter_version: "{{ _latest_release.latest_release }}"
+
+- name: define download information
+  when:
+    - not running_in_check_mode
+  ansible.builtin.set_fact:
+    logstream_exporter_release: "{{ logstream_exporter_defaults_release | combine(logstream_exporter_release, recursive=True) }}"
+
+- name: define delegate instance for download handling
+  when:
+    - not running_in_check_mode
+    - logstream_exporter_direct_download
+  ansible.builtin.set_fact:
+    logstream_exporter_delegate_to: "{{ ansible_facts.host }}"
+    logstream_exporter_local_tmp_directory: "{{
+        lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
+        default('/var/cache/ansible/logstream_exporter', true) }}/{{ logstream_exporter_version }}"
+
+- name: create download directory
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ logstream_exporter_delegate_to }}"
+  run_once: "{{ 'false' if logstream_exporter_direct_download else 'true' }}"
+  ansible.builtin.file:
+    path: "{{ logstream_exporter_local_tmp_directory }}"
+    state: directory
+    mode: "0750"
+  check_mode: false
+
+- name: detect the downloaded logstream_exporter archive
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ logstream_exporter_delegate_to }}"
+  run_once: "{{ 'false' if logstream_exporter_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ logstream_exporter_local_tmp_directory }}/{{ logstream_exporter_release.file }}"
+  register: stat_logstream_exporter_archive
+
+- name: download
+  when:
+    - not running_in_check_mode
+    - stat_logstream_exporter_archive.stat is defined
+    - not stat_logstream_exporter_archive.stat.exists | default('false')
+  block:
+    - name: checksum
+      become: false
+      delegate_to: localhost
+      run_once: true
+      block:
+        - name: get checksum list
+          bodsch.scm.github_checksum:
+            project: bodsch
+            repository: logstream-exporter
+            checksum_file: "{{ logstream_exporter_release.checksum }}"
+            user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+            password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+            architecture: "{{ ansible_facts.architecture }}"
+            system: "{{ ansible_facts.system }}"
+            version: "{{ logstream_exporter_version }}"
+          register: _latest_checksum
+
+        - name: define checksum for {{ system_architecture }} architecture
+          ansible.builtin.set_fact:
+            __logstream_exporter_checksum: "sha256:{{ _latest_checksum.checksum }}"
+          when:
+            - _latest_checksum is defined
+            - _latest_checksum.rc is defined
+            - _latest_checksum.rc == 0
+            - _latest_checksum.checksum is defined
+            - _latest_checksum.checksum | string | length > 0
+
+    - name: download logstream_exporter binary archive
+      become: false
+      delegate_to: "{{ logstream_exporter_delegate_to }}"
+      run_once: "{{ 'false' if logstream_exporter_direct_download else 'true' }}"
+      ansible.builtin.get_url:
+        url: "{{ logstream_exporter_release.download_url }}/download/{{ logstream_exporter_version }}/{{ logstream_exporter_release.file }}"
+        dest: "{{ logstream_exporter_local_tmp_directory }}/{{ logstream_exporter_release.file }}"
+        checksum: "{{ __logstream_exporter_checksum | default(omit) }}"
+        mode: "0640"
+      register: _download_archive
+      until: _download_archive is succeeded
+      retries: 5
+      delay: 2
+
+  rescue:
+    - name: delete download directory
+      become: false
+      delegate_to: "{{ logstream_exporter_delegate_to }}"
+      run_once: "{{ 'false' if logstream_exporter_direct_download else 'true' }}"
+      ansible.builtin.file:
+        path: "{{ logstream_exporter_local_tmp_directory }}"
+        state: absent
+
+    - name: exit with fail
+      ansible.builtin.fail:
+        msg: A serious error occurred when downloading the archive.
+
+- name: detect extracted binary
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ logstream_exporter_delegate_to }}"
+  run_once: "{{ 'false' if logstream_exporter_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ logstream_exporter_local_tmp_directory }}/{{ logstream_exporter_release.binary }}"
+  register: stat_logstream_exporter_binary
+
+- name: extract logstream_exporter archive
+  when:
+    - not running_in_check_mode
+    - stat_logstream_exporter_binary.stat is defined
+    - not stat_logstream_exporter_binary.stat.exists | default('false')
+  become: false
+  delegate_to: "{{ logstream_exporter_delegate_to }}"
+  run_once: "{{ 'false' if logstream_exporter_direct_download else 'true' }}"
+  ansible.builtin.unarchive:
+    src: "{{ logstream_exporter_local_tmp_directory }}/{{ logstream_exporter_release.file }}"
+    dest: "{{ logstream_exporter_local_tmp_directory }}/"
+    copy: false
+
+...

@@ -67,7 +67,7 @@
     - not running_in_check_mode
     - stat_file_binary.stat.exists
     - (stat_redis_exporter_binary.stat is defined and not stat_redis_exporter_binary.stat.exists | default('false')) or
-      not stat_redis_exporter_activated.stat | bodsch.prometheus.linked_version(redis_exporter_install_path, redis_exporter_version)
+      not stat_redis_exporter_activated.stat | bodsch.core.linked_version(redis_exporter_install_path, redis_exporter_version)
   block:
     - name: propagate files
       block:
