@@ -24,7 +24,7 @@ tags:
 
 dependencies:
   ansible.posix: "*"
-  bodsch.core: ">=2.9.0"
+  bodsch.core: ">=2.10.0"
   bodsch.scm: ">=1.8.0"
   community.general: "*"
 
