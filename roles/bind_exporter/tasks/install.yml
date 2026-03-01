@@ -31,23 +31,23 @@
     group: "{{ bind_exporter_system_group }}"
     mode: 0755
 
-- name: detect extracted binary file for bind_exporter on '{{ bind_exporter_delegate_to }}'
-  when:
-    - not running_in_check_mode
-  become: false
-  delegate_to: "{{ bind_exporter_delegate_to }}"
-  run_once: "{{ 'false' if bind_exporter_direct_download else 'true' }}"
-  ansible.builtin.stat:
-    path: "{{ bind_exporter_local_tmp_directory }}/{{ bind_exporter_release.binary }}"
-  register: stat_file_binary
 
-- name: fail when extracted binary are missing
-  when:
-    - not running_in_check_mode
-    - not stat_file_binary.stat.exists
-  ansible.builtin.fail:
-    msg: "missing extracted binary on ansible controller"
+- name: deploy and activate bind_exporter version {{ bind_exporter_version }}
+  bodsch.core.deploy_and_activate:
+    src_dir: "{{ bind_exporter_local_tmp_directory }}"
+    install_dir: "{{ bind_exporter_install_path }}"
+    link_dir: "/usr/bin"
+    remote_src: "{{ ('false' if bind_exporter_direct_download else 'true') | bool }}"
+    owner: "{{ bind_exporter_system_user }}"
+    group: "{{ bind_exporter_system_group }}"
+    mode: "0755"
+    items:
+      - name: "{{ bind_exporter_release.binary }}"
+        capability: "cap_net_raw+ep"
+  notify:
+    - restart bind exporter
 
+<<<<<<< Updated upstream
 - name: detect installed bind_exporter binary
   when:
     - not running_in_check_mode
@@ -112,6 +112,89 @@
         - name: exit with fail
           ansible.builtin.fail:
             msg: A serious error occurred during the installation of the binary.
+=======
+# - name: detect extracted binary file for bind_exporter on '{{ bind_exporter_delegate_to }}'
+#   when:
+#     - not running_in_check_mode
+#   become: false
+#   delegate_to: "{{ bind_exporter_delegate_to }}"
+#   run_once: "{{ 'false' if bind_exporter_direct_download else 'true' }}"
+#   ansible.builtin.stat:
+#     path: "{{ bind_exporter_local_tmp_directory }}/{{ bind_exporter_release.binary }}"
+#   register: stat_file_binary
+#
+# - name: fail when extracted binary are missing
+#   when:
+#     - not running_in_check_mode
+#     - not stat_file_binary.stat.exists
+#   ansible.builtin.fail:
+#     msg: "missing extracted binary on ansible controller"
+#
+# - name: detect installed bind_exporter binary
+#   when:
+#     - not running_in_check_mode
+#   ansible.builtin.stat:
+#     path: "{{ bind_exporter_install_path }}/{{ bind_exporter_release.binary }}"
+#   register: stat_bind_exporter_binary
+#
+# - name: detect activated bind_exporter binary
+#   when:
+#     - not running_in_check_mode
+#   ansible.builtin.stat:
+#     path: /usr/bin/{{ bind_exporter_release.binary }}
+#   register: stat_bind_exporter_activated
+#
+# - name: install and activate bind_exporter
+#   when:
+#     - not running_in_check_mode
+#     - stat_file_binary.stat.exists
+#     - (stat_bind_exporter_binary.stat is defined and not stat_bind_exporter_binary.stat.exists | default('false')) or
+#       not stat_bind_exporter_activated.stat | bodsch.core.linked_version(bind_exporter_install_path, bind_exporter_version)
+#   block:
+#     - name: propagate files
+#       block:
+#         - name: propagate bind_exporter binary
+#           ansible.builtin.copy:
+#             src: "{{ bind_exporter_local_tmp_directory }}/{{ bind_exporter_release.binary }}"
+#             dest: "{{ bind_exporter_install_path }}/{{ bind_exporter_release.binary }}"
+#             mode: 0755
+#             owner: "{{ bind_exporter_system_user }}"
+#             group: "{{ bind_exporter_system_group }}"
+#             remote_src: "{{ 'true' if bind_exporter_direct_download else 'false' }}"
+#
+#         - name: make files executable
+#           ansible.builtin.file:
+#             path: "{{ bind_exporter_install_path }}/{{ bind_exporter_release.binary }}"
+#             mode: 0755
+#             owner: "{{ bind_exporter_system_user }}"
+#             group: "{{ bind_exporter_system_group }}"
+#
+#         - name: ensure bind exporter binary has cap_net_raw capability
+#           capabilities:
+#             path: "{{ bind_exporter_install_path }}/{{ bind_exporter_release.binary }}"
+#             capability: cap_net_raw+ep
+#             state: present
+#
+#         - name: create link to binary
+#           ansible.builtin.file:
+#             src: "{{ bind_exporter_install_path }}/{{ bind_exporter_release.binary }}"
+#             dest: /usr/bin/{{ bind_exporter_release.binary }}
+#             state: link
+#             force: true
+#             follow: false
+#           notify:
+#             - restart bind exporter
+#
+#       rescue:
+#         - name: delete install directory
+#           ansible.builtin.file:
+#             path: "{{ bind_exporter_install_path }}"
+#             state: absent
+#
+#         - name: exit with fail
+#           ansible.builtin.fail:
+#             msg: A serious error occurred during the installation of the binary.
+>>>>>>> Stashed changes
 
 - name: systemd
   when:

@@ -1,6 +1,6 @@
 ---
 
-prometheus_version: 3.8.0
+prometheus_version: 3.10.0
 
 prometheus_scm:
   use_tags: true
