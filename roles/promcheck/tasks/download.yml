@@ -102,7 +102,7 @@
         url: "{{ promcheck_release.download_url }}/download/v{{ promcheck_version }}/{{ promcheck_release.file }}"
         dest: "{{ promcheck_local_tmp_directory }}/{{ promcheck_release.file }}"
         checksum: "{{ __promcheck_checksum | default(omit) }}"
-        mode: 0640
+        mode: "0640"
       register: _download_archive
       until: _download_archive is succeeded
       retries: 5
@@ -157,5 +157,28 @@
     copy: false
     extra_opts:
       - --strip-components=1
+
+- name: detect the extracted file
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ promcheck_delegate_to }}"
+  run_once: "{{ 'false' if promcheck_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ promcheck_local_tmp_directory }}/promcheck_linux_amd64"
+  register: stat_promcheck_extracted_file
+
+- name: rename promcheck binary
+  when:
+    - not running_in_check_mode
+    - stat_promcheck_extracted_file.stat.exists | default('false') | bool
+  become: false
+  delegate_to: "{{ promcheck_delegate_to }}"
+  run_once: "{{ 'false' if promcheck_direct_download else 'true' }}"
+  ansible.builtin.copy:
+    src: "{{ promcheck_local_tmp_directory }}/promcheck_linux_amd64"
+    dest: "{{ promcheck_local_tmp_directory }}/{{ promcheck_release.binary }}"
+    mode: "0755"
+    remote_src: "{{ ('true' if promcheck_direct_download else 'false') | bool }}"
 
 ...

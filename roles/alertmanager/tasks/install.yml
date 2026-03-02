@@ -28,7 +28,7 @@
     state: directory
     owner: "{{ alertmanager_system_user }}"
     group: "{{ alertmanager_system_group }}"
-    mode: 0755
+    mode: "0755"
 
 - name: deploy and activate alertmanager version {{ alertmanager_version }}
   bodsch.core.deploy_and_activate:
@@ -41,172 +41,9 @@
     mode: "0755"
     items:
       - name: "{{ alertmanager_release.binary }}"
-        capability: "cap_net_raw+ep"
       - name: amtool
   notify:
     - restart alertmanager
-
-<<<<<<< Updated upstream
-- name: fail when extracted binary are missing
-  when:
-    - not running_in_check_mode
-    - not stat_file_binary.stat.exists
-  ansible.builtin.fail:
-    msg: "missing extracted binary on ansible controller"
-
-- name: detect installed alertmanager binary
-  when:
-    - not running_in_check_mode
-  ansible.builtin.stat:
-    path: "{{ alertmanager_install_path }}/{{ alertmanager_release.binary }}"
-  register: stat_alertmanager_binary
-
-- name: detect activated alertmanager binary
-  when:
-    - not running_in_check_mode
-  ansible.builtin.stat:
-    path: /usr/bin/{{ alertmanager_release.binary }}
-  register: stat_alertmanager_activated
-
-- name: install and activate alertmanager
-  when:
-    - not running_in_check_mode
-    - stat_file_binary.stat.exists
-    - (stat_alertmanager_binary.stat is defined and not stat_alertmanager_binary.stat.exists | default('false')) or
-      not stat_alertmanager_activated.stat | bodsch.core.linked_version(alertmanager_install_path, alertmanager_version)
-  block:
-    - name: propagate files
-      block:
-        - name: propagate alertmanager binaries
-          ansible.builtin.copy:
-            src: "{{ alertmanager_local_tmp_directory }}/{{ item }}"
-            dest: "{{ alertmanager_install_path }}/{{ item }}"
-            mode: 0755
-            owner: "{{ alertmanager_system_user }}"
-            group: "{{ alertmanager_system_group }}"
-            remote_src: "{{ 'true' if alertmanager_direct_download else 'false' }}"
-          loop:
-            - "{{ alertmanager_release.binary }}"
-            - amtool
-
-        - name: make files executable
-          ansible.builtin.file:
-            path: "{{ alertmanager_install_path }}/{{ item }}"
-            mode: 0755
-            owner: "{{ alertmanager_system_user }}"
-            group: "{{ alertmanager_system_group }}"
-          loop:
-            - "{{ alertmanager_release.binary }}"
-            - amtool
-
-        - name: create link to binary
-          ansible.builtin.file:
-            src: "{{ alertmanager_install_path }}/{{ item }}"
-            dest: "/usr/bin/{{ item }}"
-            state: link
-            force: true
-            follow: false
-          loop:
-            - "{{ alertmanager_release.binary }}"
-            - amtool
-          notify:
-            - restart alertmanager
-
-      rescue:
-        - name: delete install directory
-          ansible.builtin.file:
-            path: "{{ alertmanager_install_path }}"
-            state: absent
-
-        - name: exit with fail
-          ansible.builtin.fail:
-            msg: A serious error occurred during the installation of the binary.
-=======
-# - name: detect extracted binary file for alertmanager on '{{ alertmanager_delegate_to }}'
-#   when:
-#     - not running_in_check_mode
-#   become: false
-#   delegate_to: "{{ alertmanager_delegate_to }}"
-#   run_once: "{{ 'false' if alertmanager_direct_download else 'true' }}"
-#   ansible.builtin.stat:
-#     path: "{{ alertmanager_local_tmp_directory }}/alertmanager"
-#   register: stat_file_binary
-#
-# - name: fail when extracted binary are missing
-#   when:
-#     - not running_in_check_mode
-#     - not stat_file_binary.stat.exists
-#   ansible.builtin.fail:
-#     msg: "missing extracted binary on ansible controller"
-#
-# - name: detect installed alertmanager binary
-#   when:
-#     - not running_in_check_mode
-#   ansible.builtin.stat:
-#     path: "{{ alertmanager_install_pa/usr/local/opt/alertmanager/0.29.0th }}/{{ alertmanager_release.binary }}"
-#   register: stat_alertmanager_binary
-#
-# - name: detect activated alertmanager binary
-#   when:
-#     - not running_in_check_mode
-#   ansible.builtin.stat:
-#     path: /usr/bin/{{ alertmanager_release.binary }}
-#   register: stat_alertmanager_activated
-#
-# - name: install and activate alertmanager
-#   when:
-#     - not running_in_check_mode
-#     - stat_file_binary.stat.exists
-#     - (stat_alertmanager_binary.stat is defined and not stat_alertmanager_binary.stat.exists | default('false')) or
-#       not stat_alertmanager_activated.stat | bodsch.core.linked_version(alertmanager_install_path, alertmanager_version)
-#   block:
-#     - name: propagate files
-#       block:
-#         - name: propagate alertmanager binaries
-#           ansible.builtin.copy:
-#             src: "{{ alertmanager_local_tmp_directory }}/{{ item }}"
-#             dest: "{{ alertmanager_install_path }}/{{ item }}"
-#             mode: 0755
-#             owner: "{{ alertmanager_system_user }}"
-#             group: "{{ alertmanager_system_group }}"
-#             remote_src: "{{ 'true' if alertmanager_direct_download else 'false' }}"
-#           loop:
-#             - "{{ alertmanager_release.binary }}"
-#             - amtool
-#
-#         - name: make files executable
-#           ansible.builtin.file:
-#             path: "{{ alertmanager_install_path }}/{{ item }}"
-#             mode: 0755
-#             owner: "{{ alertmanager_system_user }}"
-#             group: "{{ alertmanager_system_group }}"
-#           loop:
-#             - "{{ alertmanager_release.binary }}"
-#             - amtool
-#
-#         - name: create link to binary
-#           ansible.builtin.file:
-#             src: "{{ alertmanager_install_path }}/{{ item }}"
-#             dest: "/usr/bin/{{ item }}"
-#             state: link
-#             force: true
-#             follow: false
-#           loop:
-#             - "{{ alertmanager_release.binary }}"
-#             - amtool
-#           notify:
-#             - restart alertmanager
-#
-#       rescue:
-#         - name: delete install directory
-#           ansible.builtin.file:
-#             path: "{{ alertmanager_install_path }}"
-#             state: absent
-#
-#         - name: exit with fail
-#           ansible.builtin.fail:
-#             msg: A serious error occurred during the installation of the binary.
->>>>>>> Stashed changes
 
 - name: create alertmanager data directory
   when:
@@ -216,7 +53,7 @@
     state: directory
     owner: "{{ alertmanager_system_user }}"
     group: "{{ alertmanager_system_group }}"
-    mode: 0755
+    mode: "0755"
 
 - name: create alertmanager configuration directory
   when:
@@ -226,7 +63,7 @@
     state: directory
     owner: root
     group: "{{ alertmanager_system_group }}"
-    mode: 0770
+    mode: "0770"
 
 - name: create amtool configuration directory
   when:
@@ -236,7 +73,7 @@
     state: directory
     owner: root
     group: "{{ alertmanager_system_group }}"
-    mode: 0770
+    mode: "0770"
 
 - name: create alertmanager templates directory
   when:
@@ -246,7 +83,7 @@
     state: directory
     owner: root
     group: "{{ alertmanager_system_group }}"
-    mode: 0770
+    mode: "0770"
   loop: "{{ alertmanager_templates }}"
   loop_control:
     label: "{{ item | dirname }}"
@@ -263,7 +100,7 @@
         force: true
         owner: root
         group: "{{ alertmanager_system_group }}"
-        mode: 0640
+        mode: "0640"
       notify:
         - reload alertmanager
 
@@ -273,7 +110,7 @@
         dest: "{{ systemd_lib_directory }}/alertmanager.service"
         owner: root
         group: root
-        mode: 0644
+        mode: "0644"
       notify:
         - daemon-reload
 
@@ -288,7 +125,7 @@
         dest: "/etc/conf.d/alertmanager"
         owner: root
         group: root
-        mode: 0644
+        mode: "0644"
 
     - name: create openrc init configuration
       ansible.builtin.template:
@@ -296,7 +133,7 @@
         dest: "/etc/init.d/alertmanager"
         owner: root
         group: root
-        mode: 0750
+        mode: "0750"
 
 - name: create custom fact file
   when:

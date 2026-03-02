@@ -8,7 +8,7 @@
     state: directory
     owner: root
     group: "{{ node_exporter_system_group }}"
-    mode: 0775
+    mode: "0775"
 
 - name: custom directories
   when:
@@ -27,7 +27,7 @@
         path: "{{ item }}"
         owner: root
         group: "{{ node_exporter_system_group }}"
-        mode: 0775
+        mode: "0775"
       loop: "{{ node_exporter_custom_dirs }}"
       loop_control:
         label: "{{ item }}"
@@ -42,7 +42,7 @@
     force: true
     owner: root
     group: "{{ node_exporter_system_group }}"
-    mode: 0640
+    mode: "0640"
   notify:
     - restart node_exporter
 

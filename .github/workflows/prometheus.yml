@@ -112,7 +112,7 @@ jobs:
     name: "${{ matrix.image }} / ${{ matrix.scenario }} / ${{ matrix.ansible-version }} / ${{ matrix.python_version }}"
     runs-on: ubuntu-22.04
     needs:
-      -  debian
+      - debian
     strategy:
       fail-fast: false
       matrix:

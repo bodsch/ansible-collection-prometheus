@@ -21,19 +21,19 @@ mongodb_users:
   - name: coremedia
     password: "{{ vault__mongodb.coremedia }}"
     roles: [
-      { db: 'coremedia' , role: 'dbOwner' },
-      { db: 'admin' , role: 'readWriteAnyDatabase' },
-      { db: 'admin' , role: 'dbAdminAnyDatabase' },
+      { db: 'coremedia', role: 'dbOwner' },
+      { db: 'admin', role: 'readWriteAnyDatabase' },
+      { db: 'admin', role: 'dbAdminAnyDatabase' },
     ]
     database: coremedia
 
   - name: monitoring
     password: "{{ vault__mongodb.monitoring }}"
     roles: [
-      { db: 'monitoring' , role: 'readWrite' },
-      { db: 'monitoring' , role: 'dbAdmin' },
-      { db: 'test' , role: 'readWrite' },
-      { db: 'test' , role: 'dbAdmin' },
+      { db: 'monitoring', role: 'readWrite' },
+      { db: 'monitoring', role: 'dbAdmin' },
+      { db: 'test', role: 'readWrite' },
+      { db: 'test', role: 'dbAdmin' },
       { db: 'admin', role: 'read' },
       { db: 'admin', role: 'backup' }
     ]

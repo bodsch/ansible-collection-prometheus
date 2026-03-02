@@ -102,7 +102,7 @@
         url: "{{ nginx_exporter_release.download_url }}/download/v{{ nginx_exporter_version }}/{{ nginx_exporter_release.file }}"
         dest: "{{ nginx_exporter_local_tmp_directory }}/{{ nginx_exporter_release.file }}"
         checksum: "{{ __nginx_exporter_checksum | default(omit) }}"
-        mode: 0640
+        mode: "0640"
       register: _download_archive
       until: _download_archive is succeeded
       retries: 5
@@ -143,7 +143,28 @@
     src: "{{ nginx_exporter_local_tmp_directory }}/{{ nginx_exporter_release.file }}"
     dest: "{{ nginx_exporter_local_tmp_directory }}/"
     copy: false
-    #extra_opts:
-    #  - --strip-components=1
+
+- name: detect the extracted file
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ nginx_exporter_delegate_to }}"
+  run_once: "{{ 'false' if nginx_exporter_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ nginx_exporter_local_tmp_directory }}/nginx-prometheus-exporter"
+  register: stat_nginx_extracted_file
+
+- name: rename nginx_exporter binary
+  when:
+    - not running_in_check_mode
+    - stat_nginx_extracted_file.stat.exists | default('false') | bool
+  become: false
+  delegate_to: "{{ nginx_exporter_delegate_to }}"
+  run_once: "{{ 'false' if nginx_exporter_direct_download else 'true' }}"
+  ansible.builtin.copy:
+    src: "{{ nginx_exporter_local_tmp_directory }}/nginx-prometheus-exporter"
+    dest: "{{ nginx_exporter_local_tmp_directory }}/{{ nginx_exporter_release.binary }}"
+    mode: "0755"
+    remote_src: "{{ ('true' if nginx_exporter_direct_download else 'false') | bool }}"
 
 ...

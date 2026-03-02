@@ -8,7 +8,7 @@
     state: directory
     owner: root
     group: "{{ mysql_exporter_system_group }}"
-    mode: 0775
+    mode: "0775"
 
 - name: create mysql credentials file
   when:
@@ -20,7 +20,7 @@
     dest: "{{ mysql_exporter_service.config.my_cnf }}"
     owner: root
     group: "{{ mysql_exporter_system_group }}"
-    mode: 0666
+    mode: "0666"
   no_log: true
 
 ...

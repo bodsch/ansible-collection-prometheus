@@ -33,88 +33,24 @@
     state: directory
     owner: "{{ prometheus_system_user }}"
     group: "{{ prometheus_system_group }}"
-    mode: 0755
+    mode: "0755"
 
-- name: detect extracted binary file for prometheus on '{{ prometheus_delegate_to }}'
+- name: deploy and activate prometheus version {{ prometheus_version }}
   when:
     - not running_in_check_mode
-  become: false
-  delegate_to: "{{ prometheus_delegate_to }}"
-  run_once: "{{ 'false' if prometheus_direct_download else 'true' }}"
-  ansible.builtin.stat:
-    path: "{{ prometheus_local_tmp_directory }}/{{ prometheus_release.binary }}"
-  register: stat_file_binary
-
-- name: fail when extracted binary are missing
-  when:
-    - not running_in_check_mode
-    - not stat_file_binary.stat.exists
-  ansible.builtin.fail:
-    msg: "missing extracted binary on ansible controller"
-
-- name: detect installed prometheus binary
-  ansible.builtin.stat:
-    path: "{{ prometheus_install_path }}/{{ prometheus_release.binary }}"
-  register: stat_prometheus_binary
-
-- name: detect activated prometheus binary
-  ansible.builtin.stat:
-    path: /usr/bin/prometheus
-  register: stat_prometheus_activated
-
-- name: install and activate prometheus
-  when:
-    - not running_in_check_mode
-    - stat_file_binary.stat.exists
-    - (stat_prometheus_binary.stat is defined and not stat_prometheus_binary.stat.exists | default('false')) or
-      not stat_prometheus_activated.stat | bodsch.core.linked_version(prometheus_install_path, prometheus_version)
-  block:
-    - name: propagate files
-      block:
-        - name: propagate prometheus binaries
-          ansible.builtin.copy:
-            src: "{{ prometheus_local_tmp_directory }}/{{ item }}"
-            dest: "{{ prometheus_install_path }}/{{ item }}"
-            mode: 0755
-            owner: "{{ prometheus_system_user }}"
-            group: "{{ prometheus_system_group }}"
-            remote_src: "{{ 'true' if prometheus_direct_download else 'false' }}"
-          loop:
-            - "{{ prometheus_release.binary }}"
-            - promtool
-
-        - name: make files executable
-          ansible.builtin.file:
-            path: "{{ prometheus_install_path }}/{{ item }}"
-            mode: 0755
-            owner: "{{ prometheus_system_user }}"
-            group: "{{ prometheus_system_group }}"
-          loop:
-            - "{{ prometheus_release.binary }}"
-            - promtool
-
-        - name: create link to binary
-          ansible.builtin.file:
-            src: "{{ prometheus_install_path }}/{{ item }}"
-            dest: "/usr/bin/{{ item }}"
-            state: link
-            force: true
-            follow: false
-          loop:
-            - "{{ prometheus_release.binary }}"
-            - promtool
-          notify:
-            - restart prometheus
-
-      rescue:
-        - name: delete install directory
-          ansible.builtin.file:
-            path: "{{ prometheus_install_path }}"
-            state: absent
-
-        - name: exit with fail
-          ansible.builtin.fail:
-            msg: A serious error occurred during the installation of the binary.
+  bodsch.core.deploy_and_activate:
+    src_dir: "{{ prometheus_local_tmp_directory }}"
+    install_dir: "{{ prometheus_install_path }}"
+    link_dir: "/usr/bin"
+    remote_src: "{{ ('true' if prometheus_direct_download else 'false') | bool }}"
+    owner: "{{ prometheus_system_user }}"
+    group: "{{ prometheus_system_group }}"
+    mode: "0755"
+    items:
+      - name: "{{ prometheus_release.binary }}"
+      - name: promtool
+  notify:
+    - restart prometheus
 
 - name: create prometheus data directory
   when:
@@ -124,7 +60,7 @@
     state: directory
     owner: "{{ prometheus_system_user }}"
     group: "{{ prometheus_system_group }}"
-    mode: 0755
+    mode: "0755"
 
 - name: create prometheus configuration directory
   when:
@@ -134,7 +70,7 @@
     state: directory
     owner: root
     group: "{{ prometheus_system_group }}"
-    mode: 0770
+    mode: "0770"
 
 - name: create rules directory
   when:
@@ -144,7 +80,7 @@
     path: "{{ prometheus_config_dir }}/rules"
     owner: "{{ prometheus_system_user }}"
     group: "{{ prometheus_system_group }}"
-    mode: 0750
+    mode: "0750"
 
 - name: create targets directory
   when:
@@ -154,7 +90,7 @@
     path: "{{ prometheus_config_dir }}/targets"
     owner: "{{ prometheus_system_user }}"
     group: "{{ prometheus_system_group }}"
-    mode: 0750
+    mode: "0750"
 
 - name: create file_sd directory
   when:
@@ -164,7 +100,7 @@
     path: "{{ prometheus_config_dir }}/file_sd"
     owner: "{{ prometheus_system_user }}"
     group: "{{ prometheus_system_group }}"
-    mode: 0750
+    mode: "0750"
 
 - name: systemd
   when:
@@ -178,7 +114,7 @@
         force: true
         owner: root
         group: "{{ prometheus_system_group }}"
-        mode: 0640
+        mode: "0640"
       notify:
         - simple restart prometheus
 
@@ -188,7 +124,7 @@
         dest: "{{ systemd_lib_directory }}/prometheus.service"
         owner: root
         group: root
-        mode: 0644
+        mode: "0644"
       notify:
         - daemon-reload
 
@@ -203,7 +139,7 @@
         dest: "/etc/conf.d/prometheus"
         owner: root
         group: root
-        mode: 0644
+        mode: "0644"
       notify:
         - simple restart prometheus
 
@@ -213,7 +149,7 @@
         dest: "/etc/init.d/prometheus"
         owner: root
         group: root
-        mode: 0750
+        mode: "0750"
 
 - name: create custom fact file
   when:

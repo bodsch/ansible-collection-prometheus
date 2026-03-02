@@ -6,77 +6,19 @@
   ansible.builtin.file:
     path: "{{ promcheck_install_path }}"
     state: directory
-    mode: 0755
+    mode: "0755"
 
-- name: detect extracted binary file for promcheck on '{{ promcheck_delegate_to }}'
+- name: deploy and activate promcheck version {{ promcheck_version }}
   when:
     - not running_in_check_mode
-  become: false
-  delegate_to: "{{ promcheck_delegate_to }}"
-  run_once: "{{ 'false' if promcheck_direct_download else 'true' }}"
-  ansible.builtin.stat:
-    path: "{{ promcheck_local_tmp_directory }}/{{ promcheck_release.extracted }}"
-  register: stat_file_binary
-
-- name: fail when extracted binary are missing
-  when:
-    - not running_in_check_mode
-    - not stat_file_binary.stat.exists
-  ansible.builtin.fail:
-    msg: "missing extracted binary on ansible controller"
-
-- name: detect installed promcheck binary
-  when:
-    - not running_in_check_mode
-  ansible.builtin.stat:
-    path: "{{ promcheck_install_path }}/{{ promcheck_release.binary }}"
-  register: stat_promcheck_binary
-
-- name: detect activated promcheck binary
-  when:
-    - not running_in_check_mode
-  ansible.builtin.stat:
-    path: "/usr/bin/{{ promcheck_release.binary }}"
-  register: stat_promcheck_activated
-
-- name: install and activate promcheck
-  when:
-    - not running_in_check_mode
-    - stat_file_binary.stat.exists
-    - (stat_promcheck_binary.stat is defined and not stat_promcheck_binary.stat.exists | default('false')) or
-      not stat_promcheck_activated.stat | bodsch.core.linked_version(promcheck_install_path, promcheck_version)
-  block:
-    - name: propagate files
-      block:
-        - name: propagate promcheck binary
-          ansible.builtin.copy:
-            src: "{{ promcheck_local_tmp_directory }}/{{ promcheck_release.extracted }}"
-            dest: "{{ promcheck_install_path }}/{{ promcheck_release.binary }}"
-            mode: 0755
-            remote_src: "{{ 'true' if promcheck_direct_download else 'false' }}"
-
-        - name: make files executable
-          ansible.builtin.file:
-            path: "{{ promcheck_install_path }}/{{ promcheck_release.binary }}"
-            mode: 0755
-
-        - name: create link to binary
-          ansible.builtin.file:
-            src: "{{ promcheck_install_path }}/{{ promcheck_release.binary }}"
-            dest: "/usr/bin/{{ promcheck_release.binary }}"
-            state: link
-            force: true
-            follow: false
-
-      rescue:
-        - name: delete install directory
-          ansible.builtin.file:
-            path: "{{ promcheck_install_path }}"
-            state: absent
-
-        - name: exit with fail
-          ansible.builtin.fail:
-            msg: A serious error occurred during the installation of the binary.
+  bodsch.core.deploy_and_activate:
+    src_dir: "{{ promcheck_local_tmp_directory }}"
+    install_dir: "{{ promcheck_install_path }}"
+    link_dir: "/usr/bin"
+    remote_src: "{{ ('true' if promcheck_direct_download else 'false') | bool }}"
+    mode: "0755"
+    items:
+      - name: "{{ promcheck_release.binary }}"
 
 - name: create custom fact file
   when:

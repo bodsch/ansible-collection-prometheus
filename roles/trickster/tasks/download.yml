@@ -103,7 +103,7 @@
         url: "{{ trickster_release.download_url }}/download/v{{ trickster_version }}/{{ trickster_release.file }}"
         dest: "{{ trickster_local_tmp_directory }}/{{ trickster_release.file }}"
         # checksum: "{{ __trickster_checksum | default(omit) }}"
-        mode: 0640
+        mode: "0640"
       register: _download_archive
       until: _download_archive is succeeded
       retries: 5
@@ -146,5 +146,28 @@
     copy: false
     extra_opts:
       - --strip-components=1
+
+- name: detect the extracted file
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ trickster_delegate_to }}"
+  run_once: "{{ 'false' if trickster_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ trickster_local_tmp_directory }}/trickster-{{ trickster_version }}/bin/trickster-{{ trickster_version }}.{{ ansible_facts.system | lower }}-{{ system_architecture }}"
+  register: stat_trickster_extracted_file
+
+- name: rename trickster binary
+  when:
+    - not running_in_check_mode
+    - stat_trickster_extracted_file.stat.exists | default('false') | bool
+  become: false
+  delegate_to: "{{ trickster_delegate_to }}"
+  run_once: "{{ 'false' if trickster_direct_download else 'true' }}"
+  ansible.builtin.copy:
+    src: "{{ trickster_local_tmp_directory }}/trickster-{{ trickster_version }}/bin/trickster-{{ trickster_version }}.{{ ansible_facts.system | lower }}-{{ system_architecture }}"
+    dest: "{{ trickster_local_tmp_directory }}/{{ trickster_release.binary }}"
+    mode: "0755"
+    remote_src: "{{ ('true' if trickster_direct_download else 'false') | bool }}"
 
 ...

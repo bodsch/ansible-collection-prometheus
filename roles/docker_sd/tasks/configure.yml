@@ -8,7 +8,7 @@
     state: directory
     owner: root
     group: "{{ docker_sd_system_group }}"
-    mode: 0770
+    mode: "0770"
 
 - name: create docker-sd configuration
   when:
@@ -19,7 +19,7 @@
     force: true
     owner: root
     group: "{{ docker_sd_system_group }}"
-    mode: 0640
+    mode: "0640"
   notify:
     - restart docker-sd
 

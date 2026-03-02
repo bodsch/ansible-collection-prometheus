@@ -95,7 +95,7 @@
         url: "{{ promscout_release.download_url }}/download/{{ promscout_version }}/{{ promscout_release.file }}"
         dest: "{{ promscout_local_tmp_directory }}/{{ promscout_release.file }}"
         checksum: "{{ __promscout_checksum | default(omit) }}"
-        mode: 0660
+        mode: "0660"
       register: _download_archive
       until: _download_archive is succeeded
       retries: 5
