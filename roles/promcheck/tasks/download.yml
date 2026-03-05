@@ -158,25 +158,37 @@
     extra_opts:
       - --strip-components=1
 
-- name: detect the extracted file
+- name: find extracted binaries
   when:
     - not running_in_check_mode
   become: false
   delegate_to: "{{ promcheck_delegate_to }}"
   run_once: "{{ 'false' if promcheck_direct_download else 'true' }}"
-  ansible.builtin.stat:
-    path: "{{ promcheck_local_tmp_directory }}/promcheck_linux_amd64"
-  register: stat_promcheck_extracted_file
+  ansible.builtin.find:
+    paths: "{{ promcheck_local_tmp_directory }}"
+    file_type: file
+    patterns:
+      - "promcheck*"
+    recurse: false
+  register: found_binaries
+  no_log: true
+
+- name: define monitoring_plugins_directory
+  when:
+    - found_binaries.files is defined
+    - found_binaries.files | count > 0
+  ansible.builtin.set_fact:
+    stat_promcheck_extracted_file: "{{ found_binaries.files | sort(attribute='path', reverse=True) | map(attribute='path') | list | first }}"
 
 - name: rename promcheck binary
   when:
     - not running_in_check_mode
-    - stat_promcheck_extracted_file.stat.exists | default('false') | bool
+    - stat_promcheck_extracted_file | default('') | string | length > 0
   become: false
   delegate_to: "{{ promcheck_delegate_to }}"
   run_once: "{{ 'false' if promcheck_direct_download else 'true' }}"
   ansible.builtin.copy:
-    src: "{{ promcheck_local_tmp_directory }}/promcheck_linux_amd64"
+    src: "{{ stat_promcheck_extracted_file }}"
     dest: "{{ promcheck_local_tmp_directory }}/{{ promcheck_release.binary }}"
     mode: "0755"
     remote_src: "{{ ('true' if promcheck_direct_download else 'false') | bool }}"
