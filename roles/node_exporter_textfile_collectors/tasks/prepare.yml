@@ -24,7 +24,7 @@
     path: "{{ node_exporter_config_dir }}/collector-scripts"
     owner: "{{ node_exporter_system_user }}"
     group: "{{ node_exporter_system_group }}"
-    mode: 0750
+    mode: "0750"
 
 - name: create env directory for configurations
   when:
@@ -34,6 +34,6 @@
     path: "{{ node_exporter_config_dir }}/.env"
     owner: "{{ node_exporter_system_user }}"
     group: "{{ node_exporter_system_group }}"
-    mode: 0750
+    mode: "0750"
 
 ...

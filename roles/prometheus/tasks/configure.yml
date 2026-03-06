@@ -23,7 +23,7 @@
     force: true
     owner: root
     group: "{{ prometheus_system_group }}"
-    mode: 0640
+    mode: "0640"
   with_dict: "{{ prometheus_file_sd_targets }}"
   loop_control:
     label: "{{ item.key }}.yml"
@@ -54,7 +54,7 @@
     force: true
     owner: root
     group: "{{ prometheus_system_group }}"
-    mode: 0640
+    mode: "0640"
   register: prometheus_config
   notify:
     - validate prometheus config
@@ -70,7 +70,7 @@
     force: true
     owner: root
     group: "{{ prometheus_system_group }}"
-    mode: 0640
+    mode: "0640"
   notify:
     - reload prometheus
 

@@ -100,7 +100,7 @@
         url: "{{ alertmanager_release.download_url }}/download/v{{ alertmanager_version }}/{{ alertmanager_release.file }}"
         dest: "{{ alertmanager_local_tmp_directory }}/{{ alertmanager_release.file }}"
         checksum: "{{ __alertmanager_checksum | default(omit) }}"
-        mode: 0660
+        mode: "0660"
       register: _download_archive
       until: _download_archive is succeeded
       retries: 5

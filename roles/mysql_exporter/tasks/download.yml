@@ -100,7 +100,7 @@
         url: "{{ mysql_exporter_release.download_url }}/download/v{{ mysql_exporter_version }}/{{ mysql_exporter_release.file }}"
         dest: "{{ mysql_exporter_local_tmp_directory }}/{{ mysql_exporter_release.file }}"
         checksum: "{{ __mysql_exporter_checksum | default(omit) }}"
-        mode: 0640
+        mode: "0640"
       register: _download_archive
       until: _download_archive is succeeded
       retries: 5

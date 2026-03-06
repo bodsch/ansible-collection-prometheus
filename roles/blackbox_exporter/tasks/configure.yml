@@ -7,7 +7,7 @@
     state: directory
     path: "{{ blackbox_exporter_service.config.file | dirname }}"
     group: "{{ blackbox_exporter_system_group }}"
-    mode: 0750
+    mode: "0750"
 
 - name: configure blackbox exporter
   when:
@@ -16,7 +16,7 @@
     src: blackbox_exporter/blackbox_exporter.yml.j2
     dest: "{{ blackbox_exporter_service.config.file }}"
     group: "{{ blackbox_exporter_system_group }}"
-    mode: 0644
+    mode: "0644"
   notify:
     - validate blackbox config
     - reload blackbox exporter

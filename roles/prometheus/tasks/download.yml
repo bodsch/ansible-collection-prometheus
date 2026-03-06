@@ -100,7 +100,7 @@
         url: "{{ prometheus_release.download_url }}/download/v{{ prometheus_version }}/{{ prometheus_release.file }}"
         dest: "{{ prometheus_local_tmp_directory }}/{{ prometheus_release.file }}"
         checksum: "{{ __prometheus_checksum | default(omit) }}"
-        mode: 0640
+        mode: "0640"
       register: _download_archive
       until: _download_archive is succeeded
       retries: 5

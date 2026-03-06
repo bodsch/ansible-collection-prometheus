@@ -29,89 +29,24 @@
     state: directory
     owner: "{{ json_exporter_system_user }}"
     group: "{{ json_exporter_system_group }}"
-    mode: 0755
+    mode: "0755"
 
-- name: detect extracted binary file for json_exporter on '{{ json_exporter_delegate_to }}'
+- name: deploy and activate json_exporter version {{ json_exporter_version }}
   when:
     - not running_in_check_mode
-  become: false
-  delegate_to: "{{ json_exporter_delegate_to }}"
-  run_once: "{{ 'false' if json_exporter_direct_download else 'true' }}"
-  ansible.builtin.stat:
-    path: "{{ json_exporter_local_tmp_directory }}/{{ json_exporter_release.binary }}"
-  register: stat_file_binary
-
-- name: fail when extracted binary are missing
-  when:
-    - not running_in_check_mode
-    - not stat_file_binary.stat.exists
-  ansible.builtin.fail:
-    msg: "missing extracted binary on ansible controller"
-
-- name: detect installed json_exporter binary
-  when:
-    - not running_in_check_mode
-  ansible.builtin.stat:
-    path: "{{ json_exporter_install_path }}/{{ json_exporter_release.binary }}"
-  register: stat_json_exporter_binary
-
-- name: detect activated json_exporter binary
-  when:
-    - not running_in_check_mode
-  ansible.builtin.stat:
-    path: /usr/bin/{{ json_exporter_release.binary }}
-  register: stat_json_exporter_activated
-
-- name: install and activate json_exporter
-  when:
-    - not running_in_check_mode
-    - stat_file_binary.stat.exists
-    - (stat_json_exporter_binary.stat is defined and not stat_json_exporter_binary.stat.exists | default('false')) or
-      not stat_json_exporter_activated.stat | bodsch.core.linked_version(json_exporter_install_path, json_exporter_version)
-  block:
-    - name: propagate files
-      block:
-        - name: propagate json_exporter binary
-          ansible.builtin.copy:
-            src: "{{ json_exporter_local_tmp_directory }}/{{ json_exporter_release.binary }}"
-            dest: "{{ json_exporter_install_path }}/{{ json_exporter_release.binary }}"
-            mode: 0755
-            owner: "{{ json_exporter_system_user }}"
-            group: "{{ json_exporter_system_group }}"
-            remote_src: "{{ 'true' if json_exporter_direct_download else 'false' }}"
-
-        - name: make files executable
-          ansible.builtin.file:
-            path: "{{ json_exporter_install_path }}/{{ json_exporter_release.binary }}"
-            mode: 0755
-            owner: "{{ json_exporter_system_user }}"
-            group: "{{ json_exporter_system_group }}"
-
-        - name: ensure json exporter binary has cap_net_raw capability
-          capabilities:
-            path: "{{ json_exporter_install_path }}/{{ json_exporter_release.binary }}"
-            capability: cap_net_raw+ep
-            state: present
-
-        - name: create link to binary
-          ansible.builtin.file:
-            src: "{{ json_exporter_install_path }}/{{ json_exporter_release.binary }}"
-            dest: /usr/bin/{{ json_exporter_release.binary }}
-            state: link
-            force: true
-            follow: false
-          notify:
-            - restart json exporter
-
-      rescue:
-        - name: delete install directory
-          ansible.builtin.file:
-            path: "{{ json_exporter_install_path }}"
-            state: absent
-
-        - name: exit with fail
-          ansible.builtin.fail:
-            msg: A serious error occurred during the installation of the binary.
+  bodsch.core.deploy_and_activate:
+    src_dir: "{{ json_exporter_local_tmp_directory }}"
+    install_dir: "{{ json_exporter_install_path }}"
+    link_dir: "/usr/bin"
+    remote_src: "{{ ('true' if json_exporter_direct_download else 'false') | bool }}"
+    owner: "{{ json_exporter_system_user }}"
+    group: "{{ json_exporter_system_group }}"
+    mode: "0755"
+    items:
+      - name: "{{ json_exporter_release.binary }}"
+        capability: "cap_net_raw+ep"
+  notify:
+    - restart json exporter
 
 - name: systemd
   when:
@@ -125,7 +60,7 @@
         force: true
         owner: root
         group: "{{ json_exporter_system_group }}"
-        mode: 0640
+        mode: "0640"
       notify:
         - restart json exporter
 
@@ -135,7 +70,7 @@
         dest: "{{ systemd_lib_directory }}/json_exporter.service"
         owner: root
         group: root
-        mode: 0644
+        mode: "0644"
       notify:
         - daemon-reload
         - restart json exporter
@@ -151,7 +86,7 @@
         dest: "/etc/conf.d/json_exporter"
         owner: root
         group: root
-        mode: 0644
+        mode: "0644"
 
     - name: create openrc init configuration
       ansible.builtin.template:
@@ -159,7 +94,7 @@
         dest: "/etc/init.d/json_exporter"
         owner: root
         group: root
-        mode: 0750
+        mode: "0750"
 
 - name: create custom fact file
   when:

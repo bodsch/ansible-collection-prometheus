@@ -100,7 +100,7 @@
         url: "{{ redis_exporter_release.download_url }}/download/v{{ redis_exporter_version }}/{{ redis_exporter_release.file }}"
         dest: "{{ redis_exporter_local_tmp_directory }}/{{ redis_exporter_release.file }}"
         checksum: "{{ __redis_exporter_checksum | default(omit) }}"
-        mode: 0640
+        mode: "0640"
       register: _download_archive
       until: _download_archive is succeeded
       retries: 5

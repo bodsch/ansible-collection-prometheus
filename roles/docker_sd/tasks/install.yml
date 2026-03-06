@@ -33,76 +33,24 @@
     state: directory
     owner: "{{ docker_sd_system_user }}"
     group: "{{ docker_sd_system_group }}"
-    mode: 0755
+    mode: "0755"
 
-- name: detect extracted binary file for docker_sd on '{{ docker_sd_delegate_to }}'
+- name: deploy and activate docker_sd version {{ docker_sd_version }}
   when:
     - not running_in_check_mode
-  become: false
-  delegate_to: "{{ docker_sd_delegate_to }}"
-  run_once: "{{ 'false' if docker_sd_direct_download else 'true' }}"
-  ansible.builtin.stat:
-    path: "{{ docker_sd_local_tmp_directory }}/{{ docker_sd_release.binary }}"
-  register: stat_file_binary
-
-- name: fail when extracted binary are missing
-  when:
-    - not running_in_check_mode
-    - not stat_file_binary.stat.exists
-  ansible.builtin.fail:
-    msg: "missing extracted binary on ansible controller"
-
-- name: detect installed docker_sd binary
-  when:
-    - not running_in_check_mode
-  ansible.builtin.stat:
-    path: "{{ docker_sd_install_path }}/{{ docker_sd_release.binary }}"
-  register: stat_docker_sd_binary
-
-- name: detect activated docker_sd binary
-  when:
-    - not running_in_check_mode
-  ansible.builtin.stat:
-    path: /usr/bin/{{ docker_sd_release.binary }}
-  register: stat_docker_sd_activated
-
-- name: install and activate docker_sd
-  when:
-    - not running_in_check_mode
-    - stat_file_binary.stat.exists
-    - (stat_docker_sd_binary.stat is defined and not stat_docker_sd_binary.stat.exists | default('false')) or
-      not stat_docker_sd_activated.stat | bodsch.core.linked_version(docker_sd_install_path, docker_sd_version)
-  block:
-    - name: propagate files
-      block:
-        - name: propagate docker_sd binaries
-          ansible.builtin.copy:
-            src: "{{ docker_sd_local_tmp_directory }}/{{ docker_sd_release.binary }}"
-            dest: "{{ docker_sd_install_path }}/{{ docker_sd_release.binary }}"
-            mode: 0755
-            owner: "{{ docker_sd_system_user }}"
-            group: "{{ docker_sd_system_group }}"
-            remote_src: "{{ 'true' if docker_sd_direct_download else 'false' }}"
-
-        - name: create link to binary
-          ansible.builtin.file:
-            src: "{{ docker_sd_install_path }}/{{ docker_sd_release.binary }}"
-            dest: "/usr/bin/{{ docker_sd_release.binary }}"
-            state: link
-            force: true
-            follow: false
-          notify:
-            - restart docker-sd
-
-      rescue:
-        - name: delete install directory
-          ansible.builtin.file:
-            path: "{{ docker_sd_install_path }}"
-            state: absent
-
-        - name: exit with fail
-          ansible.builtin.fail:
-            msg: A serious error occurred during the installation of the binary.
+  bodsch.core.deploy_and_activate:
+    src_dir: "{{ docker_sd_local_tmp_directory }}"
+    install_dir: "{{ docker_sd_install_path }}"
+    link_dir: "/usr/bin"
+    remote_src: "{{ ('true' if docker_sd_direct_download else 'false') | bool }}"
+    owner: "{{ docker_sd_system_user }}"
+    group: "{{ docker_sd_system_group }}"
+    mode: "0755"
+    items:
+      - name: "{{ docker_sd_release.binary }}"
+        capability: "cap_net_raw+ep"
+  notify:
+    - restart docker-sd
 
 - name: create docker_sd configuration directory
   when:
@@ -112,7 +60,7 @@
     state: directory
     owner: root
     group: "{{ docker_sd_system_group }}"
-    mode: 0770
+    mode: "0770"
 
 - name: systemd
   when:
@@ -126,7 +74,7 @@
         force: true
         owner: root
         group: "{{ docker_sd_system_group }}"
-        mode: 0640
+        mode: "0640"
       notify:
         - restart docker-sd
 
@@ -136,7 +84,7 @@
         dest: "{{ systemd_lib_directory }}/docker-sd.service"
         owner: root
         group: root
-        mode: 0644
+        mode: "0644"
       notify:
         - daemon-reload
 
@@ -151,7 +99,7 @@
         dest: "/etc/conf.d/docker-sd"
         owner: root
         group: root
-        mode: 0644
+        mode: "0644"
 
     - name: create openrc init configuration
       ansible.builtin.template:
@@ -159,7 +107,7 @@
         dest: "/etc/init.d/docker-sd"
         owner: root
         group: root
-        mode: 0750
+        mode: "0750"
 
 - name: create custom fact file
   when:

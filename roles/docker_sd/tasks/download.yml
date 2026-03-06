@@ -97,7 +97,7 @@
         url: "{{ docker_sd_release.download_url }}/download/{{ docker_sd_version }}/{{ docker_sd_release.file }}"
         dest: "{{ docker_sd_local_tmp_directory }}/{{ docker_sd_release.file }}"
         checksum: "{{ __docker_sd_checksum | default(omit) }}"
-        mode: 0660
+        mode: "0660"
       register: _download_archive
       until: _download_archive is succeeded
       retries: 5
