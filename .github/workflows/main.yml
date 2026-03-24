@@ -41,6 +41,7 @@ env:
   COLLECTION_NAME: prometheus
   PY_COLORS: '1'
   ANSIBLE_FORCE_COLOR: '1'
+  GH_TOKEN: '${{ secrets.GH_TOKEN }}'
 
 jobs:
   services:
