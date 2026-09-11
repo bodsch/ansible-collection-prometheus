@@ -1,0 +1,285 @@
+---
+
+- name: define download information
+  ansible.builtin.set_fact:
+    sentinel_release: "{{ sentinel_defaults_release | combine(sentinel_release, recursive=True) }}"
+
+- name: resolve sentinel release
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: localhost
+  run_once: true
+  bodsch.scm.scm_release:
+    provider: "github"
+    project: bodsch
+    repository: sentinel
+    version: "{{ sentinel_version }}" # "latest" | "2.53.0" | "v2.53.0"
+    architecture: "{{ ansible_facts.architecture }}"
+    system: "{{ ansible_facts.system }}"
+    user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+    password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+  register: _release
+
+- name: re-define sentinel_version
+  when:
+    - not running_in_check_mode
+    - sentinel_version == "latest"
+    - _release.version is defined
+    - _release.version | length > 0
+  ansible.builtin.set_fact:
+    sentinel_version: "{{ _release.version }}"
+
+- name: detect the downloaded sentinel archive
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ sentinel_delegate_to }}"
+  run_once: "{{ 'false' if sentinel_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ sentinel_local_tmp_directory }}/{{ sentinel_release.file }}"
+  register: sentinel_stat_archive
+
+- name: define delegate instance for download handling
+  when:
+    - not running_in_check_mode
+    - sentinel_direct_download
+  ansible.builtin.set_fact:
+    sentinel_delegate_to: "{{ ansible_facts.host }}"
+    sentinel_local_tmp_directory: "{{
+      lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
+      default('/var/cache/ansible/sentinel', true) }}/{{ sentinel_version }}"
+
+- name: create download directory
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ sentinel_delegate_to }}"
+  run_once: "{{ 'false' if sentinel_direct_download else 'true' }}"
+  ansible.builtin.file:
+    path: "{{ sentinel_local_tmp_directory }}"
+    state: directory
+    mode: "0750"
+  check_mode: false
+
+- name: detect the downloaded sentinel archive
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ sentinel_delegate_to }}"
+  run_once: "{{ 'false' if sentinel_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ sentinel_local_tmp_directory }}/{{ _release.file }}"
+  register: stat_sentinel_archive
+
+- name: download
+  when:
+    - not running_in_check_mode
+    - sentinel_stat_archive.stat is defined
+    - not sentinel_stat_archive.stat.exists | default('false')
+  block:
+
+    - name: download sentinel binary archive
+      become: false
+      delegate_to: "{{ sentinel_delegate_to }}"
+      run_once: "{{ 'false' if sentinel_direct_download else 'true' }}"
+      ansible.builtin.get_url:
+        url: "{{ _release.download_url }}"
+        url_username: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+        url_password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+        dest: "{{ sentinel_local_tmp_directory }}/{{ _release.file }}"
+        checksum: "{{ _release.checksum_string | default(omit) }}"
+        mode: "0640"
+      register: _download_archive
+      until: _download_archive is succeeded
+      retries: 5
+      delay: 2
+      check_mode: false
+
+  rescue:
+    - name: delete download directory
+      become: false
+      delegate_to: "{{ sentinel_delegate_to }}"
+      run_once: "{{ 'false' if sentinel_direct_download else 'true' }}"
+      ansible.builtin.file:
+        path: "{{ sentinel_local_tmp_directory }}"
+        state: absent
+
+    - name: exit with fail
+      ansible.builtin.fail:
+        msg: A serious error occurred when downloading the archive.
+
+- name: detect downloaded file
+  become: false
+  delegate_to: "{{ sentinel_delegate_to }}"
+  run_once: "{{ 'false' if sentinel_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ sentinel_local_tmp_directory }}/{{ _release.file }}"
+  register: sentinel_stat_archive
+
+- name: detect extracted binary
+  become: false
+  delegate_to: "{{ sentinel_delegate_to }}"
+  run_once: "{{ 'false' if sentinel_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ sentinel_local_tmp_directory }}/{{ sentinel_release.binary }}"
+  register: sentinel_stat_binary
+
+- name: extract sentinel archive
+  when:
+    - not running_in_check_mode
+    - sentinel_stat_archive.stat is defined
+    - sentinel_stat_archive.stat.exists | default('false') | bool
+    - sentinel_stat_archive.stat.mimetype in ["application/zip","application/gzip"]
+    - sentinel_stat_binary.stat is defined
+    - not sentinel_stat_binary.stat.exists | default('false') | bool
+  become: false
+  delegate_to: "{{ sentinel_delegate_to }}"
+  run_once: "{{ 'false' if sentinel_direct_download else 'true' }}"
+  ansible.builtin.unarchive:
+    src: "{{ sentinel_local_tmp_directory }}/{{ _release.file }}"
+    dest: "{{ sentinel_local_tmp_directory }}/"
+    remote_src: "{{ 'true' if sentinel_direct_download else 'false' }}"
+
+# - name: get latest release
+#   when:
+#     - not running_in_check_mode
+#     - sentinel_version == "latest"
+#   delegate_to: localhost
+#   become: false
+#   run_once: true
+#   block:
+#     - name: get latest release
+#       bodsch.scm.github_latest:
+#         project: bodsch
+#         repository: sentinel
+#         user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+#         password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+#       register: _latest_release
+#
+#     - name: re-define sentinel_version
+#       ansible.builtin.set_fact:
+#         sentinel_version: "{{ _latest_release.latest_release }}"
+#
+# - name: define download information
+#   when:
+#     - not running_in_check_mode
+#   ansible.builtin.set_fact:
+#     sentinel_release: "{{ sentinel_defaults_release | combine(sentinel_release, recursive=True) }}"
+#
+# - name: define delegate instance for download handling
+#   when:
+#     - not running_in_check_mode
+#     - sentinel_direct_download
+#   ansible.builtin.set_fact:
+#     sentinel_delegate_to: "{{ ansible_facts.host }}"
+#     sentinel_local_tmp_directory: "{{
+#         lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
+#         default('/var/cache/ansible/sentinel', true) }}/{{ sentinel_version }}"
+#
+# - name: create download directory
+#   when:
+#     - not running_in_check_mode
+#   become: false
+#   delegate_to: "{{ sentinel_delegate_to }}"
+#   run_once: "{{ 'false' if sentinel_direct_download else 'true' }}"
+#   ansible.builtin.file:
+#     path: "{{ sentinel_local_tmp_directory }}"
+#     state: directory
+#     mode: "0750"
+#   check_mode: false
+#
+# - name: detect the downloaded sentinel archive
+#   when:
+#     - not running_in_check_mode
+#   become: false
+#   delegate_to: "{{ sentinel_delegate_to }}"
+#   run_once: "{{ 'false' if sentinel_direct_download else 'true' }}"
+#   ansible.builtin.stat:
+#     path: "{{ sentinel_local_tmp_directory }}/{{ sentinel_release.file }}"
+#   register: stat_sentinel_archive
+#
+# - name: download
+#   when:
+#     - not running_in_check_mode
+#     - stat_sentinel_archive.stat is defined
+#     - not stat_sentinel_archive.stat.exists | default('false')
+#   block:
+#     - name: checksum
+#       become: false
+#       delegate_to: localhost
+#       run_once: true
+#       block:
+#         - name: get checksum list
+#           bodsch.scm.github_checksum:
+#             project: bodsch
+#             repository: sentinel
+#             checksum_file: "{{ sentinel_release.checksum }}"
+#             user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+#             password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+#             architecture: "{{ ansible_facts.architecture }}"
+#             system: "{{ ansible_facts.system }}"
+#             version: "{{ sentinel_version }}"
+#           register: _latest_checksum
+#
+#         - name: define checksum for {{ system_architecture }} architecture
+#           ansible.builtin.set_fact:
+#             __sentinel_checksum: "sha256:{{ _latest_checksum.checksum }}"
+#           when:
+#             - _latest_checksum is defined
+#             - _latest_checksum.rc is defined
+#             - _latest_checksum.rc == 0
+#             - _latest_checksum.checksum is defined
+#             - _latest_checksum.checksum | string | length > 0
+#
+#     - name: download sentinel binary archive
+#       become: false
+#       delegate_to: "{{ sentinel_delegate_to }}"
+#       run_once: "{{ 'false' if sentinel_direct_download else 'true' }}"
+#       ansible.builtin.get_url:
+#         url: "{{ sentinel_release.download_url }}/download/{{ sentinel_version }}/{{ sentinel_release.file }}"
+#         dest: "{{ sentinel_local_tmp_directory }}/{{ sentinel_release.file }}"
+#         checksum: "{{ __sentinel_checksum | default(omit) }}"
+#         mode: "0640"
+#       register: _download_archive
+#       until: _download_archive is succeeded
+#       retries: 5
+#       delay: 2
+#
+#   rescue:
+#     - name: delete download directory
+#       become: false
+#       delegate_to: "{{ sentinel_delegate_to }}"
+#       run_once: "{{ 'false' if sentinel_direct_download else 'true' }}"
+#       ansible.builtin.file:
+#         path: "{{ sentinel_local_tmp_directory }}"
+#         state: absent
+#
+#     - name: exit with fail
+#       ansible.builtin.fail:
+#         msg: A serious error occurred when downloading the archive.
+#
+# - name: detect extracted binary
+#   when:
+#     - not running_in_check_mode
+#   become: false
+#   delegate_to: "{{ sentinel_delegate_to }}"
+#   run_once: "{{ 'false' if sentinel_direct_download else 'true' }}"
+#   ansible.builtin.stat:
+#     path: "{{ sentinel_local_tmp_directory }}/{{ sentinel_release.binary }}"
+#   register: stat_sentinel_binary
+#
+# - name: extract sentinel archive
+#   when:
+#     - not running_in_check_mode
+#     - stat_sentinel_binary.stat is defined
+#     - not stat_sentinel_binary.stat.exists | default('false')
+#   become: false
+#   delegate_to: "{{ sentinel_delegate_to }}"
+#   run_once: "{{ 'false' if sentinel_direct_download else 'true' }}"
+#   ansible.builtin.unarchive:
+#     src: "{{ sentinel_local_tmp_directory }}/{{ sentinel_release.file }}"
+#     dest: "{{ sentinel_local_tmp_directory }}/"
+#     copy: false
+
+...

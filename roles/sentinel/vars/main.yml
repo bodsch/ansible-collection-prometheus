@@ -1,0 +1,49 @@
+---
+
+sentinel_main_version: "{{ sentinel_version[0:3] }}"
+
+sentinel_install_path: /usr/local/opt/sentinel/{{ sentinel_version }}
+
+sentinel_delegate_to: localhost
+
+sentinel_local_tmp_directory: "{{
+  lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
+  default(lookup('env', 'HOME') ~ '/.cache/ansible/sentinel', true) }}/{{ sentinel_version }}"
+
+sentinel_requirements:
+  - iproute2
+
+sentinel_defaults_service:
+  listen: ":8080"
+  log:
+    format: "json"
+    level: "info"
+
+sentinel_defaults_defaults:
+  interval: 30s                                       # how often each target is probed
+  timeout: 10s                                        # total per-run timeout (covers all redirect hops)
+  http:
+    method: GET                                       # GET, HEAD, POST, PUT, PATCH or DELETE
+    follow_redirects: true
+    max_redirects: 10
+    max_body_bytes: 1048576                           # 1 MiB cap on the body read (DoS safeguard)
+
+sentinel_defaults_targets: []
+
+sentinel_defaults_directory: /etc/default
+
+sentinel_defaults_release:
+  download_url: https://github.com/bodsch/sentinel/releases
+  file: sentinel-{{ sentinel_version }}-{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz
+  checksum: "sentinel-{{ sentinel_version }}-{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz.sha256"
+  binary: sentinel
+
+go_arch_map:
+  i386: '386'
+  x86_64: 'amd64'
+
+system_architecture: "{{ go_arch_map[ansible_facts.architecture] | default(ansible_facts.architecture) }}"
+
+systemd_lib_directory: /lib/systemd/system
+
+...
