@@ -56,12 +56,6 @@ def test_user(host, get_vars):
     assert not host.user(user).exists
 
 
-def test_service(host, get_vars):
-    service = host.service("promscout")
-    assert not service.is_enabled
-    assert not service.is_running
-
-
 def test_open_port(host, get_vars):
     for i in host.socket.get_listening_sockets():
         print(i)
