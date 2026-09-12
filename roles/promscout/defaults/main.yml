@@ -1,6 +1,6 @@
 ---
 
-promscout_version: "1.0.1"
+promscout_version: "2.0.0"
 
 promscout_system_user: promscout
 promscout_system_group: promscout
@@ -35,8 +35,21 @@ promscout_timeout: 3s
 promscout_listen: "127.0.0.1:9099"
 
 # Maximum number of parallel scanning workers.
-promscout_max_workers: 50
+promscout_max_workers: 512
+
+# Log format: json × text
+promscout_log_format: json
 
 # Log level: debug | info | error
 promscout_log_level: info
+
+# (since v2.0) Maximum number of parallel HTTP validation workers (validate stage).
+promscout_validate_workers: 50
+
+# (since v2.0) Optional path to a target cache file.
+promscout_cache_file: "/tmp/promscout-cache.json"
+
+# (since v2.0) Best-effort "job" label guessing
+promscout_guess_job: false
+
 ...
