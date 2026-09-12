@@ -1,0 +1,11 @@
+---
+
+sentinel_targets:
+  - name: homepage
+    description: "Minimal target: inherits every default, expects HTTP 200."
+    tags:
+      service: frontend
+      environment: production
+    http:
+      url: https://www.example.com
+...

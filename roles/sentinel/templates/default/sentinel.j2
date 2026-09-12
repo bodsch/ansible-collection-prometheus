@@ -1,0 +1,21 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+# GOMAXPROCS={{ ansible_facts.processor_vcpus | default(ansible_facts.processor_count) }}
+
+OPTIONS="
+  {# log configuration #}
+  {% if sentinel_service.log.level in ["debug", "info", "warn", "error"] %}
+    {% set _loglevel = sentinel_service.log.level %}
+  {% endif %}
+  --log-level={{ _loglevel }} \
+  {% if sentinel_service.log.format is defined and
+        sentinel_service.log.format in ["logfmt", "json"] %}
+  --log-format={{ sentinel_service.log.format }} \
+  {% endif %}
+  {% if sentinel_service.listen is defined and
+        sentinel_service.listen | string | length > 0 %}
+  --listen={{ sentinel_service.listen }} \
+  {% endif %}
+  --config {{ sentinel_config_dir }}/config.yml
+"

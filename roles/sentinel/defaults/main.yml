@@ -1,0 +1,22 @@
+---
+
+sentinel_version: '0.9.0'
+
+sentinel_release: {}
+
+sentinel_system_group: sentinel
+sentinel_system_user: sentinel
+sentinel_config_dir: /etc/sentinel
+
+sentinel_direct_download: false
+
+sentinel_service:
+  listen: "127.0.0.1:8080"
+  log:
+    format: "json"
+    level: "info"
+
+sentinel_defaults: {}
+sentinel_targets: []
+
+...
