@@ -1,6 +1,6 @@
 ---
 
-name: "service: sentinel"
+name: "exporter: sentinel"
 
 on:
   workflow_dispatch:

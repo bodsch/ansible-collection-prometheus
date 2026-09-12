@@ -67,7 +67,6 @@ jobs:
           - pushgateway
           - trickster
           - promscout
-          - sentinel
     steps:
       - name: check out the codebase.
         uses: actions/checkout@v6.0.1
@@ -136,6 +135,7 @@ jobs:
           - ssl_exporter
           - bind_exporter
           - logstream_exporter
+          - sentinel
     steps:
       - name: check out the codebase.
         uses: actions/checkout@v6.0.1
