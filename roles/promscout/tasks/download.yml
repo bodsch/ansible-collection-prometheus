@@ -110,6 +110,8 @@
         msg: A serious error occurred when downloading the archive.
 
 - name: detect downloaded file
+  when:
+    - not running_in_check_mode
   become: false
   delegate_to: "{{ promscout_delegate_to }}"
   run_once: "{{ 'false' if promscout_direct_download else 'true' }}"
@@ -118,6 +120,8 @@
   register: promscout_stat_archive
 
 - name: detect extracted binary
+  when:
+    - not running_in_check_mode
   become: false
   delegate_to: "{{ promscout_delegate_to }}"
   run_once: "{{ 'false' if promscout_direct_download else 'true' }}"
