@@ -64,6 +64,68 @@ OPTIONS="
         alertmanager_service.web.timeout | string | length > 0 %}
   --web.timeout={{ alertmanager_service.web.timeout }} \
   {% endif %}
+  {# cluster configuration #}
+  {% if alertmanager_service.cluster.listen_address is defined and
+        alertmanager_service.cluster.listen_address | string | length > 0 %}
+  --cluster.listen-address={{ alertmanager_service.cluster.listen_address }} \
+  {% else %}
+  --cluster.listen-address= \
+  {% endif %}
+  {% if alertmanager_service.cluster.advertise_address is defined and
+        alertmanager_service.cluster.advertise_address | string | length > 0 %}
+  --cluster.advertise-address={{ alertmanager_service.cluster.advertise_address }} \
+  {% endif %}
+  {% if alertmanager_service.cluster.peer is defined and
+        alertmanager_service.cluster.peer | default([]) | length > 0 %}
+    {% for peer in alertmanager_service.cluster.peer %}
+  --cluster.peer={{ peer }} \
+    {% endfor %}
+  {% endif %}
+  {% if alertmanager_service.cluster.peer_timeout is defined and
+        alertmanager_service.cluster.peer_timeout | string | length > 0 %}
+  --cluster.peer-timeout={{ alertmanager_service.cluster.peer_timeout }} \
+  {% endif %}
+  {% if alertmanager_service.cluster.gossip_interval is defined and
+        alertmanager_service.cluster.gossip_interval | string | length > 0 %}
+  --cluster.gossip-interval={{ alertmanager_service.cluster.gossip_interval }} \
+  {% endif %}
+  {% if alertmanager_service.cluster.pushpull_interval is defined and
+        alertmanager_service.cluster.pushpull_interval | string | length > 0 %}
+  --cluster.pushpull-interval={{ alertmanager_service.cluster.pushpull_interval }} \
+  {% endif %}
+  {% if alertmanager_service.cluster.tcp_timeout is defined and
+        alertmanager_service.cluster.tcp_timeout | string | length > 0 %}
+  --cluster.tcp-timeout={{ alertmanager_service.cluster.tcp_timeout }} \
+  {% endif %}
+  {% if alertmanager_service.cluster.probe_timeout is defined and
+        alertmanager_service.cluster.probe_timeout | string | length > 0 %}
+  --cluster.probe-timeout={{ alertmanager_service.cluster.probe_timeout }} \
+  {% endif %}
+  {% if alertmanager_service.cluster.probe_interval is defined and
+        alertmanager_service.cluster.probe_interval | string | length > 0 %}
+  --cluster.probe-interval={{ alertmanager_service.cluster.probe_interval }} \
+  {% endif %}
+  {% if alertmanager_service.cluster.settle_timeout is defined and
+        alertmanager_service.cluster.settle_timeout | string | length > 0 %}
+  --cluster.settle-timeout={{ alertmanager_service.cluster.settle_timeout }} \
+  {% endif %}
+  {% if alertmanager_service.cluster.reconnect_interval is defined and
+        alertmanager_service.cluster.reconnect_interval | string | length > 0 %}
+  --cluster.reconnect-interval={{ alertmanager_service.cluster.reconnect_interval }} \
+  {% endif %}
+  {% if alertmanager_service.cluster.reconnect_timeout is defined and
+        alertmanager_service.cluster.reconnect_timeout | string | length > 0 %}
+  --cluster.reconnect-timeout={{ alertmanager_service.cluster.reconnect_timeout }} \
+  {% endif %}
+  {% if alertmanager_service.cluster.tls_config is defined and
+        alertmanager_service.cluster.tls_config | string | length > 0 %}
+  --cluster.tls-config={{ alertmanager_service.cluster.tls_config }} \
+  {% endif %}
+  {% if alertmanager_service.cluster.allow_insecure_public_advertise_address_discovery is defined and
+        alertmanager_service.cluster.allow_insecure_public_advertise_address_discovery | string | length > 0 and
+        alertmanager_service.cluster.allow_insecure_public_advertise_address_discovery %}
+  --cluster.allow-insecure-public-advertise-address-discovery
+  {% endif %}
   {# raw flags #}
   {% if alertmanager_service.raw_flags is defined %}
     {% for flag, flag_value in alertmanager_service.raw_flags.items() %}

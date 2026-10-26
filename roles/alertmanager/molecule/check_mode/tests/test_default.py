@@ -49,3 +49,10 @@ def test_alertmanager_files(host, get_vars):
     for _file in files:
         f = host.file(_file)
         assert not f.is_file
+
+
+def test_service(host, get_vars):
+    service = host.service("alertmanager")
+    if service.exists:
+        assert not service.is_enabled
+        assert not service.is_running

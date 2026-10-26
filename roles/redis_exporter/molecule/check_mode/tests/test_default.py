@@ -29,8 +29,9 @@ def test_files(host, files):
 
 def test_service(host, get_vars):
     service = host.service("redis_exporter")
-    assert not service.is_enabled
-    assert not service.is_running
+    if service.exists:
+        assert not service.is_enabled
+        assert not service.is_running
 
 
 @pytest.mark.parametrize(

@@ -41,7 +41,7 @@ alertmanager_defaults_service:
     # relevant URL components will be derived automatically.
     external_url: ""
     # Addresses on which to expose metrics and web interface. Repeatable for multiple addresses.
-    listen_address: "0.0.0.0:9093"
+    listen_address: "127.0.0.1:9093"
     # Prefix for the internal routes of web endpoints. Defaults to path of --web.external-url.
     route_prefix: ""
     # Maximum number of GET requests processed concurrently. If negative or zero, the limit is GOMAXPROC or 8, whichever is larger.
@@ -50,6 +50,25 @@ alertmanager_defaults_service:
     timeout: ""
     # Use systemd socket activation listeners instead of port listeners (Linux only).
     systemd_socket: false
+
+  cluster:
+    listen_address: ""                                        # "0.0.0.0:9094"  | Listen address for cluster. Set to empty string to disable HA mode.
+    advertise_address: ""                                     # CLUSTER.ADVERTISE-ADDRESS | Explicit address to advertise in cluster.
+    peer: []                                                  # CLUSTER.PEER ... | Initial peers (may be repeated).
+    peer_timeout: ""                                          # 15s | Time to wait between peers to send notifications.
+    gossip_interval: ""                                       # 200ms | Interval between sending gossip messages. By lowering this value (more frequent) gossip messages are propagated across the cluster more quickly at the
+                                                              #    expense of increased bandwidth.
+    pushpull_interval: ""                                     # 1m0s | Interval for gossip state syncs. Setting this interval lower (more frequent) will increase convergence speeds across larger clusters at the expense of
+                                                              # increased bandwidth usage.
+    tcp_timeout: ""                                           # 10s | Timeout for establishing a stream connection with a remote node for a full state sync, and for stream read and write operations.
+    probe_timeout: ""                                         # 500ms | Timeout to wait for an ack from a probed node before assuming it is unhealthy. This should be set to 99-percentile of RTT (round-trip time) on your network.
+    probe_interval: ""                                        # 1s | Interval between random node probes. Setting this lower (more frequent) will cause the cluster to detect failed nodes more quickly at the expense of
+                                                              # increased bandwidth usage.
+    settle_timeout: ""                                        # 1m0s | Maximum time to wait for cluster connections to settle before evaluating notifications.
+    reconnect_interval: ""                                    # 10s | Interval between attempting to reconnect to lost peers.
+    reconnect_timeout: ""                                     # 6h0m0s | Length of time to attempt to reconnect to a lost peer.
+    tls_config: ""                                            #  | [EXPERIMENTAL] Path to config yaml file that can enable mutual TLS within the gossip protocol.
+    allow_insecure_public_advertise_address_discovery: false  #  | [EXPERIMENTAL] Allow alertmanager to discover and listen on a public IP address.
 
   raw_flags: {}
 
