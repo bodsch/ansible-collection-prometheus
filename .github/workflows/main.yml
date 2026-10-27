@@ -129,6 +129,7 @@ jobs:
           - bind_exporter
           - logstream_exporter
           - sentinel
+          - postfix_exporter
     steps:
       - name: check out the codebase.
         uses: actions/checkout@v6.0.1

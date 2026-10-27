@@ -1,0 +1,29 @@
+---
+
+- name: create postfix_exporter directories
+  when:
+    - not running_in_check_mode
+  bodsch.core.directories:
+    paths:
+      - path: "{{ postfix_exporter_config_dir }}"
+      # - path: "{{ webmail_config.data_dir }}"
+      #   owner: "{{ webmail_system_user.owner }}"
+      #   group: "{{ webmail_system_user.group }}"
+      #   mode: "0750"
+
+- name: create config.yaml
+  when:
+    - not running_in_check_mode
+  ansible.builtin.template:
+    src: config.yml.j2
+    dest: "{{ postfix_exporter_config_dir }}/config.yml"
+    force: true
+    owner: "{{ postfix_exporter_system_user.owner }}"
+    group: "{{ postfix_exporter_system_user.group }}"
+    mode: "0640"
+    backup: true
+  register: _postfix_exporter_config
+  notify:
+    - restart postfix exporter
+
+...

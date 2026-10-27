@@ -1,0 +1,42 @@
+---
+
+postfix_exporter_version: '2.2.3'
+
+postfix_exporter_system_user:
+  owner:  postfix-exporter
+  group: postfix-exporter
+
+postfix_exporter_service:
+  state: stopped
+  enabled: false
+
+postfix_exporter_config_dir: /etc/postfix_exporter
+
+postfix_exporter_release:
+  download_url: https://github.com/sergeymakinen/postfix_exporter/releases
+  # file: postfix_exporter-{{ postfix_exporter_version }}_{{ ansible_facts.system | lower }}_{{ system_architecture }}.tar.gz
+  # binary: postfix_exporter
+
+postfix_exporter_service_config:
+  log:
+    level: info
+    format: ""
+  web:
+    listen_address: "127.0.0.1:9907"
+    telemetry_path: "/metrics"
+    systemd_socket: ""                              # [true, false]
+    config:
+      file: ""                                      #
+  collector: ""
+  journald:
+    path: ""
+    unit: ""                                        # "postfix@-.service"
+    since: 0s
+  postfix:
+    instance: ""                                    # postfix
+  config:
+    file: ""
+
+postfix_exporter_direct_download: false
+
+...
