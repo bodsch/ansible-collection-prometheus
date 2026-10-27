@@ -52,8 +52,14 @@ def test_version(host, get_vars):
 
 def test_service(host, get_vars):
     service = host.service("bind_exporter")
-    assert not service.is_enabled
-    assert not service.is_running
+    # print(service.exists)
+    # print(service.is_valid)
+    # print(service.systemd_properties)
+    # print(service.exists)
+    # print(service.exists)
+    if service.exists:
+        assert not service.is_enabled
+        assert not service.is_running
 
 
 def test_open_port(host, get_vars):

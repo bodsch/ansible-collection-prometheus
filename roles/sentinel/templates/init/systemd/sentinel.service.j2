@@ -1,0 +1,22 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{{ ansible_managed | comment }}
+
+[Unit]
+Description       = Prometheus sentinel for line-based log streams.
+After             = network-online.target
+
+[Service]
+Type              = simple
+EnvironmentFile   = {{ sentinel_defaults_directory }}/sentinel
+
+User              = {{ sentinel_system_user }}
+Group             = {{ sentinel_system_group }}
+
+ExecReload        = /bin/kill -HUP $MAINPID
+ExecStart         = /usr/bin/{{ sentinel_release.binary }} $OPTIONS
+
+SyslogIdentifier  = sentinel
+Restart           = always
+
+[Install]
+WantedBy          = multi-user.target

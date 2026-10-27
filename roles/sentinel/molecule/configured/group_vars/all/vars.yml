@@ -1,0 +1,47 @@
+---
+
+sentinel_targets:
+  - name: homepage
+    description: "Minimal target: inherits every default, expects HTTP 200."
+    # tags:
+    #   service: frontend
+    #   environment: production
+    http:
+      url: https://example.org
+
+  - name: docs-availability
+    description: "Cheap availability + TLS check using HEAD (no body downloaded)."
+    interval: 5m
+    tags:
+      service: documentation
+      environment: production
+    http:
+      url: https://docs.example.org/
+      method: HEAD
+
+  - name: dns-a-record
+    description: "DNS target (0.2): resolve an A record via a specific resolver and check it."
+    interval: 30s
+    tags:
+      service: dns
+      environment: production
+    dns:
+      server: 1.1.1.1
+      query: example.org
+      type: A
+      expected:
+        - 93.184.216.34
+
+  # Compatibility check: does the endpoint still serve TLS 1.2 clients? Pair it
+  # with an uncapped target on the same endpoint to see the whole picture.
+  - name: tls12-compatibility
+    interval: 5m
+    tags:
+      service: web
+      environment: production
+    tls:
+      host: www.example.org
+      port: 443
+      max_version: "1.2"
+
+...

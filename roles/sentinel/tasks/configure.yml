@@ -1,0 +1,34 @@
+---
+
+- name: create sentinel configuration directory
+  when:
+    - not running_in_check_mode
+  ansible.builtin.file:
+    path: "{{ sentinel_config_dir }}"
+    state: directory
+    owner: root
+    group: "{{ sentinel_system_group }}"
+    mode: "0770"
+
+- name: merge sentinel configuration between defaults and custom
+  ansible.builtin.set_fact:
+    sentinel_defaults: "{{ sentinel_defaults_defaults | combine(sentinel_defaults, recursive=True) }}"
+    # sentinel_parser: "{{ sentinel_defaults_parser | combine(sentinel_parser, recursive=True) }}"
+    # sentinel_logging: "{{ sentinel_defaults_logging | combine(sentinel_logging, recursive=True) }}"
+    # sentinel_metrics: "{{ sentinel_defaults_metrics | combine(sentinel_metrics, recursive=True) }}"
+
+- name: create sentinel configuration
+  when:
+    - not running_in_check_mode
+  ansible.builtin.template:
+    src: "config.yml.j2"
+    dest: "{{ sentinel_config_dir }}/config.yml"
+    force: true
+    owner: root
+    group: "{{ sentinel_system_group }}"
+    mode: "0644"
+  notify:
+    - verify sentinel configuration
+    - restart sentinel
+
+...

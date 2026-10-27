@@ -1,0 +1,31 @@
+---
+
+- name: prepare
+  ansible.builtin.import_tasks: prepare.yml
+  tags:
+    - sentinel_install
+    - sentinel_configure
+    - sentinel_run
+
+- name: download archive
+  ansible.builtin.import_tasks: download.yml
+  tags:
+    - sentinel_install
+
+- name: install
+  ansible.builtin.import_tasks: install.yml
+  tags:
+    - sentinel_install
+
+- name: configure
+  ansible.builtin.import_tasks: configure.yml
+  tags:
+    - sentinel_configure
+
+- name: service
+  ansible.builtin.import_tasks: service.yml
+  tags:
+    - sentinel_run
+    - sentinel_configure
+
+...

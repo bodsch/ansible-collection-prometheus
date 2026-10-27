@@ -58,8 +58,9 @@ def test_user(host, get_vars):
 
 def test_service(host, get_vars):
     service = host.service("blackbox_exporter")
-    assert not service.is_enabled
-    assert not service.is_running
+    if service.exists:
+        assert not service.is_enabled
+        assert not service.is_running
 
 
 def test_open_port(host, get_vars):

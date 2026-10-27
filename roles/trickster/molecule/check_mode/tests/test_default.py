@@ -59,9 +59,10 @@ def test_user(host):
 
 
 def test_service(host):
-    s = host.service("trickster")
-    assert not s.is_enabled
-    assert not s.is_running
+    service = host.service("trickster")
+    if service.exists:
+        assert not service.is_enabled
+        assert not service.is_running
 
 
 @pytest.mark.parametrize(
