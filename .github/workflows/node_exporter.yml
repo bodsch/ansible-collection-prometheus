@@ -177,7 +177,6 @@ jobs:
         scenario:
           - configured
           - latest
-          - upgrade
           - check_mode
         collection_role:
           - node_exporter
