@@ -1,0 +1,94 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+OPTIONS="
+{% if postfix_exporter_service_config is defined %}
+  {# log configuration #}
+  --log.level={{ postfix_exporter_service_config.log.level | default('info') }} \
+  {% if postfix_exporter_service_config.log.format is defined and
+        postfix_exporter_service_config.log.format in ["logfmt", "json"] %}
+  --log.format={{postfix_exporter_service_config.log.format }} \
+  {% endif %}
+  {# web ... #}
+  {% if postfix_exporter_service_config.web.listen_address is defined and
+        postfix_exporter_service_config.web.listen_address | string | length > 0 %}
+  --web.listen-address={{ postfix_exporter_service_config.web.listen_address }} \
+  {% endif %}
+  {% if postfix_exporter_service_config.web.telemetry_path is defined and
+        postfix_exporter_service_config.web.telemetry_path | string | length > 0 %}
+  --web.telemetry-path={{ postfix_exporter_service_config.web.telemetry_path }} \
+  {% endif %}
+  {% if postfix_exporter_service_config.web.systemd_socket is defined and
+        postfix_exporter_service_config.web.systemd_socket | string | length > 0 and
+        postfix_exporter_service_config.web.systemd_socket | bool %}
+  --web.systemd-socket \
+  {% endif %}
+  {% if postfix_exporter_service_config.web.config is defined and
+        postfix_exporter_service_config.web.config.file is defined and
+        postfix_exporter_service_config.web.config.file | string | length > 0 %}
+  --web.config.file={{ postfix_exporter_service_config.web.config.file }} \
+  {% endif %}
+  {# collector ... #}
+  {% if postfix_exporter_service_config.collector is defined and
+        postfix_exporter_service_config.collector in ["file", "journald"] %}
+  --collector={{postfix_exporter_service_config.collector }} \
+  {% endif %}
+  {# postfix ... #}
+  {% if postfix_exporter_service_config.postfix.instance is defined and
+        postfix_exporter_service_config.postfix.instance | string | length > 0 %}
+  --postfix.instance={{ postfix_exporter_service_config.postfix.instance }} \
+  {% endif %}
+  {# journald #}
+  {% if postfix_exporter_service_config.collector is defined and
+        postfix_exporter_service_config.collector == "journald" %}
+    {% if postfix_exporter_service_config.journald.path is defined and
+          postfix_exporter_service_config.journald.path | string | length > 0 %}
+  --journald.path={{ postfix_exporter_service_config.journald.path }} \
+    {% endif %}
+    {% if postfix_exporter_service_config.journald.unit is defined and
+          postfix_exporter_service_config.journald.unit | string | length > 0 %}
+  --journald.unit={{ postfix_exporter_service_config.journald.unit }} \
+    {% endif %}
+    {% if postfix_exporter_service_config.journald.since is defined and
+          postfix_exporter_service_config.journald.since | string | length > 0 %}
+  --journald.since={{ postfix_exporter_service_config.journald.since }} \
+    {% endif %}
+  {% endif %}
+  {# config #}
+  {% if postfix_exporter_service_config.config is defined and
+        postfix_exporter_service_config.config.file is defined and
+        postfix_exporter_service_config.config.file | string | length > 0 %}
+  --config.file={{ postfix_exporter_service_config.config.file }} \
+  {% endif %}
+{% endif %}
+{#
+# postfix_exporter --help
+usage: postfix_exporter [<flags>]
+
+
+Flags:
+  -h, --[no-]help                Show context-sensitive help (also try --help-long and --help-man).
+      --config.file=CONFIG.FILE  Postfix Exporter configuration file.
+      --[no-]config.check        If true, validate the config file and then exit.
+      --collector=file           Collector type to scrape metrics with. One of: [file, journald]
+      --postfix.instance="postfix"
+                                 Postfix instance name.
+      --file.log="/var/log/mail.log"
+                                 Path to a file containing Postfix logs.
+      --journald.path=""         Path where a systemd journal residing in.
+      --journald.unit="postfix@-.service"
+                                 Postfix systemd service name.
+      --journald.since=0s        Time since which to read from a systemd journal.
+      --[no-]test                If true, read logs, print metrics and then exit.
+      --[no-]web.systemd-socket  Use systemd socket activation listeners instead of port listeners (Linux only).
+      --web.listen-address=:9907 ...
+                                 Addresses on which to expose metrics and web interface. Repeatable for multiple addresses. Examples: `:9100` or `[::1]:9100` for http,
+                                 `vsock://:9100` for vsock
+      --web.config.file=""       Path to configuration file that can enable TLS or authentication. See:
+                                 https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md
+      --web.telemetry-path="/metrics"
+                                 Path under which to expose metrics.
+      --log.level=info           Only log messages with the given severity or above. One of: [debug, info, warn, error]
+      --log.format=logfmt        Output format of log messages. One of: [logfmt, json]
+      --[no-]version             Show application version.
+#}

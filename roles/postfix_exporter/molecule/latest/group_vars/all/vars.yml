@@ -1,0 +1,9 @@
+---
+
+postfix_exporter_version: latest
+
+postfix_exporter_service:
+  web:
+    listen_address: "127.0.0.1:9119"
+
+...

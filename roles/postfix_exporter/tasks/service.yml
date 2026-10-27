@@ -1,0 +1,16 @@
+---
+
+- name: flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: ensure postfix_exporter is enabled on boot
+  when:
+    - not running_in_check_mode
+    - postfix_exporter_service.state | default('started') == 'started'
+  become: true
+  ansible.builtin.service:
+    name: postfix_exporter
+    enabled: true
+    state: started
+
+...

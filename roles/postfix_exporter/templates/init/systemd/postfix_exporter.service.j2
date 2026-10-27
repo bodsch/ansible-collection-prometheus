@@ -1,0 +1,28 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{{ ansible_managed | comment }}
+
+[Unit]
+Description       = Export postfix service metrics to Prometheus.
+After             = network-online.target
+
+[Service]
+Type              = simple
+EnvironmentFile   = {{ postfix_exporter_defaults_directory }}/postfix_exporter
+
+User              = {{ postfix_exporter_system_user.owner }}
+Group             = {{ postfix_exporter_system_user.group }}
+
+ExecReload        = /bin/kill -HUP $MAINPID
+
+{% if postfix_exporter_service_config.config is defined and
+      postfix_exporter_service_config.config.file is defined and
+      postfix_exporter_service_config.config.file | string | length > 0 %}
+ExecStartPre      = /usr/bin/{{ postfix_exporter_release.binary }} --config.check --log.level debug --config.file {{ postfix_exporter_service_config.config.file }}
+{% endif %}
+ExecStart         = /usr/bin/{{ postfix_exporter_release.binary }} $OPTIONS
+
+SyslogIdentifier  = postfix_exporter
+Restart           = always
+
+[Install]
+WantedBy          = multi-user.target

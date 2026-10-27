@@ -1,0 +1,140 @@
+---
+
+- name: define download information
+  when:
+    - not running_in_check_mode
+  ansible.builtin.set_fact:
+    postfix_exporter_release: "{{ postfix_exporter_defaults_release | combine(postfix_exporter_release, recursive=True) }}"
+  no_log: true
+
+- name: resolve postfix_exporter release
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: localhost
+  run_once: true
+  bodsch.scm.scm_release:
+    provider: "github"
+    project: sergeymakinen
+    repository: postfix_exporter
+    version: "{{ postfix_exporter_version }}"
+    architecture: "{{ system_architecture }}"
+    system: "{{ ansible_facts.system }}"
+    user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+    password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+  register: _release
+
+- name: re-define postfix_exporter_version
+  when:
+    - not running_in_check_mode
+    - postfix_exporter_version == "latest"
+    - _release.version is defined
+    - _release.version | length > 0
+  ansible.builtin.set_fact:
+    postfix_exporter_version: "{{ _release.version }}"
+
+- name: define delegate instance for download handling
+  when:
+    - not running_in_check_mode
+    - postfix_exporter_direct_download
+  ansible.builtin.set_fact:
+    postfix_exporter_delegate_to: "{{ ansible_facts.host }}"
+    postfix_exporter_local_tmp_directory: "{{
+      lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
+      default('/var/cache/ansible/postfix_exporter', true) }}/{{ postfix_exporter_version }}"
+
+- name: create download directory
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ postfix_exporter_delegate_to }}"
+  run_once: "{{ 'false' if postfix_exporter_direct_download else 'true' }}"
+  ansible.builtin.file:
+    path: "{{ postfix_exporter_local_tmp_directory }}"
+    state: directory
+    mode: "0700"
+  check_mode: false
+
+- name: detect the downloaded postfix_exporter archive
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ postfix_exporter_delegate_to }}"
+  run_once: "{{ 'false' if postfix_exporter_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ postfix_exporter_local_tmp_directory }}/{{ _release.file }}"
+  register: postfix_exporter_stat_archive
+
+- name: download
+  when:
+    - not running_in_check_mode
+    - postfix_exporter_stat_archive.stat is defined
+    - not postfix_exporter_stat_archive.stat.exists | default(false) | bool
+  block:
+    - name: download postfix_exporter binary archive
+      become: false
+      delegate_to: "{{ postfix_exporter_delegate_to }}"
+      run_once: "{{ 'false' if postfix_exporter_direct_download else 'true' }}"
+      ansible.builtin.get_url:
+        url: "{{ _release.download_url }}"
+        url_username: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+        url_password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+        dest: "{{ postfix_exporter_local_tmp_directory }}/{{ _release.file }}"
+        checksum: "{{ _release.checksum_string | default(omit) }}"
+        mode: "0640"
+      register: _download_archive
+      until: _download_archive is succeeded
+      retries: 5
+      delay: 2
+      check_mode: false
+
+  rescue:
+    - name: delete download directory
+      become: false
+      delegate_to: "{{ postfix_exporter_delegate_to }}"
+      run_once: "{{ 'false' if postfix_exporter_direct_download else 'true' }}"
+      ansible.builtin.file:
+        path: "{{ postfix_exporter_local_tmp_directory }}"
+        state: absent
+
+    - name: exit with fail
+      ansible.builtin.fail:
+        msg: A serious error occurred when downloading the archive.
+
+- name: detect downloaded file
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ postfix_exporter_delegate_to }}"
+  run_once: "{{ 'false' if postfix_exporter_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ postfix_exporter_local_tmp_directory }}/{{ _release.file }}"
+  register: postfix_exporter_stat_archive
+
+- name: detect extracted binary
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ postfix_exporter_delegate_to }}"
+  run_once: "{{ 'false' if postfix_exporter_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ postfix_exporter_local_tmp_directory }}/{{ postfix_exporter_release.binary }}"
+  register: postfix_exporter_stat_binary
+
+- name: extract postfix_exporter archive
+  when:
+    - not running_in_check_mode
+    - postfix_exporter_stat_archive.stat is defined
+    - postfix_exporter_stat_archive.stat.exists | default('false') | bool
+    - postfix_exporter_stat_archive.stat.mimetype in ["application/zip","application/gzip"]
+    - postfix_exporter_stat_binary.stat is defined
+    - not postfix_exporter_stat_binary.stat.exists | default('false') | bool
+  become: false
+  delegate_to: "{{ postfix_exporter_delegate_to }}"
+  run_once: "{{ 'false' if postfix_exporter_direct_download else 'true' }}"
+  ansible.builtin.unarchive:
+    src: "{{ postfix_exporter_local_tmp_directory }}/{{ _release.file }}"
+    dest: "{{ postfix_exporter_local_tmp_directory }}/"
+    remote_src: "{{ 'true' if postfix_exporter_direct_download else 'false' }}"
+
+...

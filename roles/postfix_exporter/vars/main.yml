@@ -1,0 +1,48 @@
+---
+
+postfix_exporter_main_version: "{{ postfix_exporter_version[0:3] }}"
+
+postfix_exporter_install_path: /usr/local/opt/postfix_exporter/{{ postfix_exporter_version }}
+
+postfix_exporter_delegate_to: localhost
+
+postfix_exporter_local_tmp_directory: "{{
+  lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
+  default(lookup('env', 'HOME') ~ '/.cache/ansible/postfix_exporter', true) }}/{{ postfix_exporter_version }}"
+
+postfix_exporter_defaults_service:
+  log:
+    level: info
+    format: ""
+  web:
+    listen_address: "127.0.0.1:9907"
+    telemetry_path: "/metrics"
+    systemd_socket: ""                              # [true, false]
+    config:
+      file: ""                                      #
+  collector: ""
+  journald:
+    path: ""
+    unit: ""                                        # "postfix@-.service"
+    since: 0s
+  postfix:
+    instance: ""                                    # postfix
+  config:
+    file: ""
+
+postfix_exporter_defaults_directory: /etc/default
+
+postfix_exporter_defaults_release:
+  download_url: https://github.com/sergeymakinen/postfix_exporter/releases
+  file: postfix_exporter-{{ postfix_exporter_version }}_{{ ansible_facts.system | lower }}_{{ system_architecture }}.tar.gz
+  binary: postfix_exporter
+
+go_arch_map:
+  i386: '386'
+  x86_64: 'amd64'
+
+system_architecture: "{{ go_arch_map[ansible_facts.architecture] | default(ansible_facts.architecture) }}"
+
+systemd_lib_directory: /lib/systemd/system
+
+...
