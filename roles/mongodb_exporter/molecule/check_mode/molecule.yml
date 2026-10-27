@@ -10,33 +10,33 @@ driver:
 
 platforms:
 
-  - name: mongodb
-    image: "mirror.gcr.io/mongodb/mongodb-community-server:7.0.7-ubuntu2204"
-    command: ${MOLECULE_DOCKER_COMMAND:-""}
-    docker_host: "${DOCKER_HOST:-unix:///run/docker.sock}"
-    privileged: true
-    pre_build_image: true
-    cgroupns_mode: host
-    volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:rw
-      - /var/lib/containerd
-    capabilities:
-      - SYS_ADMIN
-    env:
-      MONGODB_INITDB_ROOT_USERNAME: molecule
-      MONGODB_INITDB_ROOT_PASSWORD: molecule
-    tmpfs:
-      - /run
-      - /tmp
-    network_mode: default
-    docker_networks:
-      - name: mongodb
-        ipam_config:
-          - subnet: "10.20.0.0/24"
-            gateway: "10.20.0.2"
-    networks:
-      - name: mongodb
-        ipv4_address: "10.20.0.10"
+  # - name: mongodb
+  #   image: "mirror.gcr.io/mongodb/mongodb-community-server:7.0.7-ubuntu2204"
+  #   command: ${MOLECULE_DOCKER_COMMAND:-""}
+  #   docker_host: "${DOCKER_HOST:-unix:///run/docker.sock}"
+  #   privileged: true
+  #   pre_build_image: true
+  #   cgroupns_mode: host
+  #   volumes:
+  #     - /sys/fs/cgroup:/sys/fs/cgroup:rw
+  #     - /var/lib/containerd
+  #   capabilities:
+  #     - SYS_ADMIN
+  #   env:
+  #     MONGODB_INITDB_ROOT_USERNAME: molecule
+  #     MONGODB_INITDB_ROOT_PASSWORD: molecule
+  #   tmpfs:
+  #     - /run
+  #     - /tmp
+  #   network_mode: default
+  #   docker_networks:
+  #     - name: mongodb
+  #       ipam_config:
+  #         - subnet: "10.20.0.0/24"
+  #           gateway: "10.20.0.2"
+  #   networks:
+  #     - name: mongodb
+  #       ipv4_address: "10.20.0.10"
 
   - name: instance
     image: "ghcr.io/bodsch/docker-ansible/ansible-${DISTRIBUTION:-debian:13}"
@@ -53,10 +53,10 @@ platforms:
     tmpfs:
       - /run
       - /tmp
-    network_mode: default
-    networks:
-      - name: mongodb
-        ipv4_address: "10.20.0.11"
+    # network_mode: default
+    # networks:
+    #   - name: mongodb
+    #     ipv4_address: "10.20.0.11"
 
 provisioner:
   name: ansible
