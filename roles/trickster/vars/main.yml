@@ -273,7 +273,7 @@ trickster_defaults_logging:
 trickster_defaults_directory: /etc/default
 
 trickster_defaults_release:
-  download_url: https://github.com/tricksterproxy/trickster/releases
+  download_url: https://github.com/trickstercache/trickster/releases
   file: trickster-{{ trickster_version }}.tar.gz
   binary: trickster
 
