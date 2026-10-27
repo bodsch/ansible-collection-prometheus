@@ -64,7 +64,7 @@
   run_once: "{{ 'false' if trickster_direct_download else 'true' }}"
   ansible.builtin.stat:
     path: "{{ trickster_local_tmp_directory }}/{{ _release.file }}"
-  register: stat_trickster_archive
+  register: trickster_stat_archive
 
 - name: download
   when:
