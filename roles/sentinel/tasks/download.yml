@@ -1,6 +1,8 @@
 ---
 
 - name: define download information
+  when:
+    - not running_in_check_mode
   ansible.builtin.set_fact:
     sentinel_release: "{{ sentinel_defaults_release | combine(sentinel_release, recursive=True) }}"
 
@@ -110,6 +112,8 @@
         msg: A serious error occurred when downloading the archive.
 
 - name: detect downloaded file
+  when:
+    - not running_in_check_mode
   become: false
   delegate_to: "{{ sentinel_delegate_to }}"
   run_once: "{{ 'false' if sentinel_direct_download else 'true' }}"
@@ -118,6 +122,8 @@
   register: sentinel_stat_archive
 
 - name: detect extracted binary
+  when:
+    - not running_in_check_mode
   become: false
   delegate_to: "{{ sentinel_delegate_to }}"
   run_once: "{{ 'false' if sentinel_direct_download else 'true' }}"
