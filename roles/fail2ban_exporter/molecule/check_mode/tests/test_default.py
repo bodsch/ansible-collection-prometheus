@@ -1,0 +1,19 @@
+from __future__ import annotations, unicode_literals
+
+import os
+
+import pytest
+import testinfra.utils.ansible_runner
+from helper.molecule import get_vars, infra_hosts, local_facts
+
+testinfra_hosts = infra_hosts(host_name="instance")
+
+# --- tests -----------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "files", ["/usr/bin/fail2ban_exporter", "/lib/systemd/system/fail2ban_exporter.service"]
+)
+def test_files(host, files):
+    f = host.file(files)
+    assert not f.exists

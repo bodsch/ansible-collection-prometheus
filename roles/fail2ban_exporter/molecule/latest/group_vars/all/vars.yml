@@ -1,0 +1,9 @@
+---
+
+fail2ban_exporter_version: latest
+
+fail2ban_exporter_service:
+  web:
+    listen_address: "127.0.0.1:9119"
+
+...

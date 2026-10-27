@@ -1,0 +1,82 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+OPTIONS="
+{% if fail2ban_exporter_service_config is defined %}
+  {# log configuration #}
+  {# --log.level={{ fail2ban_exporter_service_config.log.level | default('info') }} \
+  {% if fail2ban_exporter_service_config.log.format is defined and
+        fail2ban_exporter_service_config.log.format in ["logfmt", "json"] %}
+  --log.format={{fail2ban_exporter_service_config.log.format }} \
+  {% endif %}
+  #}
+  {# web ... #}
+  {% if fail2ban_exporter_service_config.web.listen_address is defined and
+        fail2ban_exporter_service_config.web.listen_address | string | length > 0 %}
+  --web.listen-address={{ fail2ban_exporter_service_config.web.listen_address }} \
+  {% endif %}
+  {% if fail2ban_exporter_service_config.web.basic_auth is defined and
+        fail2ban_exporter_service_config.web.basic_auth.username is defined and
+        fail2ban_exporter_service_config.web.basic_auth.username | string | length > 0 and
+        fail2ban_exporter_service_config.web.basic_auth.password is defined and
+        fail2ban_exporter_service_config.web.basic_auth.password | string | length > 0 %}
+  --web.basic-auth.username={{ fail2ban_exporter_service_config.web.basic_auth.username }} \
+  --web.basic-auth.password={{ fail2ban_exporter_service_config.web.basic_auth.password }} \
+  {% endif %}
+  {# collector ... #}
+  {% if fail2ban_exporter_service_config.collector is defined %}
+    {% if fail2ban_exporter_service_config.collector.f2b is defined %}
+      {% if fail2ban_exporter_service_config.collector.f2b.socket is defined and
+            fail2ban_exporter_service_config.collector.f2b.socket | string | length > 0 %}
+  --collector.f2b.socket={{ fail2ban_exporter_service_config.collector.f2b.socket }} \
+      {% endif %}
+      {% if fail2ban_exporter_service_config.collector.f2b.socket is defined and
+            fail2ban_exporter_service_config.collector.f2b.socket | string | length > 0 and
+            fail2ban_exporter_service_config.collector.f2b.socket | bool %}
+  --collector.f2b.exit-on-socket-connection-error \
+      {% endif %}
+    {% endif %}
+    {% if fail2ban_exporter_service_config.collector.textfile is defined and
+          fail2ban_exporter_service_config.collector.textfile.directory is defined and
+          fail2ban_exporter_service_config.collector.textfile.directory | string | length > 0 %}
+  --collector.textfile.directory={{ fail2ban_exporter_service_config.collector.textfile.directory }} \
+    {% endif %}
+  {% endif %}
+  {# geo ... #}
+  {% if fail2ban_exporter_service_config.geo is defined and
+        fail2ban_exporter_service_config.geo.enabled is defined and
+        fail2ban_exporter_service_config.geo.enabled | string | length > 0 and
+        fail2ban_exporter_service_config.geo.enabled | bool %}
+  --geo.enabled \
+    {% if fail2ban_exporter_service_config.geo.db_path is defined and
+          fail2ban_exporter_service_config.geo.db_path | string | length > 0  %}
+  --geo.db-path={{ fail2ban_exporter_service_config.geo.db_path }} \
+    {% endif %}
+    {% if fail2ban_exporter_service_config.geo.provider is defined and
+          fail2ban_exporter_service_config.geo.provider | string | length > 0  %}
+  --geo.provider={{ fail2ban_exporter_service_config.geo.provider }} \
+    {% endif %}
+  {% endif %}
+{% endif %}
+"
+{#
+# fail2ban_exporter --help
+Usage: fail2ban_exporter [flags]
+
+🚀 Export prometheus metrics from a running Fail2Ban instance
+
+Flags:
+  -h, --help                                                      Show context-sensitive help.
+  -v, --version                                                   Show version info and exit
+      --dry-run                                                   Attempt to connect to the fail2ban socket then exit before starting the server
+      --web.listen-address=":9191"                                Address to use for the metrics server ($F2B_WEB_LISTEN_ADDRESS)
+      --web.basic-auth.username=STRING                            Username to use to protect endpoints with basic auth ($F2B_WEB_BASICAUTH_USER)
+      --web.basic-auth.password=STRING                            Password to use to protect endpoints with basic auth ($F2B_WEB_BASICAUTH_PASS)
+      --collector.f2b.socket="/var/run/fail2ban/fail2ban.sock"    Path to the fail2ban server socket ($F2B_COLLECTOR_SOCKET)
+      --collector.f2b.exit-on-socket-connection-error             When set to true the exporter will immediately exit on a fail2ban socket connection error
+                                                                  ($F2B_EXIT_ON_SOCKET_CONN_ERROR)
+      --collector.textfile.directory=STRING                       Directory to read text files with metrics from ($F2B_COLLECTOR_TEXT_PATH)
+      --geo.enabled                                               Enable geo-tagging of banned IPs ($F2B_GEO_ENABLED)
+      --geo.db-path=STRING                                        Path to MaxMind GeoLite2-City.mmdb database file ($F2B_GEO_DB_PATH)
+      --geo.provider="maxmind"                                    Geo provider to use (default: maxmind) ($F2B_GEO_PROVIDER)
+#}

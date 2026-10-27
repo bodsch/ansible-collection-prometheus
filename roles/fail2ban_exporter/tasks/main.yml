@@ -1,0 +1,31 @@
+---
+
+- name: prepare
+  ansible.builtin.import_tasks: prepare.yml
+  tags:
+    - fail2ban_exporter_install
+    - fail2ban_exporter_configure
+    - fail2ban_exporter_run
+
+- name: download archive
+  ansible.builtin.import_tasks: download.yml
+  tags:
+    - fail2ban_exporter_install
+
+- name: external installation
+  ansible.builtin.import_tasks: external_installation.yml
+  tags:
+    - fail2ban_exporter_install
+
+- name: install
+  ansible.builtin.import_tasks: install.yml
+  tags:
+    - fail2ban_exporter_install
+
+- name: service
+  ansible.builtin.import_tasks: service.yml
+  tags:
+    - fail2ban_exporter_run
+    - fail2ban_exporter_configure
+
+...
