@@ -1,0 +1,48 @@
+---
+
+fail2ban_exporter_main_version: "{{ fail2ban_exporter_version[0:3] }}"
+
+fail2ban_exporter_install_path: /usr/local/opt/fail2ban_exporter/{{ fail2ban_exporter_version }}
+
+fail2ban_exporter_delegate_to: localhost
+
+fail2ban_exporter_local_tmp_directory: "{{
+  lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
+  default(lookup('env', 'HOME') ~ '/.cache/ansible/fail2ban_exporter', true) }}/{{ fail2ban_exporter_version }}"
+
+fail2ban_exporter_defaults_service:
+  log:
+    level: info
+    format: ""
+  web:
+    listen_address: "127.0.0.1:9191"
+    basic_auth:
+      username: ""
+      password: ""
+  collector:
+    f2b:
+      socket: ""
+      exit_on_socket_connection_error: ""
+      textfile:
+        directory: ""
+  geo:
+    enabled: false
+    db_path: ""
+    provider: "maxmind"
+
+fail2ban_exporter_defaults_directory: /etc/default
+
+fail2ban_exporter_defaults_release:
+  download_url: https://github.com/NightSquawk/fail2ban-prometheus-exporter/releases
+  file: fail2ban_exporter-{{ fail2ban_exporter_version }}_{{ ansible_facts.system | lower }}_{{ system_architecture }}.tar.gz
+  binary: fail2ban_exporter
+
+go_arch_map:
+  i386: '386'
+  x86_64: 'amd64'
+
+system_architecture: "{{ go_arch_map[ansible_facts.architecture] | default(ansible_facts.architecture) }}"
+
+systemd_lib_directory: /lib/systemd/system
+
+...

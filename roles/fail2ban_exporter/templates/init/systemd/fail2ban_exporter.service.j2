@@ -1,0 +1,23 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{{ ansible_managed | comment }}
+
+[Unit]
+Description       = Export fail2ban service metrics to Prometheus.
+After             = network-online.target
+
+[Service]
+Type              = simple
+EnvironmentFile   = {{ fail2ban_exporter_defaults_directory }}/fail2ban_exporter
+
+User              = {{ fail2ban_exporter_system_user.owner }}
+Group             = {{ fail2ban_exporter_system_user.group }}
+
+ExecReload        = /bin/kill -HUP $MAINPID
+
+ExecStart         = /usr/bin/{{ fail2ban_exporter_release.binary }} $OPTIONS
+
+SyslogIdentifier  = fail2ban_exporter
+Restart           = always
+
+[Install]
+WantedBy          = multi-user.target

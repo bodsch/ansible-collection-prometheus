@@ -58,7 +58,8 @@ If you want to use something stable, please use a [Tagged Version](https://githu
 | [bodsch.prometheus.redis_exporter](./roles/redis_exporter/README.md)       |[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/bodsch/ansible-collection-prometheus/redis_exporter.yml?branch=main)][workflow-redis_exporter]| Ansible role to install and configure [redis_exporter](https://github.com/oliver006/redis_exporter) |
 | [bodsch.prometheus.ssl_exporter](./roles/ssl_exporter/README.md)           |[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/bodsch/ansible-collection-prometheus/ssl_exporter.yml?branch=main)][workflow-ssl_exporter]| Ansible role to install and configure [SSL Exporter](https://github.com/ribbybibby/ssl_exporter). |
 | [bodsch.prometheus.bind_exporter](./roles/bind_exporter/README.md)         |[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/bodsch/ansible-collection-prometheus/bind_exporter.yml?branch=main)][workflow-bind_exporter]| Ansible role to install and configure [Bind Exporter](https://github.com/prometheus/bind_exporter). |
-| [bodsch.prometheus.postfix_exporter](./roles/postfix_exporter/README.md)   |[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/bodsch/ansible-collection-prometheus/postfix_exporter.yml?branch=main)][workflow-postfix_exporter]| Ansible role to install and configure [Postfix Exporter](https://github.com/prometheus/postfix_exporter). |
+| [bodsch.prometheus.postfix_exporter](./roles/postfix_exporter/README.md)   |[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/bodsch/ansible-collection-prometheus/postfix_exporter.yml?branch=main)][workflow-postfix_exporter]| Ansible role to install and configure [Postfix Exporter](https://github.com/sergeymakinen/postfix_exporter). |
+| [bodsch.prometheus.fail2ban_exporter](./roles/fail2ban_exporter/README.md) |[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/bodsch/ansible-collection-prometheus/fail2ban_exporter.yml?branch=main)][workflow-fail2ban_exporter]| Ansible role to install and configure [fail2ban Exporter](https://github.com/NightSquawk/fail2ban-prometheus-exporter). |
 
 [workflow-alertmanager]: https://github.com/bodsch/ansible-collection-prometheus/actions/workflows/alertmanager.yml
 [workflow-am_silence]: https://github.com/bodsch/ansible-collection-prometheus/actions/workflows/am_silence.yml
@@ -78,6 +79,7 @@ If you want to use something stable, please use a [Tagged Version](https://githu
 [workflow-ssl_exporter]: https://github.com/bodsch/ansible-collection-prometheus/actions/workflows/ssl_exporter.yml
 [workflow-bind_exporter]: https://github.com/bodsch/ansible-collection-prometheus/actions/workflows/bind_exporter.yml
 [workflow-postfix_exporter]: https://github.com/bodsch/ansible-collection-prometheus/actions/workflows/postfix_exporter.yml
+[workflow-fail2ban_exporter]: https://github.com/bodsch/ansible-collection-prometheus/actions/workflows/fail2ban_exporter.yml
 
 ## Modules
 

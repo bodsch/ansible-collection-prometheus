@@ -1,0 +1,140 @@
+---
+
+- name: define download information
+  when:
+    - not running_in_check_mode
+  ansible.builtin.set_fact:
+    fail2ban_exporter_release: "{{ fail2ban_exporter_defaults_release | combine(fail2ban_exporter_release, recursive=True) }}"
+  no_log: true
+
+- name: resolve fail2ban_exporter release
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: localhost
+  run_once: true
+  bodsch.scm.scm_release:
+    provider: "github"
+    project: NightSquawk
+    repository: fail2ban-prometheus-exporter
+    version: "{{ fail2ban_exporter_version }}"
+    architecture: "{{ system_architecture }}"
+    system: "{{ ansible_facts.system }}"
+    user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+    password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+  register: _release
+
+- name: re-define fail2ban_exporter_version
+  when:
+    - not running_in_check_mode
+    - fail2ban_exporter_version == "latest"
+    - _release.version is defined
+    - _release.version | length > 0
+  ansible.builtin.set_fact:
+    fail2ban_exporter_version: "{{ _release.version }}"
+
+- name: define delegate instance for download handling
+  when:
+    - not running_in_check_mode
+    - fail2ban_exporter_direct_download
+  ansible.builtin.set_fact:
+    fail2ban_exporter_delegate_to: "{{ ansible_facts.host }}"
+    fail2ban_exporter_local_tmp_directory: "{{
+      lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
+      default('/var/cache/ansible/fail2ban_exporter', true) }}/{{ fail2ban_exporter_version }}"
+
+- name: create download directory
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ fail2ban_exporter_delegate_to }}"
+  run_once: "{{ 'false' if fail2ban_exporter_direct_download else 'true' }}"
+  ansible.builtin.file:
+    path: "{{ fail2ban_exporter_local_tmp_directory }}"
+    state: directory
+    mode: "0700"
+  check_mode: false
+
+- name: detect the downloaded fail2ban_exporter archive
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ fail2ban_exporter_delegate_to }}"
+  run_once: "{{ 'false' if fail2ban_exporter_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ fail2ban_exporter_local_tmp_directory }}/{{ _release.file }}"
+  register: fail2ban_exporter_stat_archive
+
+- name: download
+  when:
+    - not running_in_check_mode
+    - fail2ban_exporter_stat_archive.stat is defined
+    - not fail2ban_exporter_stat_archive.stat.exists | default(false) | bool
+  block:
+    - name: download fail2ban_exporter binary archive
+      become: false
+      delegate_to: "{{ fail2ban_exporter_delegate_to }}"
+      run_once: "{{ 'false' if fail2ban_exporter_direct_download else 'true' }}"
+      ansible.builtin.get_url:
+        url: "{{ _release.download_url }}"
+        url_username: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+        url_password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+        dest: "{{ fail2ban_exporter_local_tmp_directory }}/{{ _release.file }}"
+        checksum: "{{ _release.checksum_string | default(omit) }}"
+        mode: "0640"
+      register: _download_archive
+      until: _download_archive is succeeded
+      retries: 5
+      delay: 2
+      check_mode: false
+
+  rescue:
+    - name: delete download directory
+      become: false
+      delegate_to: "{{ fail2ban_exporter_delegate_to }}"
+      run_once: "{{ 'false' if fail2ban_exporter_direct_download else 'true' }}"
+      ansible.builtin.file:
+        path: "{{ fail2ban_exporter_local_tmp_directory }}"
+        state: absent
+
+    - name: exit with fail
+      ansible.builtin.fail:
+        msg: A serious error occurred when downloading the archive.
+
+- name: detect downloaded file
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ fail2ban_exporter_delegate_to }}"
+  run_once: "{{ 'false' if fail2ban_exporter_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ fail2ban_exporter_local_tmp_directory }}/{{ _release.file }}"
+  register: fail2ban_exporter_stat_archive
+
+- name: detect extracted binary
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ fail2ban_exporter_delegate_to }}"
+  run_once: "{{ 'false' if fail2ban_exporter_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ fail2ban_exporter_local_tmp_directory }}/{{ fail2ban_exporter_release.binary }}"
+  register: fail2ban_exporter_stat_binary
+
+- name: extract fail2ban_exporter archive
+  when:
+    - not running_in_check_mode
+    - fail2ban_exporter_stat_archive.stat is defined
+    - fail2ban_exporter_stat_archive.stat.exists | default('false') | bool
+    - fail2ban_exporter_stat_archive.stat.mimetype in ["application/zip","application/gzip"]
+    - fail2ban_exporter_stat_binary.stat is defined
+    - not fail2ban_exporter_stat_binary.stat.exists | default('false') | bool
+  become: false
+  delegate_to: "{{ fail2ban_exporter_delegate_to }}"
+  run_once: "{{ 'false' if fail2ban_exporter_direct_download else 'true' }}"
+  ansible.builtin.unarchive:
+    src: "{{ fail2ban_exporter_local_tmp_directory }}/{{ _release.file }}"
+    dest: "{{ fail2ban_exporter_local_tmp_directory }}/"
+    remote_src: "{{ 'true' if fail2ban_exporter_direct_download else 'false' }}"
+
+...

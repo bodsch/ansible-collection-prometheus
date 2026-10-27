@@ -1,0 +1,19 @@
+---
+
+fail2ban_exporter_service:
+  state: started
+  enabled: true
+
+fail2ban_exporter_service_config:
+  web:
+    listen_address: "127.0.0.1:9191"
+  collector:
+    f2b:
+      socket: /var/run/fail2ban/fail2ban.sock
+      exit_on_socket_connection_error: false
+  geo:
+    enabled: false
+    db_path: ""
+    provider: "maxmind"
+
+...

@@ -1,0 +1,39 @@
+---
+
+fail2ban_exporter_version: 1.0.0-beta
+
+fail2ban_exporter_system_user:
+  owner:  root
+  group: root
+
+fail2ban_exporter_service:
+  state: stopped
+  enabled: false
+
+fail2ban_exporter_config_dir: /etc/fail2ban_exporter
+
+fail2ban_exporter_release: {}
+  # download_url: https://github.com/NightSquawk/fail2ban-prometheus-exporter/releases
+  # file: fail2ban_exporter-{{ fail2ban_exporter_version }}_{{ ansible_facts.system | lower }}_{{ system_architecture }}.tar.gz
+  # binary: fail2ban_exporter
+
+fail2ban_exporter_service_config:
+  web:
+    listen_address: "127.0.0.1:9191"
+    basic_auth:
+      username: ""
+      password: ""
+  collector:
+    f2b:
+      socket: ""
+      exit_on_socket_connection_error: ""
+      textfile:
+        directory: ""
+  geo:
+    enabled: false
+    db_path: ""
+    provider: "maxmind"
+
+fail2ban_exporter_direct_download: false
+
+...
