@@ -36,6 +36,13 @@
     name: "{{ trickster_requirements }}"
     state: present
 
+- name: exit with fail
+  when:
+    - not running_in_check_mode
+    - trickster_version == "latest"
+  ansible.builtin.fail:
+    msg: we don't support 'latest' as trickster_version.
+
 - name: merge trickster configuration between defaults and custom
   ansible.builtin.set_fact:
     trickster_service_config: "{{ trickster_defaults_service_config | combine(trickster_service_config, recursive=True) }}"

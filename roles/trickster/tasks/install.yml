@@ -35,7 +35,7 @@
   when:
     - not running_in_check_mode
   bodsch.core.deploy_and_activate:
-    src_dir: "{{ trickster_local_tmp_directory }}"
+    src_dir: "{{ trickster_local_tmp_directory }}/bin"
     install_dir: "{{ trickster_install_path }}"
     link_dir: "/usr/bin"
     remote_src: "{{ ('true' if trickster_direct_download else 'false') | bool }}"

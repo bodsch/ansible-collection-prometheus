@@ -1,36 +1,38 @@
 ---
 
-- name: get latest release
-  when:
-    - not running_in_check_mode
-    - trickster_version == "latest"
-  delegate_to: localhost
-  become: false
-  run_once: true
-  block:
-    - name: get latest release
-      delegate_to: localhost
-      become: false
-      run_once: true
-      bodsch.scm.github_latest:
-        project: tricksterproxy
-        repository: trickster
-        user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
-        password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
-        github_tags: "{{ trickster_scm.use_tags | default('false') }}"
-        without_beta: "{{ trickster_scm.without_beta | default('false') }}"
-        filter_elements: "{{ trickster_scm.version_filter | default([]) }}"
-      register: _latest_release
-
-    - name: re-define trickster_version
-      ansible.builtin.set_fact:
-        trickster_version: "{{ _latest_release.latest_release }}"
-
 - name: define download information
   when:
     - not running_in_check_mode
   ansible.builtin.set_fact:
     trickster_release: "{{ trickster_defaults_release | combine(trickster_release, recursive=True) }}"
+  no_log: true
+
+- name: resolve trickster release
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: localhost
+  run_once: true
+  bodsch.scm.scm_release:
+    provider: "github"
+    project: trickstercache
+    repository: trickster
+    version: "{{ trickster_version }}"
+    architecture: "{{ system_architecture }}"
+    system: "{{ ansible_facts.system }}"
+    # asset: "trickster-{version}.{system}-{arch}.tar.gz"
+    user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+    password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+  register: _release
+
+- name: re-define trickster_version
+  when:
+    - not running_in_check_mode
+    - trickster_version == "latest"
+    - _release.version is defined
+    - _release.version | length > 0
+  ansible.builtin.set_fact:
+    trickster_version: "{{ _release.version }}"
 
 - name: define delegate instance for download handling
   when:
@@ -39,8 +41,8 @@
   ansible.builtin.set_fact:
     trickster_delegate_to: "{{ ansible_facts.host }}"
     trickster_local_tmp_directory: "{{
-        lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
-        default('/var/cache/ansible/trickster', true) }}/{{ trickster_version }}"
+      lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
+      default('/var/cache/ansible/trickster', true) }}/{{ trickster_version }}"
 
 - name: create download directory
   when:
@@ -51,7 +53,7 @@
   ansible.builtin.file:
     path: "{{ trickster_local_tmp_directory }}"
     state: directory
-    mode: "0750"
+    mode: "0700"
   check_mode: false
 
 - name: detect the downloaded trickster archive
@@ -61,53 +63,32 @@
   delegate_to: "{{ trickster_delegate_to }}"
   run_once: "{{ 'false' if trickster_direct_download else 'true' }}"
   ansible.builtin.stat:
-    path: "{{ trickster_local_tmp_directory }}/{{ trickster_release.file }}"
+    path: "{{ trickster_local_tmp_directory }}/{{ _release.file }}"
   register: stat_trickster_archive
 
 - name: download
   when:
     - not running_in_check_mode
-    - stat_trickster_archive.stat is defined
-    - not stat_trickster_archive.stat.exists | default('false')
+    - trickster_stat_archive.stat is defined
+    - not trickster_stat_archive.stat.exists | default(false) | bool
   block:
-    # - name: checksum
-    #   become: false
-    #   delegate_to: localhost
-    #   run_once: true
-    #   block:
-    #     - name: get checksum list
-    #       bodsch.scm.github_checksum:
-    #         project: tricksterproxy
-    #         repository: trickster
-    #         checksum_file: sha256sums.txt
-    #         user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
-    #         password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
-    #         architecture: "{{ ansible_facts.architecture }}"
-    #         system: "{{ ansible_facts.system }}"
-    #         version: "v{{ trickster_version }}"
-    #       register: _latest_checksum
-    #
-    #     - name: define checksum for {{ system_architecture }} architecture
-    #       ansible.builtin.set_fact:
-    #         __trickster_checksum: "sha256:{{ _latest_checksum.checksum }}"
-    #       when:
-    #         - _latest_checksum.rc == 0
-    #         - _latest_checksum.checksum is defined
-    #         - _latest_checksum.checksum | string | length > 0
 
     - name: download trickster binary archive
       become: false
       delegate_to: "{{ trickster_delegate_to }}"
       run_once: "{{ 'false' if trickster_direct_download else 'true' }}"
       ansible.builtin.get_url:
-        url: "{{ trickster_release.download_url }}/download/v{{ trickster_version }}/{{ trickster_release.file }}"
-        dest: "{{ trickster_local_tmp_directory }}/{{ trickster_release.file }}"
-        # checksum: "{{ __trickster_checksum | default(omit) }}"
+        url: "{{ _release.download_url }}"
+        url_username: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+        url_password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+        dest: "{{ trickster_local_tmp_directory }}/{{ _release.file }}"
+        checksum: "{{ _release.checksum_string | default(omit) }}"
         mode: "0640"
       register: _download_archive
       until: _download_archive is succeeded
       retries: 5
       delay: 2
+      check_mode: false
 
   rescue:
     - name: delete download directory
@@ -122,6 +103,16 @@
       ansible.builtin.fail:
         msg: A serious error occurred when downloading the archive.
 
+- name: detect downloaded file
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ trickster_delegate_to }}"
+  run_once: "{{ 'false' if trickster_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ trickster_local_tmp_directory }}/{{ _release.file }}"
+  register: trickster_stat_archive
+
 - name: detect extracted binary
   when:
     - not running_in_check_mode
@@ -129,45 +120,25 @@
   delegate_to: "{{ trickster_delegate_to }}"
   run_once: "{{ 'false' if trickster_direct_download else 'true' }}"
   ansible.builtin.stat:
-    path: "{{ trickster_local_tmp_directory }}/{{ trickster_release.binary }}"
-  register: stat_trickster_binary
+    path: "{{ trickster_local_tmp_directory }}/bin/{{ trickster_release.binary }}"
+  register: trickster_stat_binary
 
 - name: extract trickster archive
   when:
     - not running_in_check_mode
-    - stat_trickster_binary.stat is defined
-    - not stat_trickster_binary.stat.exists | default('false')
+    - trickster_stat_archive.stat is defined
+    - trickster_stat_archive.stat.exists | default('false') | bool
+    - trickster_stat_archive.stat.mimetype in ["application/zip","application/gzip"]
+    - trickster_stat_binary.stat is defined
+    - not trickster_stat_binary.stat.exists | default('false') | bool
   become: false
   delegate_to: "{{ trickster_delegate_to }}"
   run_once: "{{ 'false' if trickster_direct_download else 'true' }}"
   ansible.builtin.unarchive:
-    src: "{{ trickster_local_tmp_directory }}/{{ trickster_release.file }}"
+    src: "{{ trickster_local_tmp_directory }}/{{ _release.file }}"
     dest: "{{ trickster_local_tmp_directory }}/"
-    copy: false
+    remote_src: "{{ 'true' if trickster_direct_download else 'false' }}"
     extra_opts:
       - --strip-components=1
-
-- name: detect the extracted file
-  when:
-    - not running_in_check_mode
-  become: false
-  delegate_to: "{{ trickster_delegate_to }}"
-  run_once: "{{ 'false' if trickster_direct_download else 'true' }}"
-  ansible.builtin.stat:
-    path: "{{ trickster_local_tmp_directory }}/trickster-{{ trickster_version }}/bin/trickster-{{ trickster_version }}.{{ ansible_facts.system | lower }}-{{ system_architecture }}"
-  register: stat_trickster_extracted_file
-
-- name: rename trickster binary
-  when:
-    - not running_in_check_mode
-    - stat_trickster_extracted_file.stat.exists | default('false') | bool
-  become: false
-  delegate_to: "{{ trickster_delegate_to }}"
-  run_once: "{{ 'false' if trickster_direct_download else 'true' }}"
-  ansible.builtin.copy:
-    src: "{{ trickster_local_tmp_directory }}/trickster-{{ trickster_version }}/bin/trickster-{{ trickster_version }}.{{ ansible_facts.system | lower }}-{{ system_architecture }}"
-    dest: "{{ trickster_local_tmp_directory }}/{{ trickster_release.binary }}"
-    mode: "0755"
-    remote_src: "{{ ('true' if trickster_direct_download else 'false') | bool }}"
 
 ...

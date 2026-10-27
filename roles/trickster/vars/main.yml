@@ -247,10 +247,10 @@ trickster_defaults_negative_caches:
   # is empty unless you populate it. Update it by adding entries here in the format of:
   # "code": ttl_in_ms
   general:
-    "400": 3000
-    "404": 3000
-    "500": 3000
-    "502": 3000
+    "400": 3s
+    "404": 3s
+    "500": 3s
+    "502": 3s
 
 trickster_defaults_rules: {}
 trickster_defaults_request_rewriters: {}

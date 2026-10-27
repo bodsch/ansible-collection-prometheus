@@ -176,7 +176,6 @@ jobs:
           - "3.12"
         scenario:
           - configured
-          - latest
           - check_mode
         collection_role:
           - trickster
