@@ -111,7 +111,7 @@ def test_open_port(host, get_vars):
 
         listen_address = alertmanager_web.get("listen_address")
     else:
-        listen_address = "0.0.0.0:9093"
+        listen_address = "127.0.0.1:9093"
 
     service = host.socket(f"tcp://{listen_address}")
     assert service.is_listening
