@@ -3,7 +3,7 @@
 namespace: bodsch
 name: prometheus
 
-version: 1.8.0
+version: 1.9.0
 
 readme: README.md
 
@@ -24,8 +24,8 @@ tags:
 
 dependencies:
   ansible.posix: "*"
-  bodsch.core: ">=2.14.0"
-  bodsch.scm: ">=1.11.0"
+  # bodsch.core: ">=2.14.2"
+  bodsch.scm: ">=1.12.1"
   community.general: "*"
 
 repository: https://github.com/bodsch/ansible-collection-prometheus
@@ -34,12 +34,19 @@ homepage: https://github.com/bodsch/ansible-collection-prometheus
 issues: https://github.com/bodsch/ansible-collection-prometheus/issues
 
 build_ignore:
-  - "galaxy.yml"
   - "*.pyc"
   - "*.retry"
+  - "*/molecule"
   - ".ansible-lint"
+  - ".config"
   - ".editorconfig"
   - ".flake8"
+  - ".git"
+  - ".github"
   - ".gitignore"
   - ".yamllint"
-  - ".github"
+  - "Makefile"
+  - "galaxy.yml"
+  - "hooks"
+  - "test-requirements.txt"
+  - "tox.ini"

@@ -1,0 +1,124 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+---
+# {{ ansible_managed }}
+
+servers:
+{% if openvpn_exporter_config.servers | default([]) | count > 0 %}
+  {% for server in openvpn_exporter_config.servers %}
+# ------------------------------------------------------------
+  - name: {{ server.name }}
+    {% if server.management | default({}) | count > 0 %}
+
+    management:
+      {% if server.management.address | default('') | string | length > 0 %}
+      address: {{ server.management.address }}
+      {% endif %}
+      {% if server.management.password_file | default('') | string | length > 0 %}
+      password_file: {{ server.management.password_file }}
+      {% endif %}
+      {% if server.management.timeout | default('') | string | length > 0 %}
+      timeout: {{ server.management.timeout }}
+      {% endif %}
+    {% endif %}
+    {% if server.certificates | default([]) | count > 0 %}
+
+    certificates:
+      {% for cert in server.certificates %}
+      - {{ cert }}
+      {% endfor %}
+    {% endif %}
+    {% if server.crls | default([]) | count > 0 %}
+
+    crls:
+      {% for crl in server.crls %}
+      - {{ crl }}
+      {% endfor %}
+    {% endif %}
+    {% if server.expected_clients | default([]) | count > 0 %}
+
+    expected_clients:
+      {% for clients in server.expected_clients %}
+      - {{ clients }}
+      {% endfor %}
+    {% endif %}
+    {% if server.ping | default([]) | count > 0 %}
+
+    ping:
+      {% if server.ping.connected_clients | default('') | string | length > 0 %}
+      connected_clients: {{ server.ping.connected_clients | bool | bodsch.core.config_bool(true_as='true', false_as='false') }}
+      {% endif %}
+      {% if server.ping.targets | default([]) | count > 0 %}
+      targets:
+        {% for target in server.ping.targets %}
+        - name: {{ target.name }}
+          address: {{ target.address }}
+        {% endfor %}
+      {% endif %}
+      {% if server.ping.count | default('') | string | length > 0 %}
+      count: {{ server.ping.count | int }}
+      {% endif %}
+      {% if server.ping.interval | default('') | string | length > 0 %}
+      interval: {{ server.ping.interval }}
+      {% endif %}
+      {% if server.ping.timeout | default('') | string | length > 0 %}
+      timeout: {{ server.ping.timeout }}
+      {% endif %}
+      {% if server.ping.privileged | default('') | string | length > 0 %}
+      privileged: {{ server.ping.privileged | bool | bodsch.core.config_bool(true_as='true', false_as='false') }}
+      {% endif %}
+      {% if server.ping.concurrency | default('') | string | length > 0 %}
+      concurrency: {{ server.ping.concurrency | int }}
+      {% endif %}
+    {% endif %}
+
+# ------------------------------------------------------------
+  {% endfor %}
+{#
+  - name: second
+
+    # Source of the client list: either the management interface ...
+    #   OpenVPN server config:  management 127.0.0.1 7505 /etc/openvpn/server/mgmt.pass
+    #                      or:  management /run/openvpn/server.sock unix
+    management:
+      address: 127.0.0.1:7505              # or tcp://host:port, unix:///run/openvpn/server.sock
+      password_file: /etc/openvpn/server/mgmt.pass
+      # password: "..."                    # alternatively inline
+      timeout: 5s
+
+    # ... or a status file (only one of both per server)
+    #   OpenVPN server config:  status /run/openvpn/status.log 10
+    #                           status-version 3
+    # status_file: /run/openvpn/status.log
+
+    # Expiry of these certificates is exported. OpenVPN configs with inline
+    # <ca>/<cert> blocks work as well.
+    certificates:
+      - /etc/openvpn/server/server.crt
+      - /etc/openvpn/server/ca.crt
+
+    # CRLs used with "crl-verify". An expired CRL locks out ALL clients.
+    crls:
+      - /etc/openvpn/server/crl.pem
+
+    # Clients that should always be connected. Missing ones are exported as
+    # openvpn_client_connections{common_name="..."} 0.
+    expected_clients:
+      - filiale-01
+      - filiale-02
+
+    # ICMP reachability of clients through the tunnel.
+    ping:
+      connected_clients: true              # ping the virtual IP of every connected client
+      targets:                             # additional fixed addresses (e.g. via ifconfig-push)
+        - name: filiale-01
+          address: 10.8.0.10
+        - name: filiale-01-lan             # a host behind a site-to-site client (iroute)
+          address: 192.168.50.1
+      check_interval: 30s                  # pings run in the background; scrapes read the latest result
+      count: 3
+      interval: 200ms
+      timeout: 2s
+      privileged: false                    # true = raw socket, needs CAP_NET_RAW
+      concurrency: 16
+#}
+{% endif %}

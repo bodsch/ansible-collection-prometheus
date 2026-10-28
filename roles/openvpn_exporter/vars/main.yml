@@ -1,0 +1,41 @@
+---
+
+openvpn_exporter_main_version: "{{ openvpn_exporter_version[0:3] }}"
+
+openvpn_exporter_install_path: /usr/local/opt/openvpn_exporter/{{ openvpn_exporter_version }}
+
+openvpn_exporter_delegate_to: localhost
+
+openvpn_exporter_local_tmp_directory: "{{
+  lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
+  default(lookup('env', 'HOME') ~ '/.cache/ansible/openvpn_exporter', true) }}/{{ openvpn_exporter_version }}"
+
+openvpn_exporter_defaults_service:
+  log:
+    level: info
+  web:
+    listen_address: "127.0.0.1:9176"
+    telemetry_path: "/metrics"
+    max_requests: ""
+  config:
+    file: ""                                      #
+
+openvpn_exporter_defaults_config:
+  servers: []
+
+openvpn_exporter_defaults_directory: /etc/default
+
+openvpn_exporter_defaults_release:
+  download_url: https://github.com/bodsch/openvpn_exporter/releases
+  file: openvpn_exporter-{{ openvpn_exporter_version }}_{{ ansible_facts.system | lower }}_{{ system_architecture }}.tar.gz
+  binary: openvpn_exporter
+
+go_arch_map:
+  i386: '386'
+  x86_64: 'amd64'
+
+system_architecture: "{{ go_arch_map[ansible_facts.architecture] | default(ansible_facts.architecture) }}"
+
+systemd_lib_directory: /lib/systemd/system
+
+...

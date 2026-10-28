@@ -1,0 +1,51 @@
+---
+
+openvpn_exporter_service:
+  state: started
+  enabled: true
+
+openvpn_exporter_systemd:
+  unit:
+    after:
+      - network.target
+    wants: []
+    requires:
+      - openvpn-server@server.service
+
+openvpn_exporter_service_config:
+  log:
+    level: debug
+    format: json
+  web:
+    listen_address: "127.0.0.1:9176"
+#  config:
+#    file: "{{ openvpn_exporter_config_dir }}/config.yml"
+
+openvpn_exporter_config:
+  servers:
+    - name: vpn-udp
+      management:
+        address: unix:///run/openvpn-server/server.sock
+        timeout: 5s
+      certificates:
+        - /etc/openvpn/keys/server/dunkelzahn.matrix.lan.crt
+        - /etc/openvpn/keys/server/ca.crt
+      crls:
+        - /etc/easy-rsa/pki/crl.pem
+      expected_clients:
+        - filiale-01
+        - filiale-02
+      ping:
+        connected_clients: true              # ping the virtual IP of every connected client
+        targets:                             # additional fixed addresses (e.g. via ifconfig-push)
+          - name: filiale-01
+            address: 10.8.0.10
+          - name: filiale-01-lan             # a host behind a site-to-site client (iroute)
+            address: 192.168.50.1
+        count: 3
+        interval: 200ms
+        timeout: 2s
+        privileged: false                    # true = raw socket, needs CAP_NET_RAW
+        concurrency: 16
+
+...

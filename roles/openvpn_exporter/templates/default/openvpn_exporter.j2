@@ -1,0 +1,47 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+OPTIONS="
+{% if openvpn_exporter_service_config is defined %}
+  {# log configuration #}
+  --log.level={{ openvpn_exporter_service_config.log.level | default('info') }} \
+  {# web ... #}
+  {% if openvpn_exporter_service_config.web.listen_address is defined and
+        openvpn_exporter_service_config.web.listen_address | string | length > 0 %}
+  --web.listen-address={{ openvpn_exporter_service_config.web.listen_address }} \
+  {% endif %}
+  {% if openvpn_exporter_service_config.web.telemetry_path is defined and
+        openvpn_exporter_service_config.web.telemetry_path | string | length > 0 %}
+  --web.telemetry-path={{ openvpn_exporter_service_config.web.telemetry_path }} \
+  {% endif %}
+  {% if openvpn_exporter_service_config.web.max_requests is defined and
+        openvpn_exporter_service_config.web.max_requests | string | length > 0  %}
+  --web.max-requests={{ openvpn_exporter_service_config.web.max_requests }} \
+  {% endif %}
+  {# config #}
+  {% if openvpn_exporter_service_config.config is defined and
+        openvpn_exporter_service_config.config.file is defined and
+        openvpn_exporter_service_config.config.file | string | length > 0 %}
+  --config.file={{ openvpn_exporter_service_config.config.file }} \
+  {% endif %}
+{% endif %}
+{#
+# openvpn_exporter --help
+Usage of openvpn_exporter:
+  -config.check
+        Validate the configuration file and exit.
+  -config.file string
+        Path to the configuration file. (default "/etc/openvpn_exporter/config.yml")
+  -log.level string
+        Log level: debug, info, warn or error. (default "info")
+  -version
+        Print version and exit.
+  -web.config.file string
+        Path to a web configuration file enabling TLS and/or basic authentication.
+  -web.listen-address string
+        Address to listen on for HTTP requests. (default ":9176")
+  -web.max-requests int
+        Maximum number of parallel scrape requests; 0 disables the limit. (default 3)
+  -web.telemetry-path string
+        Path under which to expose metrics. (default "/metrics")
+#}

@@ -1,0 +1,84 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+{{ ansible_managed | comment }}
+
+[Unit]
+Description             = Prometheus exporter for OpenVPN
+Documentation           = https://github.com/bodsch/openvpn_exporter
+
+{% if openvpn_exporter_systemd.unit.after is defined and
+      openvpn_exporter_systemd.unit.after | count > 0 %}
+After                   = {{ openvpn_exporter_systemd.unit.after | join(' ') }}
+{% endif %}
+{% if openvpn_exporter_systemd.unit.wants is defined and
+      openvpn_exporter_systemd.unit.wants | count > 0 %}
+Wants                   = {{ openvpn_exporter_systemd.unit.wants | join(' ') }}
+{% endif %}
+{% if openvpn_exporter_systemd.unit.requires is defined and
+      openvpn_exporter_systemd.unit.requires | count > 0 %}
+Requires                = network.target {{ openvpn_exporter_systemd.unit.requires | join(' ') }}
+{% endif %}
+
+# After                   = network-online.target openvpn-server@server.service
+# Wants                   = network-online.target
+
+[Service]
+Type                    = simple
+User                    = {{ openvpn_exporter_system_user.owner }}
+Group                   = {{ openvpn_exporter_system_user.group }}
+EnvironmentFile         = {{ openvpn_exporter_defaults_directory }}/openvpn_exporter
+
+# Read access to certificates, CRL, status file and password file.
+# SupplementaryGroups     = openvpn
+{% if openvpn_exporter_service_config.config is defined and
+      openvpn_exporter_service_config.config.file is defined and
+      openvpn_exporter_service_config.config.file | string | length > 0 %}
+ExecStartPre            = /usr/bin/{{ openvpn_exporter_release.binary }} --config.check --log.level debug --config.file {{ openvpn_exporter_service_config.config.file }}
+{% endif %}
+
+ExecStart               = /usr/bin/{{ openvpn_exporter_release.binary }} $OPTIONS
+
+SyslogIdentifier        = openvpn_exporter
+
+RestartSec              = 10s
+Restart                 = on-failure
+
+# No capabilities at all by default.
+CapabilityBoundingSet   =
+# Only needed with "ping.privileged: true", i.e. when
+# net.ipv4.ping_group_range does not allow unprivileged ICMP sockets.
+# These lines must stay below the empty CapabilityBoundingSet= above.
+## AmbientCapabilities     = CAP_NET_RAW
+## CapabilityBoundingSet   = CAP_NET_RAW
+
+NoNewPrivileges         = yes
+UMask                   = 0077
+
+ProtectSystem           = strict
+## ProtectHome             = yes
+PrivateTmp              = yes
+PrivateDevices          = yes
+# Hides other processes; the exporter only reads /proc/self.
+ProtectProc             = invisible
+ProtectHostname         = yes
+ProtectClock            = yes
+ProtectKernelTunables   = yes
+ProtectKernelModules    = yes
+ProtectKernelLogs       = yes
+ProtectControlGroups    = yes
+
+# AF_UNIX for a management socket, AF_NETLINK for Go's interface lookups.
+RestrictAddressFamilies = AF_INET AF_INET6 AF_UNIX AF_NETLINK
+RestrictNamespaces      = yes
+RestrictRealtime        = yes
+RestrictSUIDSGID        = yes
+LockPersonality         = yes
+MemoryDenyWriteExecute  = yes
+
+SystemCallArchitectures = native
+SystemCallFilter        = @system-service
+SystemCallFilter        = ~@privileged @resources
+SystemCallErrorNumber   = EPERM
+
+[Install]
+WantedBy                = multi-user.target
+
