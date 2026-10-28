@@ -25,13 +25,13 @@ openvpn_exporter_config:
   servers:
     - name: vpn-udp
       management:
-        address: unix:///run/openvpn-server/server.sock
+        address: unix:///run/openvpn/server.sock
         timeout: 5s
       certificates:
-        - /etc/openvpn/keys/server/dunkelzahn.matrix.lan.crt
+        - /etc/openvpn/keys/server/instance.crt
         - /etc/openvpn/keys/server/ca.crt
       crls:
-        - /etc/easy-rsa/pki/crl.pem
+        - /etc/openvpn/keys/server/crl.pem
       expected_clients:
         - filiale-01
         - filiale-02

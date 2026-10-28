@@ -24,11 +24,15 @@ Requires                = network.target {{ openvpn_exporter_systemd.unit.requir
 [Service]
 Type                    = simple
 User                    = {{ openvpn_exporter_system_user.owner }}
-Group                   = {{ openvpn_exporter_system_user.group }}
+{% set _group = openvpn_exporter_system_user.group %}
+{% if openvpn_exporter_management_group | default('') | string | length > 0 %}
+  {% set _group = openvpn_exporter_management_group %}
+{% endif %}
+Group                   = {{ _group }}
 EnvironmentFile         = {{ openvpn_exporter_defaults_directory }}/openvpn_exporter
 
 # Read access to certificates, CRL, status file and password file.
-# SupplementaryGroups     = openvpn
+# SupplementaryGroups     = openvpn-mgmt
 {% if openvpn_exporter_service_config.config is defined and
       openvpn_exporter_service_config.config.file is defined and
       openvpn_exporter_service_config.config.file | string | length > 0 %}

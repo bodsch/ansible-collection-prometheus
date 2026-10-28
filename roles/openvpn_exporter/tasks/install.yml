@@ -1,8 +1,17 @@
 ---
 
 - name: merge openvpn_exporter configuration between defaults and custom
+  when:
+    - not running_in_check_mode
   ansible.builtin.set_fact:
     openvpn_exporter_service_config: "{{ openvpn_exporter_defaults_service | combine(openvpn_exporter_service_config, recursive=True) }}"
+
+- name: define openvpn_exporter_management_group
+  when:
+    - not running_in_check_mode
+    - openvpn_server.management.client_group | default('') | string | length > 0
+  ansible.builtin.set_fact:
+    openvpn_exporter_management_group: "{{ openvpn_server.management.client_group }}"
 
 - name: user and group handling
   when:
