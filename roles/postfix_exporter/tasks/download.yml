@@ -14,9 +14,10 @@
   delegate_to: localhost
   run_once: true
   bodsch.scm.scm_release:
-    provider: "github"
-    project: sergeymakinen
-    repository: postfix_exporter
+    provider: "{{ postfix_exporter_release.provider }}"
+    host: "{{ postfix_exporter_release.host }}"
+    project: "{{ postfix_exporter_release.project }}"
+    repository: "{{ postfix_exporter_release.repository }}"
     version: "{{ postfix_exporter_version }}"
     architecture: "{{ system_architecture }}"
     system: "{{ ansible_facts.system }}"
@@ -136,5 +137,6 @@
     src: "{{ postfix_exporter_local_tmp_directory }}/{{ _release.file }}"
     dest: "{{ postfix_exporter_local_tmp_directory }}/"
     remote_src: "{{ 'true' if postfix_exporter_direct_download else 'false' }}"
-
+    extra_opts:
+      - --strip-components=1
 ...

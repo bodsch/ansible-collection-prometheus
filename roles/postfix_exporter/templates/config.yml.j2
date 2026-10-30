@@ -1,36 +1,193 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
+{% set values = postfix_exporter_config | bodsch.core.remove_empty_values() %}
 ---
-{# https://github.com/sergeymakinen/postfix_exporter/blob/main/CONFIGURATION.md #}
 # {{ ansible_managed }}
 
-status_replies:
-  - type: other
-    regexp: ignored
-    text: ignore
-  - regexp: out of storage
-    text: storage
-  - statuses:
-      - sent
-    regexp: 2\.0\.0
-    match: enhanced_code
-    text: sent
-  - regexp: (?i)spf|dkim|dns
-    text: local_conf_problem
-  - regexp: OK queued as .+
-    match: text
-    text: ok
-  - not_statuses:
-      - bounced
-    regexp: (.+)
-    text: $1
-smtp_replies:
-  - regexp: (?i)gr(a|e)ylist
-    text: graylist
-  - regexp: ^1\.2\.345$
-    match: enhanced_code
-    text: enhanced_code
-noqueue_reject_replies:
-  - regexp: '(Client host rejected: cannot find your hostname|Recipient address rejected: Rejected by SPF)'
-    text: $1
-  - regexp: (.+)
-    text: $1
+{% if values is defined and
+      values | count > 0 %}
+  {% if values.log is defined and
+        values.log | count > 0 %}
+log:
+    {% set _log_source = file %}
+    {% set _log_file = "/var/log/mail.log" %}
+    {% if values.log.source is defined and
+          values.log.source | string | length > 0 and
+          values.log.source in ["file", "journal"] %}
+      {% set _log_source = values.log.source %}
+  source: {{ _log_source }}
+      {% if _log_source == "file" %}
+  file: {{ _log_file }}
+        {% if values.log.poll is defined and
+              values.log.poll | string | length > 0 %}
+  poll: {{ values.log.poll | bool | bodsch.core.config_bool(true_as='true', false_as='false') }}
+        {% endif %}
+      {% else %}
+  journal:
+        {% if values.log.journal.units is defined and
+              values.log.journal.units | count > 0 %}
+    units:
+          {% for u in values.log.journal.units %}
+      - {{ u }}
+          {% endfor %}
+        {% endif %}
+        {% if values.log.journal.command is defined and
+              values.log.journal.command | string | length > 0 %}
+    command: {{ values.log.journal.command }}
+        {% endif %}
+        {% if values.log.journal.directory is defined and
+              values.log.journal.directory | string | length > 0 %}
+    directory: {{ values.log.journal.directory }}
+        {% endif %}
+      {% endif %}
+    {% endif %}
+
+    {% if values.log.syslog_name is defined and
+          values.log.syslog_name | string | length > 0 %}
+  syslog_name: {{ values.log.syslog_name }}
+    {% endif %}
+  {% endif %}
+  {% if values.showq is defined and
+        values.showq | count > 0 %}
+
+showq:
+    {% if values.showq.address is defined and
+          values.showq.address | string | length > 0 %}
+  address: {{ values.showq.address }}
+    {% endif %}
+    {% if values.showq.timeout is defined and
+          values.showq.timeout | string | length > 0 %}
+  timeout: {{ values.showq.timeout }}
+    {% endif %}
+    {% if values.showq.disabled is defined and
+          values.showq.disabled | string | length > 0 %}
+  disabled: {{ values.showq.disabled | bool | bodsch.core.config_bool(true_as='true', false_as='false') }}
+    {% endif %}
+  {% endif %}
+  {% if values.max_services is defined and
+        values.max_services | count > 0 %}
+
+max_services: {{ values.max_services }}
+  {% endif %}
+
+  {% if values.replies is defined and
+        values.replies | count > 0 %}
+
+replies:
+  {{ values.replies | to_nice_yaml(indent=2, width=1337, sort_keys=False) | indent(2, False) }}
+
+  {% endif %}
+{% else %}
+# postfix_exporter default configuration
+#
+# All settings are optional; without a configuration file the exporter
+# reads /var/log/mail.log and the queue from
+# /var/spool/postfix/public/showq.
+
+log:
+  # "file" for a syslog file or Postfix's own maillog_file,
+  # "journal" for the systemd journal (read via journalctl).
+  source: file
+
+  file: /var/log/mail.log
+  # Poll for changes instead of inotify, e.g. on network file systems.
+  # poll: false
+
+  journal:
+    # Restrict the journal to the Postfix unit. Arch Linux, Fedora:
+    # postfix.service; Debian, Ubuntu: postfix@-.service.
+    units:
+      - postfix.service
+    # command: journalctl
+    # directory: /var/log/journal/<machine-id>
+
+  # Postfix's syslog_name (postconf -h syslog_name).
+  # syslog_name: postfix
+
+showq:
+  # unix:///path for the local socket, tcp://host:port for a showq
+  # service exposed in master.cf (protect it, it reveals all addresses).
+  address: unix:///var/spool/postfix/public/showq
+  timeout: 10s
+  # disabled: false
+
+# Service names from master.cf whose last path element is not the daemon
+# type. "submission/smtpd" or "relay/smtp" (via syslog_name) need no entry.
+#
+#   encrypt  unix  -  -  n  -  -  smtp
+#     -o smtp_tls_security_level=encrypt
+#
+# services:
+#   smtp: [encrypt]
+
+# Distinct service names in the "service" label; lines of further
+# services are counted as "other". Any local user can log under the tag
+# "postfix/<anything>", so this protects Prometheus from forged tags.
+# max_services: 100
+
+# Classification of SMTP replies into a "text" label. Without rules the
+# metrics postfix_delivery_replies_total, postfix_smtp_replies_total and
+# postfix_smtpd_reject_replies_total are not exported; the reason classes
+# of postfix_smtpd_rejects_total work without any rules.
+#
+# Every list is tried in order, the first matching rule wins, replies no
+# rule matches are not counted. "match" selects what "regexp" is applied
+# to: code (550), enhanced_code (5.1.1) or text (default). "text" may use
+# submatches ($1). Test rules against the existing log with
+#   postfix_exporter --config.file=... --replay
+replies:
+  # Distinct texts per metric; further ones are counted as "other".
+  max_texts: 100
+
+  # NOQUEUE rejects by smtpd restrictions.
+  reject:
+    - regexp: 'blocked using (\S+)'
+      text: 'dnsbl $1'
+    - regexp: 'Relay access denied'
+      text: relay_denied
+    - regexp: 'User unknown|undeliverable address'
+      text: unknown_recipient
+    - regexp: 'cannot find your (?:reverse )?hostname'
+      text: no_reverse_dns
+    - regexp: 'Helo command rejected: (Host not found|need fully-qualified hostname|Invalid name)'
+      text: 'helo: $1'
+    - regexp: 'Sender address rejected: (Domain not found|need fully-qualified address|not owned by user)'
+      text: 'sender: $1'
+    - regexp: '(?i)spf'
+      text: spf
+    - regexp: '(?i)greylist'
+      text: greylisting
+
+  # Replies to delivery attempts with a status (smtp, lmtp, local, ...).
+  delivery:
+    - statuses: [sent]
+      regexp: '.*'
+      text: ok
+    - regexp: '(?i)greylist|try again later'
+      text: greylisting
+    - regexp: '(?i)quota|mailbox.*full|over.*storage|insufficient.*storage'
+      text: mailbox_full
+    - regexp: '(?i)spamhaus|blocklist|blacklist|denylist|block list|listed'
+      text: listed
+    - regexp: '(?i)spf|dkim|dmarc'
+      text: authentication
+    - regexp: '(?i)spam|policy|reputation'
+      text: spam_policy
+    - match: enhanced_code
+      regexp: '^5\.1\.[0-3]$'
+      text: unknown_recipient
+    - regexp: 'Connection timed out|Connection refused|No route to host|Network is unreachable'
+      text: connection
+    - regexp: '(?i)host or domain name not found|name service error'
+      text: dns
+    - regexp: '(?i)tls|certificate'
+      text: tls
+    - regexp: '.*'
+      text: other
+
+  # Remote replies the smtp client logs without a status.
+  smtp:
+    - regexp: '(?i)greylist|try again later'
+      text: greylisting
+    - regexp: '.*'
+      text: other
+{% endif %}

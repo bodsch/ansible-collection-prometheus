@@ -1,5 +1,9 @@
 ---
 
+- name: merge postfix_exporter configuration between defaults and custom
+  ansible.builtin.set_fact:
+    postfix_exporter_config: "{{ postfix_exporter_defaults_config | combine(postfix_exporter_config, recursive=True) }}"
+
 - name: create postfix_exporter directories
   when:
     - not running_in_check_mode
