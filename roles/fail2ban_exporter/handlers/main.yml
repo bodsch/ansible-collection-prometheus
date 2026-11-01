@@ -7,7 +7,6 @@
   ansible.builtin.systemd:
     daemon_reload: true
     force: true
-  notify: restart fail2ban_exporter
 
 - name: verify configuration  # noqa no-changed-when
   when:
@@ -19,7 +18,7 @@
 - name: reload fail2ban exporter
   when:
     - not running_in_check_mode
-    - fail2ban_exporter_service.state | default('started') == 'started'
+    - fail2ban_exporter_system_service.state | default('started') == 'started'
   become: true
   ansible.builtin.service:
     name: fail2ban_exporter
@@ -28,7 +27,7 @@
 - name: restart fail2ban exporter
   when:
     - not running_in_check_mode
-    - fail2ban_exporter_service.state | default('started') == 'started'
+    - fail2ban_exporter_system_service.state | default('started') == 'started'
   become: true
   ansible.builtin.service:
     name: fail2ban_exporter

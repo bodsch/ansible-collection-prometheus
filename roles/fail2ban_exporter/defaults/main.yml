@@ -2,20 +2,25 @@
 
 fail2ban_exporter_version: 1.0.0-beta
 
+# fail2ban_exporter_state: installed
+
 fail2ban_exporter_system_user:
   owner:  root
   group: root
 
-fail2ban_exporter_service:
+fail2ban_exporter_system_service:
   state: stopped
   enabled: false
 
-fail2ban_exporter_config_dir: /etc/fail2ban_exporter
+fail2ban_exporter_release:
+  provider: github
+  host: https://github.com
+  project:  NightSquawk
+  repository: fail2ban-prometheus-exporter
+  file: fail2ban_exporter-{{ fail2ban_exporter_version }}_{{ ansible_facts.system | lower }}_{{ system_architecture }}.tar.gz
+  binary: fail2ban_exporter
 
-fail2ban_exporter_release: {}
-  # download_url: https://github.com/NightSquawk/fail2ban-prometheus-exporter/releases
-  # file: fail2ban_exporter-{{ fail2ban_exporter_version }}_{{ ansible_facts.system | lower }}_{{ system_architecture }}.tar.gz
-  # binary: fail2ban_exporter
+fail2ban_exporter_config_dir: /etc/fail2ban_exporter
 
 fail2ban_exporter_service_config:
   web:
