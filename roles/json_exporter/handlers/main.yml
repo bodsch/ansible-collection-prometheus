@@ -5,32 +5,32 @@
     daemon_reload: true
     force: true
   notify: restart json_exporter
-  when:
-    - ansible_facts.service_mgr == 'systemd'
 
 - name: verify configuration  # noqa no-changed-when
+  when:
+    - not running_in_check_mode
   become: true
   ansible.builtin.command: |
     json_exporter \
       --config.check \
       --config.file={{ json_exporter_service.config.file }}
-  when:
-    - not running_in_check_mode
 
 - name: reload json exporter
+  when:
+    - not running_in_check_mode
+    - json_exporter_system_service.state | default('started') == 'started'
   become: true
   ansible.builtin.service:
     name: json_exporter
     state: reloaded
-  when:
-    - not running_in_check_mode
 
 - name: restart json exporter
+  when:
+    - not running_in_check_mode
+    - json_exporter_system_service.state | default('started') == 'started'
   become: true
   ansible.builtin.service:
     name: json_exporter
     state: restarted
-  when:
-    - not running_in_check_mode
 
 ...

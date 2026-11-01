@@ -9,8 +9,8 @@ After             = network-online.target
 Type              = simple
 EnvironmentFile   = {{ json_exporter_defaults_directory }}/json_exporter
 
-User              = {{ json_exporter_system_user }}
-Group             = {{ json_exporter_system_group }}
+User              = {{ json_exporter_system_user.owner }}
+Group             = {{ json_exporter_system_user.group }}
 
 ExecReload        = /bin/kill -HUP $MAINPID
 ExecStartPre      = /usr/bin/{{ json_exporter_release.binary }} --config.check --log.level debug --config.file {{ json_exporter_service.config.file }}
