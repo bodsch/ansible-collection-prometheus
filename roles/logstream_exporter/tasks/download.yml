@@ -21,8 +21,8 @@
     version: "{{ logstream_exporter_version }}"
     architecture: "{{ system_architecture }}"
     system: "{{ ansible_facts.system }}"
-    user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
-    password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+    user: "{{ _logstream_exporter_scm_user | default(omit, true) }}"
+    password: "{{ _logstream_exporter_scm_token | default(omit, true) }}"
   register: _logstream_exporter_release
 
 - name: re-define logstream_exporter_version
@@ -78,8 +78,8 @@
       run_once: "{{ 'false' if logstream_exporter_direct_download else 'true' }}"
       ansible.builtin.get_url:
         url: "{{ _logstream_exporter_release.download_url }}"
-        url_username: "{{ lookup('env', 'GH_USER') | default(omit) }}"
-        url_password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+        url_username: "{{ _logstream_exporter_scm_user | default(omit, true) }}"
+        url_password: "{{ _logstream_exporter_scm_token | default(omit, true) }}"
         dest: "{{ logstream_exporter_local_tmp_directory }}/{{ _logstream_exporter_release.file }}"
         checksum: "{{ _logstream_exporter_release.checksum_string | default(omit) }}"
         mode: "0640"
