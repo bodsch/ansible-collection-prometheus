@@ -1,11 +1,17 @@
 ---
 
-alertmanager_version: 0.29.0
+alertmanager_version: 0.34.2
 
-# alertmanager_release_download_url: https://github.com/prometheus/alertmanager/releases
+# alertmanager_state: installed
 
-alertmanager_system_user: alertmanager
-alertmanager_system_group: alertmanager
+alertmanager_system_user:
+  owner: alertmanager
+  group: alertmanager
+
+alertmanager_system_service:
+  state: started
+  enabled: true
+
 alertmanager_config_dir: /etc/alertmanager
 alertmanager_data_dir: /var/lib/alertmanager
 
@@ -13,7 +19,13 @@ alertmanager_enable_experimental: false
 
 alertmanager_direct_download: false
 
-alertmanager_release: {}
+alertmanager_release:
+  provider: github
+  host: https://github.com
+  project:  prometheus
+  repository: alertmanager
+  file: "alertmanager-{{ alertmanager_version }}.{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz"
+  binary: alertmanager
 
 alertmanager_amtool: {}
 

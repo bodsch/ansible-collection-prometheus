@@ -145,7 +145,10 @@ alertmanager_defaults_time_intervals: {}
 alertmanager_defaults_directory: /etc/default
 
 alertmanager_defaults_release:
-  download_url: https://github.com/prometheus/alertmanager/releases
+  provider: github
+  host: https://github.com
+  project:  prometheus
+  repository: alertmanager
   file: "alertmanager-{{ alertmanager_version }}.{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz"
   binary: alertmanager
 

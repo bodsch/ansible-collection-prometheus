@@ -2,18 +2,18 @@
 - name: user and group handling
   when:
     - not running_in_check_mode
-    - alertmanager_system_user != "root"
+    - alertmanager_system_user.owner != "root"
   block:
     - name: create alertmanager group
       ansible.builtin.group:
-        name: "{{ alertmanager_system_group }}"
+        name: "{{ alertmanager_system_user.group }}"
         state: present
         system: true
 
     - name: create alertmanager user
       ansible.builtin.user:
-        name: "{{ alertmanager_system_user }}"
-        groups: "{{ alertmanager_system_group }}"
+        name: "{{ alertmanager_system_user.owner }}"
+        groups: "{{ alertmanager_system_user.group }}"
         append: true
         shell: /usr/sbin/nologin
         system: true
@@ -26,8 +26,8 @@
   ansible.builtin.file:
     path: "{{ alertmanager_install_path }}"
     state: directory
-    owner: "{{ alertmanager_system_user }}"
-    group: "{{ alertmanager_system_group }}"
+    owner: "{{ alertmanager_system_user.owner }}"
+    group: "{{ alertmanager_system_user.group }}"
     mode: "0755"
 
 - name: deploy and activate alertmanager version {{ alertmanager_version }}
@@ -38,8 +38,8 @@
     install_dir: "{{ alertmanager_install_path }}"
     link_dir: "/usr/bin"
     remote_src: "{{ ('true' if alertmanager_direct_download else 'false') | bool }}"
-    owner: "{{ alertmanager_system_user }}"
-    group: "{{ alertmanager_system_group }}"
+    owner: "{{ alertmanager_system_user.owner }}"
+    group: "{{ alertmanager_system_user.group }}"
     mode: "0755"
     items:
       - name: "{{ alertmanager_release.binary }}"
@@ -47,35 +47,19 @@
   notify:
     - restart alertmanager
 
-- name: create alertmanager data directory
+- name: create alertmanager directories
   when:
     - not running_in_check_mode
-  ansible.builtin.file:
-    path: "{{ alertmanager_data_dir }}"
-    state: directory
-    owner: "{{ alertmanager_system_user }}"
-    group: "{{ alertmanager_system_group }}"
-    mode: "0755"
-
-- name: create alertmanager configuration directory
-  when:
-    - not running_in_check_mode
-  ansible.builtin.file:
-    path: "{{ alertmanager_config_dir }}"
-    state: directory
+  bodsch.core.directories:
     owner: root
-    group: "{{ alertmanager_system_group }}"
+    group: "{{ alertmanager_system_user.group }}"
     mode: "0770"
-
-- name: create amtool configuration directory
-  when:
-    - not running_in_check_mode
-  ansible.builtin.file:
-    path: "{{ alertmanager_amtool.config_dir }}"
-    state: directory
-    owner: root
-    group: "{{ alertmanager_system_group }}"
-    mode: "0770"
+    paths:
+      - path: "{{ alertmanager_data_dir }}"
+        owner: "{{ alertmanager_system_user.owner }}"
+        mode: "0755"
+      - path: "{{ alertmanager_config_dir }}"
+      - path: "{{ alertmanager_amtool.config_dir }}"
 
 - name: create alertmanager templates directory
   when:
@@ -84,7 +68,7 @@
     path: "{{ item | dirname }}"
     state: directory
     owner: root
-    group: "{{ alertmanager_system_group }}"
+    group: "{{ alertmanager_system_user.group }}"
     mode: "0770"
   loop: "{{ alertmanager_templates }}"
   loop_control:
@@ -101,7 +85,7 @@
         dest: "{{ alertmanager_defaults_directory }}/alertmanager"
         force: true
         owner: root
-        group: "{{ alertmanager_system_group }}"
+        group: "{{ alertmanager_system_user.group }}"
         mode: "0640"
       notify:
         - reload alertmanager

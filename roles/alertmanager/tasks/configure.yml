@@ -14,11 +14,12 @@
   when:
     - not running_in_check_mode
   become: true
+  no_log: true
   ansible.builtin.copy:
     src: "{{ item }}"
     dest: "{{ alertmanager_config_dir }}/templates/"
     owner: root
-    group: "{{ alertmanager_system_group }}"
+    group: "{{ alertmanager_system_user.group }}"
     mode: "0640"
   loop: "{{ _alertmanager_templates }}"
   loop_control:
@@ -41,7 +42,7 @@
     src: alertmanager/amtool.yml.j2
     dest: "{{ alertmanager_amtool.config_dir }}/config.yml"
     owner: alertmanager
-    group: "{{ alertmanager_system_group }}"
+    group: "{{ alertmanager_system_user.group }}"
     mode: "0640"
 
 - name: create alertmanager.yml
@@ -52,7 +53,7 @@
     src: alertmanager/alertmanager.yml.j2
     dest: "{{ alertmanager_config_dir }}/alertmanager.yml"
     owner: root
-    group: "{{ alertmanager_system_group }}"
+    group: "{{ alertmanager_system_user.group }}"
     mode: "0640"
   register: alertmanger_config
   notify:

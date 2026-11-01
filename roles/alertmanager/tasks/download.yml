@@ -1,33 +1,38 @@
 ---
 
-- name: get latest release
-  delegate_to: localhost
-  become: false
-  run_once: true
-  when:
-    - not running_in_check_mode
-    - alertmanager_version == "latest"
-  block:
-    - name: get latest release
-      delegate_to: localhost
-      become: false
-      run_once: true
-      bodsch.scm.github_latest:
-        project: prometheus
-        repository: alertmanager
-        user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
-        password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
-      register: _latest_release
-
-    - name: re-define alertmanager_version
-      ansible.builtin.set_fact:
-        alertmanager_version: "{{ _latest_release.latest_release }}"
-
 - name: define download information
   when:
     - not running_in_check_mode
   ansible.builtin.set_fact:
     alertmanager_release: "{{ alertmanager_defaults_release | combine(alertmanager_release, recursive=True) }}"
+  no_log: true
+
+- name: resolve alertmanager release
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: localhost
+  run_once: true
+  bodsch.scm.scm_release:
+    provider: "{{ alertmanager_release.provider }}"
+    host: "{{ alertmanager_release.host }}"
+    project: "{{ alertmanager_release.project }}"
+    repository: "{{ alertmanager_release.repository }}"
+    version: "{{ alertmanager_version }}"
+    architecture: "{{ system_architecture }}"
+    system: "{{ ansible_facts.system }}"
+    user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+    password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+  register: _release
+
+- name: re-define alertmanager_version
+  when:
+    - not running_in_check_mode
+    - alertmanager_version == "latest"
+    - _release.version is defined
+    - _release.version | length > 0
+  ansible.builtin.set_fact:
+    alertmanager_version: "{{ _release.version }}"
 
 - name: define delegate instance for download handling
   when:
@@ -36,8 +41,8 @@
   ansible.builtin.set_fact:
     alertmanager_delegate_to: "{{ ansible_facts.host }}"
     alertmanager_local_tmp_directory: "{{
-        lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
-        default('/var/cache/ansible/alertmanager', true) }}/{{ alertmanager_version }}"
+      lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
+      default('/var/cache/ansible/alertmanager', true) }}/{{ alertmanager_version }}"
 
 - name: create download directory
   when:
@@ -48,7 +53,7 @@
   ansible.builtin.file:
     path: "{{ alertmanager_local_tmp_directory }}"
     state: directory
-    mode: "0750"
+    mode: "0700"
   check_mode: false
 
 - name: detect the downloaded alertmanager archive
@@ -58,53 +63,31 @@
   delegate_to: "{{ alertmanager_delegate_to }}"
   run_once: "{{ 'false' if alertmanager_direct_download else 'true' }}"
   ansible.builtin.stat:
-    path: "{{ alertmanager_local_tmp_directory }}/{{ alertmanager_release.file }}"
-  register: stat_alertmanager_archive
+    path: "{{ alertmanager_local_tmp_directory }}/{{ _release.file }}"
+  register: alertmanager_stat_archive
 
 - name: download
   when:
     - not running_in_check_mode
-    - stat_alertmanager_archive.stat is defined
-    - not stat_alertmanager_archive.stat.exists | default('false')
+    - alertmanager_stat_archive.stat is defined
+    - not alertmanager_stat_archive.stat.exists | default(false) | bool
   block:
-    - name: checksum
-      become: false
-      delegate_to: localhost
-      run_once: true
-      block:
-        - name: get checksum list
-          bodsch.scm.github_checksum:
-            project: prometheus
-            repository: alertmanager
-            checksum_file: sha256sums.txt
-            user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
-            password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
-            architecture: "{{ ansible_facts.architecture }}"
-            system: "{{ ansible_facts.system }}"
-            version: "v{{ alertmanager_version }}"
-          register: _latest_checksum
-
-        - name: define checksum for {{ system_architecture }} architecture
-          ansible.builtin.set_fact:
-            __alertmanager_checksum: "sha256:{{ _latest_checksum.checksum }}"
-          when:
-            - _latest_checksum.rc == 0
-            - _latest_checksum.checksum is defined
-            - _latest_checksum.checksum | string | length > 0
-
     - name: download alertmanager binary archive
       become: false
       delegate_to: "{{ alertmanager_delegate_to }}"
       run_once: "{{ 'false' if alertmanager_direct_download else 'true' }}"
       ansible.builtin.get_url:
-        url: "{{ alertmanager_release.download_url }}/download/v{{ alertmanager_version }}/{{ alertmanager_release.file }}"
-        dest: "{{ alertmanager_local_tmp_directory }}/{{ alertmanager_release.file }}"
-        checksum: "{{ __alertmanager_checksum | default(omit) }}"
-        mode: "0660"
+        url: "{{ _release.download_url }}"
+        url_username: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+        url_password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+        dest: "{{ alertmanager_local_tmp_directory }}/{{ _release.file }}"
+        checksum: "{{ _release.checksum_string | default(omit) }}"
+        mode: "0640"
       register: _download_archive
       until: _download_archive is succeeded
       retries: 5
       delay: 2
+      check_mode: false
 
   rescue:
     - name: delete download directory
@@ -119,6 +102,16 @@
       ansible.builtin.fail:
         msg: A serious error occurred when downloading the archive.
 
+- name: detect downloaded file
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ alertmanager_delegate_to }}"
+  run_once: "{{ 'false' if alertmanager_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ alertmanager_local_tmp_directory }}/{{ _release.file }}"
+  register: alertmanager_stat_archive
+
 - name: detect extracted binary
   when:
     - not running_in_check_mode
@@ -127,21 +120,168 @@
   run_once: "{{ 'false' if alertmanager_direct_download else 'true' }}"
   ansible.builtin.stat:
     path: "{{ alertmanager_local_tmp_directory }}/{{ alertmanager_release.binary }}"
-  register: stat_alertmanager_binary
+  register: alertmanager_stat_binary
 
 - name: extract alertmanager archive
   when:
     - not running_in_check_mode
-    - stat_alertmanager_binary.stat is defined
-    - not stat_alertmanager_binary.stat.exists | default('false')
+    - alertmanager_stat_archive.stat is defined
+    - alertmanager_stat_archive.stat.exists | default('false') | bool
+    - alertmanager_stat_archive.stat.mimetype in ["application/zip","application/gzip"]
+    - alertmanager_stat_binary.stat is defined
+    - not alertmanager_stat_binary.stat.exists | default('false') | bool
   become: false
   delegate_to: "{{ alertmanager_delegate_to }}"
   run_once: "{{ 'false' if alertmanager_direct_download else 'true' }}"
   ansible.builtin.unarchive:
-    src: "{{ alertmanager_local_tmp_directory }}/{{ alertmanager_release.file }}"
+    src: "{{ alertmanager_local_tmp_directory }}/{{ _release.file }}"
     dest: "{{ alertmanager_local_tmp_directory }}/"
-    copy: false
+    remote_src: "{{ 'true' if alertmanager_direct_download else 'false' }}"
     extra_opts:
       - --strip-components=1
+
+# - name: get latest release
+#   delegate_to: localhost
+#   become: false
+#   run_once: true
+#   when:
+#     - not running_in_check_mode
+#     - alertmanager_version == "latest"
+#   block:
+#     - name: get latest release
+#       delegate_to: localhost
+#       become: false
+#       run_once: true
+#       bodsch.scm.github_latest:
+#         project: prometheus
+#         repository: alertmanager
+#         user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+#         password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+#       register: _latest_release
+#
+#     - name: re-define alertmanager_version
+#       ansible.builtin.set_fact:
+#         alertmanager_version: "{{ _latest_release.latest_release }}"
+#
+# - name: define download information
+#   when:
+#     - not running_in_check_mode
+#   ansible.builtin.set_fact:
+#     alertmanager_release: "{{ alertmanager_defaults_release | combine(alertmanager_release, recursive=True) }}"
+#
+# - name: define delegate instance for download handling
+#   when:
+#     - not running_in_check_mode
+#     - alertmanager_direct_download
+#   ansible.builtin.set_fact:
+#     alertmanager_delegate_to: "{{ ansible_facts.host }}"
+#     alertmanager_local_tmp_directory: "{{
+#         lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
+#         default('/var/cache/ansible/alertmanager', true) }}/{{ alertmanager_version }}"
+#
+# - name: create download directory
+#   when:
+#     - not running_in_check_mode
+#   become: false
+#   delegate_to: "{{ alertmanager_delegate_to }}"
+#   run_once: "{{ 'false' if alertmanager_direct_download else 'true' }}"
+#   ansible.builtin.file:
+#     path: "{{ alertmanager_local_tmp_directory }}"
+#     state: directory
+#     mode: "0750"
+#   check_mode: false
+#
+# - name: detect the downloaded alertmanager archive
+#   when:
+#     - not running_in_check_mode
+#   become: false
+#   delegate_to: "{{ alertmanager_delegate_to }}"
+#   run_once: "{{ 'false' if alertmanager_direct_download else 'true' }}"
+#   ansible.builtin.stat:
+#     path: "{{ alertmanager_local_tmp_directory }}/{{ alertmanager_release.file }}"
+#   register: stat_alertmanager_archive
+#
+# - name: download
+#   when:
+#     - not running_in_check_mode
+#     - stat_alertmanager_archive.stat is defined
+#     - not stat_alertmanager_archive.stat.exists | default('false')
+#   block:
+#     - name: checksum
+#       become: false
+#       delegate_to: localhost
+#       run_once: true
+#       block:
+#         - name: get checksum list
+#           bodsch.scm.github_checksum:
+#             project: prometheus
+#             repository: alertmanager
+#             checksum_file: sha256sums.txt
+#             user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+#             password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+#             architecture: "{{ ansible_facts.architecture }}"
+#             system: "{{ ansible_facts.system }}"
+#             version: "v{{ alertmanager_version }}"
+#           register: _latest_checksum
+#
+#         - name: define checksum for {{ system_architecture }} architecture
+#           ansible.builtin.set_fact:
+#             __alertmanager_checksum: "sha256:{{ _latest_checksum.checksum }}"
+#           when:
+#             - _latest_checksum.rc == 0
+#             - _latest_checksum.checksum is defined
+#             - _latest_checksum.checksum | string | length > 0
+#
+#     - name: download alertmanager binary archive
+#       become: false
+#       delegate_to: "{{ alertmanager_delegate_to }}"
+#       run_once: "{{ 'false' if alertmanager_direct_download else 'true' }}"
+#       ansible.builtin.get_url:
+#         url: "{{ alertmanager_release.download_url }}/download/v{{ alertmanager_version }}/{{ alertmanager_release.file }}"
+#         dest: "{{ alertmanager_local_tmp_directory }}/{{ alertmanager_release.file }}"
+#         checksum: "{{ __alertmanager_checksum | default(omit) }}"
+#         mode: "0660"
+#       register: _download_archive
+#       until: _download_archive is succeeded
+#       retries: 5
+#       delay: 2
+#
+#   rescue:
+#     - name: delete download directory
+#       become: false
+#       delegate_to: "{{ alertmanager_delegate_to }}"
+#       run_once: "{{ 'false' if alertmanager_direct_download else 'true' }}"
+#       ansible.builtin.file:
+#         path: "{{ alertmanager_local_tmp_directory }}"
+#         state: absent
+#
+#     - name: exit with fail
+#       ansible.builtin.fail:
+#         msg: A serious error occurred when downloading the archive.
+#
+# - name: detect extracted binary
+#   when:
+#     - not running_in_check_mode
+#   become: false
+#   delegate_to: "{{ alertmanager_delegate_to }}"
+#   run_once: "{{ 'false' if alertmanager_direct_download else 'true' }}"
+#   ansible.builtin.stat:
+#     path: "{{ alertmanager_local_tmp_directory }}/{{ alertmanager_release.binary }}"
+#   register: stat_alertmanager_binary
+#
+# - name: extract alertmanager archive
+#   when:
+#     - not running_in_check_mode
+#     - stat_alertmanager_binary.stat is defined
+#     - not stat_alertmanager_binary.stat.exists | default('false')
+#   become: false
+#   delegate_to: "{{ alertmanager_delegate_to }}"
+#   run_once: "{{ 'false' if alertmanager_direct_download else 'true' }}"
+#   ansible.builtin.unarchive:
+#     src: "{{ alertmanager_local_tmp_directory }}/{{ alertmanager_release.file }}"
+#     dest: "{{ alertmanager_local_tmp_directory }}/"
+#     copy: false
+#     extra_opts:
+#       - --strip-components=1
 
 ...
