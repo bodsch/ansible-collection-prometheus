@@ -9,8 +9,8 @@ After             = network-online.target
 Type              = simple
 EnvironmentFile   = {{ logstream_exporter_defaults_directory }}/logstream_exporter
 
-User              = {{ logstream_exporter_system_user }}
-Group             = {{ logstream_exporter_system_group }}
+User              = {{ logstream_exporter_system_user.owner }}
+Group             = {{ logstream_exporter_system_user.group }}
 
 ExecReload        = /bin/kill -HUP $MAINPID
 ExecStart         = /usr/bin/{{ logstream_exporter_release.binary }} $OPTIONS

@@ -3,18 +3,18 @@
 - name: user and group handling
   when:
     - not running_in_check_mode
-    - logstream_exporter_system_user != "root"
+    - logstream_exporter_system_user.owner != "root"
   block:
     - name: create logstream_exporter group
       ansible.builtin.group:
-        name: "{{ logstream_exporter_system_group }}"
+        name: "{{ logstream_exporter_system_user.group }}"
         state: present
         system: true
 
     - name: create logstream_exporter user
       ansible.builtin.user:
-        name: "{{ logstream_exporter_system_user }}"
-        groups: "{{ logstream_exporter_system_group }}"
+        name: "{{ logstream_exporter_system_user.owner }}"
+        groups: "{{ logstream_exporter_system_user.group }}"
         append: true
         shell: /usr/sbin/nologin
         system: true
@@ -27,8 +27,8 @@
   ansible.builtin.file:
     path: "{{ logstream_exporter_install_path }}"
     state: directory
-    owner: "{{ logstream_exporter_system_user }}"
-    group: "{{ logstream_exporter_system_group }}"
+    owner: "{{ logstream_exporter_system_user.owner }}"
+    group: "{{ logstream_exporter_system_user.group }}"
     mode: "0755"
 
 - name: deploy and activate logstream_exporter version {{ logstream_exporter_version }}
@@ -39,8 +39,8 @@
     install_dir: "{{ logstream_exporter_install_path }}"
     link_dir: "/usr/bin"
     remote_src: "{{ ('true' if logstream_exporter_direct_download else 'false') | bool }}"
-    owner: "{{ logstream_exporter_system_user }}"
-    group: "{{ logstream_exporter_system_group }}"
+    owner: "{{ logstream_exporter_system_user.owner }}"
+    group: "{{ logstream_exporter_system_user.group }}"
     mode: "0755"
     items:
       - name: "{{ logstream_exporter_release.binary }}"
@@ -59,7 +59,7 @@
         dest: "{{ logstream_exporter_defaults_directory }}/logstream_exporter"
         force: true
         owner: root
-        group: "{{ logstream_exporter_system_group }}"
+        group: "{{ logstream_exporter_system_user.group }}"
         mode: "0640"
       notify:
         - restart logstream exporter

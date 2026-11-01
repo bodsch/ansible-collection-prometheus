@@ -14,7 +14,7 @@
     path: "{{ logstream_exporter_config_dir }}"
     state: directory
     owner: root
-    group: "{{ logstream_exporter_system_group }}"
+    group: "{{ logstream_exporter_system_user.group }}"
     mode: "0770"
 
 - name: create logstream_exporter configuration
@@ -25,7 +25,7 @@
     dest: "{{ logstream_exporter_config_dir }}/config.yml"
     force: true
     owner: root
-    group: "{{ logstream_exporter_system_group }}"
+    group: "{{ logstream_exporter_system_user.group }}"
     mode: "0644"
   notify:
     - restart logstream exporter
