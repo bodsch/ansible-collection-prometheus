@@ -21,7 +21,7 @@
     version: "{{ alertmanager_version }}"
     architecture: "{{ system_architecture }}"
     system: "{{ ansible_facts.system }}"
-    user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+    user: "{{ _alertmanager_scm_user | default(omit, true) }}"
     password: "{{ _alertmanager_scm_token | default(omit, true) }}"
   register: _alertmanager_release
 
