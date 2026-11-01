@@ -19,6 +19,25 @@ def test_files(host, files):
     assert f.exists
 
 
+def test_user(host, get_vars):
+    """ """
+    system_user = get_vars.get("bind_exporter_system_user", {})
+
+    owner = system_user.get("owner", "bind-exporter")
+    group = system_user.get("group", "bind-exporter")
+
+    assert host.group(group).exists
+    assert host.user(owner).exists
+    assert group in host.user(owner).groups
+    assert host.user(owner).home == "/nonexistent"
+
+
+def test_service(host, get_vars):
+    service = host.service("bind_exporter")
+    assert service.is_enabled
+    assert service.is_running
+
+
 @pytest.mark.parametrize(
     "sockets",
     [

@@ -38,7 +38,10 @@ bind_exporter_defaults_service:
 bind_exporter_defaults_directory: /etc/default
 
 bind_exporter_defaults_release:
-  download_url: https://github.com/prometheus-community/bind_exporter/releases
+  provider: github
+  host: https://github.com
+  project:  prometheus-community
+  repository: bind_exporter
   file: bind_exporter-{{ bind_exporter_version }}.{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz
   binary: bind_exporter
 
