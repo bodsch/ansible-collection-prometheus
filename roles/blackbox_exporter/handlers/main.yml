@@ -5,10 +5,10 @@
     daemon_reload: true
     force: true
   notify: restart blackbox_exporter
-  when:
-    - ansible_facts.service_mgr == 'systemd'
 
 - name: validate blackbox config  # noqa no-handler
+  when:
+    - not running_in_check_mode
   become: true
   ansible.builtin.command: |
     /usr/bin/blackbox_exporter \
@@ -17,23 +17,23 @@
   register: _validate
   changed_when: _validate.rc != 0
   failed_when: _validate.rc != 0
-  when:
-    - not running_in_check_mode
 
 - name: restart blackbox exporter
+  when:
+    - not running_in_check_mode
+    - blackbox_exporter_system_service.state | default('started') == 'started'
   become: true
   ansible.builtin.service:
     name: blackbox_exporter
     state: restarted
-  when:
-    - not running_in_check_mode
 
 - name: reload blackbox exporter
+  when:
+    - not running_in_check_mode
+    - blackbox_exporter_system_service.state | default('started') == 'started'
   become: true
   ansible.builtin.service:
     name: blackbox_exporter
     state: reloaded
-  when:
-    - not running_in_check_mode
 
 ...
