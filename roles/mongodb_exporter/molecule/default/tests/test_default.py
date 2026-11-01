@@ -54,13 +54,16 @@ def test_files(host, get_vars):
 
 
 def test_user(host, get_vars):
-    username = get_vars.get("mongodb_exporter_system_user")
-    groupname = get_vars.get("mongodb_exporter_system_group")
+    """ """
+    system_user = get_vars.get("mongodb_exporter_system_user", {})
 
-    assert host.group(groupname).exists
-    assert host.user(username).exists
-    assert groupname in host.user(username).groups
-    assert host.user(username).home == "/nonexistent"
+    owner = system_user.get("owner", "mongodb-exporter")
+    group = system_user.get("group", "mongodb-exporter")
+
+    assert host.group(group).exists
+    assert host.user(owner).exists
+    assert group in host.user(owner).groups
+    assert host.user(owner).home == "/nonexistent"
 
 
 def test_service(host, get_vars):

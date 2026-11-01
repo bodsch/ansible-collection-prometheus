@@ -2,12 +2,25 @@
 
 mongodb_exporter_version: "0.47.2"
 
-mongodb_exporter_system_user: mongodb_exporter
-mongodb_exporter_system_group: mongodb_exporter
+# mongodb_exporter_state: installed
+
+mongodb_exporter_system_user:
+  owner: mongodb-exporter
+  group: mongodb-exporter
+
+mongodb_exporter_system_service:
+  state: started
+  enabled: true
+
+mongodb_exporter_release:
+  provider: github
+  host: https://github.com
+  project:  percona
+  repository: mongodb_exporter
+  file: mongodb_exporter-{{ mongodb_exporter_version }}.{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz
+  binary: mongodb_exporter
 
 mongodb_exporter_direct_download: false
-
-mongodb_exporter_release: {}
 
 mongodb_exporter_service: {}
 
