@@ -7,7 +7,7 @@
     daemon_reload: true
     force: true
 
-- name: validate config
+- name: validate alertmanger config
   when:
     - not running_in_check_mode
     - alertmanger_config is defined
