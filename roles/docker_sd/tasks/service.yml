@@ -9,7 +9,7 @@
   become: true
   ansible.builtin.service:
     name: docker-sd
-    enabled: true
-    state: started
+    state: "{{ docker_sd_system_service.state | default('started') }}"
+    enabled: "{{ docker_sd_system_service.enabled | default(true) | bool }}"
 
 ...

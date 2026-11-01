@@ -33,9 +33,11 @@ docker_sd_defaults_addition_labels: []
 docker_sd_defaults_directory: /etc/default
 
 docker_sd_defaults_release:
-  download_url: https://github.com/bodsch/docker-sd/releases
+  provider: github
+  host: https://github.com
+  project:  bodsch
+  repository: docker-sd
   file: "docker-sd-{{ docker_sd_version }}-{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz"
-  checksum: "docker-sd-{{ docker_sd_version }}-{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz.sha256"
   binary: docker-sd
 
 # ---------------------------------------------

@@ -56,13 +56,15 @@ def test_files(host, get_vars):
 
 def test_user(host, get_vars):
     """ """
-    user = get_vars.get("docker_sd_system_user", "node_exp")
-    group = get_vars.get("docker_sd_system_group", "node_exp")
+    system_user = get_vars.get("docker_sd_system_user", {})
 
-    assert not host.group(group).exists
-    assert not host.user(user).exists
-    # assert group in host.user(user).groups
-    # assert host.user(user).home == "/nonexistent"
+    owner = system_user.get("owner", "docker-sd")
+    group = system_user.get("group", "docker-sd")
+
+    assert host.group(group).exists
+    assert host.user(owner).exists
+    assert group in host.user(owner).groups
+    assert host.user(owner).home == "/nonexistent"
 
 
 def test_service(host, get_vars):

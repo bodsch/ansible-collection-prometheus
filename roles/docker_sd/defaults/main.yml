@@ -2,13 +2,28 @@
 
 docker_sd_version: "1.0.1"
 
-docker_sd_system_user: docker-sd
-docker_sd_system_group: docker-sd
+# docker_sd_state: installed
+
+docker_sd_system_user:
+  owner: docker-sd
+  group: docker-sd
+
+docker_sd_system_service:
+  state: started
+  enabled: true
+
+docker_sd_release:
+  provider: github
+  host: https://github.com
+  project:  bodsch
+  repository: docker-sd
+  file: "docker-sd-{{ docker_sd_version }}-{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz"
+  binary: docker-sd
+
 docker_sd_config_dir: /etc/docker-sd
 
 docker_sd_direct_download: false
 
-docker_sd_release: {}
 docker_sd_rest_api: {}
 docker_sd_hosts: []
 docker_sd_addition_labels: []

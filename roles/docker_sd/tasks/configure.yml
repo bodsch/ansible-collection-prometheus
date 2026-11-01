@@ -7,7 +7,7 @@
     path: "{{ docker_sd_config_dir }}"
     state: directory
     owner: root
-    group: "{{ docker_sd_system_group }}"
+    group: "{{ docker_sd_system_user.group }}"
     mode: "0770"
 
 - name: create docker-sd configuration
@@ -18,7 +18,7 @@
     dest: "{{ docker_sd_config_dir }}/docker-sd.yml"
     force: true
     owner: root
-    group: "{{ docker_sd_system_group }}"
+    group: "{{ docker_sd_system_user.group }}"
     mode: "0640"
   notify:
     - restart docker-sd
