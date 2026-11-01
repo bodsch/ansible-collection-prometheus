@@ -23,16 +23,16 @@
     system: "{{ ansible_facts.system }}"
     user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
     password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
-  register: _release
+  register: _alertmanager_release
 
 - name: re-define alertmanager_version
   when:
     - not running_in_check_mode
     - alertmanager_version == "latest"
-    - _release.version is defined
-    - _release.version | length > 0
+    - _alertmanager_release.version is defined
+    - _alertmanager_release.version | length > 0
   ansible.builtin.set_fact:
-    alertmanager_version: "{{ _release.version }}"
+    alertmanager_version: "{{ _alertmanager_release.version }}"
 
 - name: define delegate instance for download handling
   when:
@@ -63,7 +63,7 @@
   delegate_to: "{{ alertmanager_delegate_to }}"
   run_once: "{{ 'false' if alertmanager_direct_download else 'true' }}"
   ansible.builtin.stat:
-    path: "{{ alertmanager_local_tmp_directory }}/{{ _release.file }}"
+    path: "{{ alertmanager_local_tmp_directory }}/{{ _alertmanager_release.file }}"
   register: alertmanager_stat_archive
 
 - name: download
@@ -77,11 +77,11 @@
       delegate_to: "{{ alertmanager_delegate_to }}"
       run_once: "{{ 'false' if alertmanager_direct_download else 'true' }}"
       ansible.builtin.get_url:
-        url: "{{ _release.download_url }}"
+        url: "{{ _alertmanager_release.download_url }}"
         url_username: "{{ lookup('env', 'GH_USER') | default(omit) }}"
         url_password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
-        dest: "{{ alertmanager_local_tmp_directory }}/{{ _release.file }}"
-        checksum: "{{ _release.checksum_string | default(omit) }}"
+        dest: "{{ alertmanager_local_tmp_directory }}/{{ _alertmanager_release.file }}"
+        checksum: "{{ _alertmanager_release.checksum_string | default(omit) }}"
         mode: "0640"
       register: _download_archive
       until: _download_archive is succeeded
@@ -109,7 +109,7 @@
   delegate_to: "{{ alertmanager_delegate_to }}"
   run_once: "{{ 'false' if alertmanager_direct_download else 'true' }}"
   ansible.builtin.stat:
-    path: "{{ alertmanager_local_tmp_directory }}/{{ _release.file }}"
+    path: "{{ alertmanager_local_tmp_directory }}/{{ _alertmanager_release.file }}"
   register: alertmanager_stat_archive
 
 - name: detect extracted binary
@@ -134,7 +134,7 @@
   delegate_to: "{{ alertmanager_delegate_to }}"
   run_once: "{{ 'false' if alertmanager_direct_download else 'true' }}"
   ansible.builtin.unarchive:
-    src: "{{ alertmanager_local_tmp_directory }}/{{ _release.file }}"
+    src: "{{ alertmanager_local_tmp_directory }}/{{ _alertmanager_release.file }}"
     dest: "{{ alertmanager_local_tmp_directory }}/"
     remote_src: "{{ 'true' if alertmanager_direct_download else 'false' }}"
     extra_opts:
