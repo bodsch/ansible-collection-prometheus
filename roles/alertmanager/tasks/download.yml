@@ -22,7 +22,7 @@
     architecture: "{{ system_architecture }}"
     system: "{{ ansible_facts.system }}"
     user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
-    password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+    password: "{{ _alertmanager_scm_token | default(omit, true) }}"
   register: _alertmanager_release
 
 - name: re-define alertmanager_version
@@ -78,8 +78,8 @@
       run_once: "{{ 'false' if alertmanager_direct_download else 'true' }}"
       ansible.builtin.get_url:
         url: "{{ _alertmanager_release.download_url }}"
-        url_username: "{{ lookup('env', 'GH_USER') | default(omit) }}"
-        url_password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+        url_username: "{{ _alertmanager_scm_user | default(omit, true) }}"
+        url_password: "{{ _alertmanager_scm_token | default(omit, true) }}"
         dest: "{{ alertmanager_local_tmp_directory }}/{{ _alertmanager_release.file }}"
         checksum: "{{ _alertmanager_release.checksum_string | default(omit) }}"
         mode: "0640"
