@@ -22,7 +22,7 @@
     dest: "{{ prometheus_config_dir }}/file_sd/{{ item.key }}.yml"
     force: true
     owner: root
-    group: "{{ prometheus_system_group }}"
+    group: "{{ prometheus_system_user.group }}"
     mode: "0640"
   with_dict: "{{ prometheus_file_sd_targets }}"
   loop_control:
@@ -38,7 +38,7 @@
     - prometheus_alert_rules | count > 0
   bodsch.prometheus.prometheus_alert_rules:
     rules: "{{ prometheus_alert_rules | bodsch.prometheus.jinja_encode }}"
-    group: "{{ prometheus_system_group }}"
+    group: "{{ prometheus_system_user.group }}"
   register: _created_alert_rules
   notify:
     - summary of changes or failed
@@ -53,7 +53,7 @@
     dest: "{{ prometheus_config_dir }}/prometheus.yml"
     force: true
     owner: root
-    group: "{{ prometheus_system_group }}"
+    group: "{{ prometheus_system_user.group }}"
     mode: "0640"
   register: prometheus_config
   notify:
@@ -69,7 +69,7 @@
     dest: "{{ prometheus_config_dir }}/web.yml"
     force: true
     owner: root
-    group: "{{ prometheus_system_group }}"
+    group: "{{ prometheus_system_user.group }}"
     mode: "0640"
   notify:
     - reload prometheus

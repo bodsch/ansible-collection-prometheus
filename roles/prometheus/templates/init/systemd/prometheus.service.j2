@@ -13,8 +13,8 @@ Type                    = simple
 Environment             = "GOMAXPROCS={{ ansible_facts.processor_vcpus | default(ansible_facts.processor_count) }}"
 EnvironmentFile         = {{ prometheus_defaults_directory }}/prometheus
 
-User                    = {{ prometheus_system_user }}
-Group                   = {{ prometheus_system_group }}
+User                    = {{ prometheus_system_user.owner }}
+Group                   = {{ prometheus_system_user.group }}
 
 ExecStartPre            = /usr/bin/promtool check config {{ prometheus_config_dir }}/prometheus.yml
 

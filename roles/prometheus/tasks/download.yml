@@ -1,43 +1,48 @@
 ---
 
-- name: get latest release
+- name: define download information
+  when:
+    - not running_in_check_mode
+  ansible.builtin.set_fact:
+    prometheus_release: "{{ prometheus_defaults_release | combine(prometheus_release, recursive=True) }}"
+  no_log: true
+
+- name: resolve prometheus release
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: localhost
+  run_once: true
+  bodsch.scm.scm_release:
+    provider: "{{ prometheus_release.provider }}"
+    host: "{{ prometheus_release.host }}"
+    project: "{{ prometheus_release.project }}"
+    repository: "{{ prometheus_release.repository }}"
+    version: "{{ prometheus_version }}"
+    architecture: "{{ system_architecture }}"
+    system: "{{ ansible_facts.system }}"
+    user: "{{ _prometheus_scm_user | default(omit, true) }}"
+    password: "{{ _prometheus_scm_token | default(omit, true) }}"
+  register: _prometheus_release
+
+- name: re-define prometheus_version
   when:
     - not running_in_check_mode
     - prometheus_version == "latest"
-  delegate_to: localhost
-  become: false
-  run_once: true
-  block:
-    - name: get latest release
-      delegate_to: localhost
-      become: false
-      run_once: true
-      bodsch.scm.github_latest:
-        project: prometheus
-        repository: prometheus
-        github_tags: "{{ prometheus_scm.use_tags | default('false') }}"
-        without_beta: "{{ prometheus_scm.without_beta | default('false') }}"
-        filter_elements: "{{ prometheus_scm.version_filter | default([]) }}"
-        user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
-        password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
-      register: _latest_release
-
-    - name: re-define prometheus_version
-      ansible.builtin.set_fact:
-        prometheus_version: "{{ _latest_release.latest_release }}"
-
-- name: define download information
+    - _prometheus_release.version is defined
+    - _prometheus_release.version | length > 0
   ansible.builtin.set_fact:
-    prometheus_release: "{{ prometheus_defaults_release | combine(prometheus_release, recursive=True) }}"
+    prometheus_version: "{{ _prometheus_release.version }}"
 
 - name: define delegate instance for download handling
+  when:
+    - not running_in_check_mode
+    - prometheus_direct_download
   ansible.builtin.set_fact:
     prometheus_delegate_to: "{{ ansible_facts.host }}"
     prometheus_local_tmp_directory: "{{
-        lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
-        default('/var/cache/ansible/prometheus', true) }}/{{ prometheus_version }}"
-  when:
-    - prometheus_direct_download
+      lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
+      default('/var/cache/ansible/prometheus', true) }}/{{ prometheus_version }}"
 
 - name: create download directory
   when:
@@ -48,7 +53,7 @@
   ansible.builtin.file:
     path: "{{ prometheus_local_tmp_directory }}"
     state: directory
-    mode: "0750"
+    mode: "0700"
   check_mode: false
 
 - name: detect the downloaded prometheus archive
@@ -58,48 +63,25 @@
   delegate_to: "{{ prometheus_delegate_to }}"
   run_once: "{{ 'false' if prometheus_direct_download else 'true' }}"
   ansible.builtin.stat:
-    path: "{{ prometheus_local_tmp_directory }}/{{ prometheus_release.file }}"
-  register: stat_prometheus_archive
+    path: "{{ prometheus_local_tmp_directory }}/{{ _prometheus_release.file }}"
+  register: prometheus_stat_archive
 
 - name: download
   when:
     - not running_in_check_mode
-    - stat_prometheus_archive.stat is defined
-    - not stat_prometheus_archive.stat.exists | default('false')
+    - prometheus_stat_archive.stat is defined
+    - not prometheus_stat_archive.stat.exists | default(false) | bool
   block:
-    - name: checksum
-      become: false
-      delegate_to: localhost
-      run_once: true
-      block:
-        - name: get checksum list
-          bodsch.scm.github_checksum:
-            project: prometheus
-            repository: prometheus
-            checksum_file: sha256sums.txt
-            user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
-            password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
-            architecture: "{{ ansible_facts.architecture }}"
-            system: "{{ ansible_facts.system }}"
-            version: "v{{ prometheus_version }}"
-          register: _latest_checksum
-
-        - name: define checksum for {{ system_architecture }} architecture
-          ansible.builtin.set_fact:
-            __prometheus_checksum: "sha256:{{ _latest_checksum.checksum }}"
-          when:
-            - _latest_checksum.rc == 0
-            - _latest_checksum.checksum is defined
-            - _latest_checksum.checksum | string | length > 0
-
-    - name: download prometheus binary archive {{ prometheus_release.file }}
+    - name: download prometheus binary archive
       become: false
       delegate_to: "{{ prometheus_delegate_to }}"
       run_once: "{{ 'false' if prometheus_direct_download else 'true' }}"
       ansible.builtin.get_url:
-        url: "{{ prometheus_release.download_url }}/download/v{{ prometheus_version }}/{{ prometheus_release.file }}"
-        dest: "{{ prometheus_local_tmp_directory }}/{{ prometheus_release.file }}"
-        checksum: "{{ __prometheus_checksum | default(omit) }}"
+        url: "{{ _prometheus_release.download_url }}"
+        url_username: "{{ _prometheus_scm_user | default(omit, true) }}"
+        url_password: "{{ _prometheus_scm_token | default(omit, true) }}"
+        dest: "{{ prometheus_local_tmp_directory }}/{{ _prometheus_release.file }}"
+        checksum: "{{ _prometheus_release.checksum_string | default(omit) }}"
         mode: "0640"
       register: _download_archive
       until: _download_archive is succeeded
@@ -120,6 +102,16 @@
       ansible.builtin.fail:
         msg: A serious error occurred when downloading the archive.
 
+- name: detect downloaded file
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ prometheus_delegate_to }}"
+  run_once: "{{ 'false' if prometheus_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ prometheus_local_tmp_directory }}/{{ _prometheus_release.file }}"
+  register: prometheus_stat_archive
+
 - name: detect extracted binary
   when:
     - not running_in_check_mode
@@ -128,21 +120,173 @@
   run_once: "{{ 'false' if prometheus_direct_download else 'true' }}"
   ansible.builtin.stat:
     path: "{{ prometheus_local_tmp_directory }}/{{ prometheus_release.binary }}"
-  register: stat_prometheus_binary
+  register: prometheus_stat_binary
 
 - name: extract prometheus archive
   when:
     - not running_in_check_mode
-    - stat_prometheus_binary.stat is defined
-    - not stat_prometheus_binary.stat.exists | default('false')
+    - prometheus_stat_archive.stat is defined
+    - prometheus_stat_archive.stat.exists | default('false') | bool
+    - prometheus_stat_archive.stat.mimetype in ["application/zip","application/gzip"]
+    - prometheus_stat_binary.stat is defined
+    - not prometheus_stat_binary.stat.exists | default('false') | bool
   become: false
   delegate_to: "{{ prometheus_delegate_to }}"
   run_once: "{{ 'false' if prometheus_direct_download else 'true' }}"
   ansible.builtin.unarchive:
-    src: "{{ prometheus_local_tmp_directory }}/{{ prometheus_release.file }}"
+    src: "{{ prometheus_local_tmp_directory }}/{{ _prometheus_release.file }}"
     dest: "{{ prometheus_local_tmp_directory }}/"
-    copy: false
+    remote_src: "{{ 'true' if prometheus_direct_download else 'false' }}"
     extra_opts:
       - --strip-components=1
 
 ...
+
+
+#
+# - name: get latest release
+#   when:
+#     - not running_in_check_mode
+#     - prometheus_version == "latest"
+#   delegate_to: localhost
+#   become: false
+#   run_once: true
+#   block:
+#     - name: get latest release
+#       delegate_to: localhost
+#       become: false
+#       run_once: true
+#       bodsch.scm.github_latest:
+#         project: prometheus
+#         repository: prometheus
+#         github_tags: "{{ prometheus_scm.use_tags | default('false') }}"
+#         without_beta: "{{ prometheus_scm.without_beta | default('false') }}"
+#         filter_elements: "{{ prometheus_scm.version_filter | default([]) }}"
+#         user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+#         password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+#       register: _latest_release
+#
+#     - name: re-define prometheus_version
+#       ansible.builtin.set_fact:
+#         prometheus_version: "{{ _latest_release.latest_release }}"
+#
+# - name: define download information
+#   ansible.builtin.set_fact:
+#     prometheus_release: "{{ prometheus_defaults_release | combine(prometheus_release, recursive=True) }}"
+#
+# - name: define delegate instance for download handling
+#   ansible.builtin.set_fact:
+#     prometheus_delegate_to: "{{ ansible_facts.host }}"
+#     prometheus_local_tmp_directory: "{{
+#         lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
+#         default('/var/cache/ansible/prometheus', true) }}/{{ prometheus_version }}"
+#   when:
+#     - prometheus_direct_download
+#
+# - name: create download directory
+#   when:
+#     - not running_in_check_mode
+#   become: false
+#   delegate_to: "{{ prometheus_delegate_to }}"
+#   run_once: "{{ 'false' if prometheus_direct_download else 'true' }}"
+#   ansible.builtin.file:
+#     path: "{{ prometheus_local_tmp_directory }}"
+#     state: directory
+#     mode: "0750"
+#   check_mode: false
+#
+# - name: detect the downloaded prometheus archive
+#   when:
+#     - not running_in_check_mode
+#   become: false
+#   delegate_to: "{{ prometheus_delegate_to }}"
+#   run_once: "{{ 'false' if prometheus_direct_download else 'true' }}"
+#   ansible.builtin.stat:
+#     path: "{{ prometheus_local_tmp_directory }}/{{ prometheus_release.file }}"
+#   register: stat_prometheus_archive
+#
+# - name: download
+#   when:
+#     - not running_in_check_mode
+#     - stat_prometheus_archive.stat is defined
+#     - not stat_prometheus_archive.stat.exists | default('false')
+#   block:
+#     - name: checksum
+#       become: false
+#       delegate_to: localhost
+#       run_once: true
+#       block:
+#         - name: get checksum list
+#           bodsch.scm.github_checksum:
+#             project: prometheus
+#             repository: prometheus
+#             checksum_file: sha256sums.txt
+#             user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+#             password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+#             architecture: "{{ ansible_facts.architecture }}"
+#             system: "{{ ansible_facts.system }}"
+#             version: "v{{ prometheus_version }}"
+#           register: _latest_checksum
+#
+#         - name: define checksum for {{ system_architecture }} architecture
+#           ansible.builtin.set_fact:
+#             __prometheus_checksum: "sha256:{{ _latest_checksum.checksum }}"
+#           when:
+#             - _latest_checksum.rc == 0
+#             - _latest_checksum.checksum is defined
+#             - _latest_checksum.checksum | string | length > 0
+#
+#     - name: download prometheus binary archive {{ prometheus_release.file }}
+#       become: false
+#       delegate_to: "{{ prometheus_delegate_to }}"
+#       run_once: "{{ 'false' if prometheus_direct_download else 'true' }}"
+#       ansible.builtin.get_url:
+#         url: "{{ prometheus_release.download_url }}/download/v{{ prometheus_version }}/{{ prometheus_release.file }}"
+#         dest: "{{ prometheus_local_tmp_directory }}/{{ prometheus_release.file }}"
+#         checksum: "{{ __prometheus_checksum | default(omit) }}"
+#         mode: "0640"
+#       register: _download_archive
+#       until: _download_archive is succeeded
+#       retries: 5
+#       delay: 2
+#       check_mode: false
+#
+#   rescue:
+#     - name: delete download directory
+#       become: false
+#       delegate_to: "{{ prometheus_delegate_to }}"
+#       run_once: "{{ 'false' if prometheus_direct_download else 'true' }}"
+#       ansible.builtin.file:
+#         path: "{{ prometheus_local_tmp_directory }}"
+#         state: absent
+#
+#     - name: exit with fail
+#       ansible.builtin.fail:
+#         msg: A serious error occurred when downloading the archive.
+#
+# - name: detect extracted binary
+#   when:
+#     - not running_in_check_mode
+#   become: false
+#   delegate_to: "{{ prometheus_delegate_to }}"
+#   run_once: "{{ 'false' if prometheus_direct_download else 'true' }}"
+#   ansible.builtin.stat:
+#     path: "{{ prometheus_local_tmp_directory }}/{{ prometheus_release.binary }}"
+#   register: stat_prometheus_binary
+#
+# - name: extract prometheus archive
+#   when:
+#     - not running_in_check_mode
+#     - stat_prometheus_binary.stat is defined
+#     - not stat_prometheus_binary.stat.exists | default('false')
+#   become: false
+#   delegate_to: "{{ prometheus_delegate_to }}"
+#   run_once: "{{ 'false' if prometheus_direct_download else 'true' }}"
+#   ansible.builtin.unarchive:
+#     src: "{{ prometheus_local_tmp_directory }}/{{ prometheus_release.file }}"
+#     dest: "{{ prometheus_local_tmp_directory }}/"
+#     copy: false
+#     extra_opts:
+#       - --strip-components=1
+#
+# ...

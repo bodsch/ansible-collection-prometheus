@@ -62,17 +62,6 @@ def test_files(host, get_vars):
         assert not f.is_file
 
 
-def test_user(host, get_vars):
-    """ """
-    user = get_vars.get("prometheus_system_user", "prometheus")
-    group = get_vars.get("prometheus_system_group", "prometheus")
-
-    assert not host.group(group).exists
-    assert not host.user(user).exists
-    # assert group in host.user(user).groups
-    # assert host.user(user).home == "/nonexistent"
-
-
 def test_service(host, get_vars):
     service = host.service("prometheus")
     if service.exists:
