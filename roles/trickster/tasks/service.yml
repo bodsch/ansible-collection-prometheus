@@ -9,8 +9,8 @@
   become: true
   ansible.builtin.systemd:
     name: trickster
-    enabled: true
-    state: started
+    state: "{{ trickster_system_service.state | default('started') }}"
+    enabled: "{{ trickster_system_service.enabled | default(true) | bool }}"
   tags:
     - trickster_run
 

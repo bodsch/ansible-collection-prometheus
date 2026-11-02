@@ -51,11 +51,17 @@ def test_files(host, get_vars):
         assert f.is_file
 
 
-def test_user(host):
-    assert host.group("trickster").exists
-    assert "trickster" in host.user("trickster").groups
-    assert host.user("trickster").shell == "/usr/sbin/nologin"
-    assert host.user("trickster").home == "/nonexistent"
+def test_user(host, get_vars):
+    """ """
+    system_user = get_vars.get("trickster_system_user", {})
+
+    owner = system_user.get("owner", "trickster")
+    group = system_user.get("group", "trickster")
+
+    assert host.group(group).exists
+    assert host.user(owner).exists
+    assert group in host.user(owner).groups
+    assert host.user(owner).home == "/nonexistent"
 
 
 def test_service(host):
