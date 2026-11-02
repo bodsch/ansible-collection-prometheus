@@ -2,13 +2,23 @@
 
 openvpn_exporter_version: '1.0.0'
 
+# openvpn_exporter_state: installed
+
 openvpn_exporter_system_user:
   owner:  openvpn-exporter
   group: openvpn-exporter
 
-openvpn_exporter_service:
+openvpn_exporter_system_service:
   state: stopped
   enabled: false
+
+openvpn_exporter_release:
+  provider: github
+  host: https://github.com
+  project:  bodsch
+  repository: openvpn_exporter
+  file: openvpn_exporter-{{ openvpn_exporter_version }}_{{ ansible_facts.system | lower }}_{{ system_architecture }}.tar.gz
+  binary: openvpn_exporter
 
 openvpn_exporter_systemd:
   unit:
@@ -19,12 +29,7 @@ openvpn_exporter_systemd:
 
 openvpn_exporter_config_dir: /etc/openvpn_exporter
 
-openvpn_exporter_release:
-  download_url: https://github.com/bodsch/openvpn_exporter/releases
-  # file: openvpn_exporter-{{ openvpn_exporter_version }}_{{ ansible_facts.system | lower }}_{{ system_architecture }}.tar.gz
-  # binary: openvpn_exporter
-
-openvpn_exporter_service_config:
+openvpn_exporter_service:
   log:
     level: info
   web:

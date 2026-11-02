@@ -2,27 +2,27 @@
 # {{ ansible_managed }}
 
 OPTIONS="
-{% if openvpn_exporter_service_config is defined %}
+{% if openvpn_exporter_service is defined %}
   {# log configuration #}
-  --log.level={{ openvpn_exporter_service_config.log.level | default('info') }} \
+  --log.level={{ openvpn_exporter_service.log.level | default('info') }} \
   {# web ... #}
-  {% if openvpn_exporter_service_config.web.listen_address is defined and
-        openvpn_exporter_service_config.web.listen_address | string | length > 0 %}
-  --web.listen-address={{ openvpn_exporter_service_config.web.listen_address }} \
+  {% if openvpn_exporter_service.web.listen_address is defined and
+        openvpn_exporter_service.web.listen_address | string | length > 0 %}
+  --web.listen-address={{ openvpn_exporter_service.web.listen_address }} \
   {% endif %}
-  {% if openvpn_exporter_service_config.web.telemetry_path is defined and
-        openvpn_exporter_service_config.web.telemetry_path | string | length > 0 %}
-  --web.telemetry-path={{ openvpn_exporter_service_config.web.telemetry_path }} \
+  {% if openvpn_exporter_service.web.telemetry_path is defined and
+        openvpn_exporter_service.web.telemetry_path | string | length > 0 %}
+  --web.telemetry-path={{ openvpn_exporter_service.web.telemetry_path }} \
   {% endif %}
-  {% if openvpn_exporter_service_config.web.max_requests is defined and
-        openvpn_exporter_service_config.web.max_requests | string | length > 0  %}
-  --web.max-requests={{ openvpn_exporter_service_config.web.max_requests }} \
+  {% if openvpn_exporter_service.web.max_requests is defined and
+        openvpn_exporter_service.web.max_requests | string | length > 0  %}
+  --web.max-requests={{ openvpn_exporter_service.web.max_requests }} \
   {% endif %}
   {# config #}
-  {% if openvpn_exporter_service_config.config is defined and
-        openvpn_exporter_service_config.config.file is defined and
-        openvpn_exporter_service_config.config.file | string | length > 0 %}
-  --config.file={{ openvpn_exporter_service_config.config.file }} \
+  {% if openvpn_exporter_service.config is defined and
+        openvpn_exporter_service.config.file is defined and
+        openvpn_exporter_service.config.file | string | length > 0 %}
+  --config.file={{ openvpn_exporter_service.config.file }} \
   {% endif %}
 {% endif %}
 {#

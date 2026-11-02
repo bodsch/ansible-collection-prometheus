@@ -7,7 +7,6 @@
   ansible.builtin.systemd:
     daemon_reload: true
     force: true
-  notify: restart openvpn_exporter
 
 - name: verify configuration  # noqa no-changed-when
   when:
@@ -19,7 +18,7 @@
 - name: reload openvpn exporter
   when:
     - not running_in_check_mode
-    - openvpn_exporter_service.state | default('started') == 'started'
+    - openvpn_exporter_system_service.state | default('started') == 'started'
   become: true
   ansible.builtin.service:
     name: openvpn_exporter
@@ -28,7 +27,7 @@
 - name: restart openvpn exporter
   when:
     - not running_in_check_mode
-    - openvpn_exporter_service.state | default('started') == 'started'
+    - openvpn_exporter_system_service.state | default('started') == 'started'
   become: true
   ansible.builtin.service:
     name: openvpn_exporter
