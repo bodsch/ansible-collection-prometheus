@@ -3,27 +3,27 @@
 - name: user and group handling
   when:
     - not running_in_check_mode
-    - sentinel_system_user != "root" or sentinel_system_group != "root"
+    - sentinel_system_user.owner != "root" or sentinel_system_user.group != "root"
   block:
     - name: create sentinel group
       ansible.builtin.group:
-        name: "{{ sentinel_system_group }}"
+        name: "{{ sentinel_system_user.group }}"
         state: present
         system: true
       when:
-        - sentinel_system_group != "root"
+        - sentinel_system_user.group != "root"
 
     - name: create sentinel user
       ansible.builtin.user:
-        name: "{{ sentinel_system_user }}"
-        groups: "{{ sentinel_system_group }}"
+        name: "{{ sentinel_system_user.owner }}"
+        groups: "{{ sentinel_system_user.group }}"
         append: true
         shell: /usr/sbin/nologin
         system: true
         createhome: false
         home: /nonexistent
       when:
-        - sentinel_system_user != "root"
+        - sentinel_system_user.owner != "root"
 
 - name: create install directory
   when:
@@ -31,8 +31,8 @@
   ansible.builtin.file:
     path: "{{ sentinel_install_path }}"
     state: directory
-    owner: "{{ sentinel_system_user }}"
-    group: "{{ sentinel_system_group }}"
+    owner: "{{ sentinel_system_user.owner }}"
+    group: "{{ sentinel_system_user.group }}"
     mode: "0755"
 
 - name: deploy and activate sentinel version {{ sentinel_version }}
@@ -43,8 +43,8 @@
     install_dir: "{{ sentinel_install_path }}"
     link_dir: "/usr/bin"
     remote_src: "{{ ('true' if sentinel_direct_download else 'false') | bool }}"
-    owner: "{{ sentinel_system_user }}"
-    group: "{{ sentinel_system_group }}"
+    owner: "{{ sentinel_system_user.owner }}"
+    group: "{{ sentinel_system_user.group }}"
     mode: "0755"
     items:
       - name: "{{ sentinel_release.binary }}"
@@ -67,7 +67,7 @@
         dest: "{{ sentinel_defaults_directory }}/sentinel"
         force: true
         owner: root
-        group: "{{ sentinel_system_group }}"
+        group: "{{ sentinel_system_user.group }}"
         mode: "0640"
       notify:
         - restart sentinel

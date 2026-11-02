@@ -7,7 +7,7 @@
     path: "{{ sentinel_config_dir }}"
     state: directory
     owner: root
-    group: "{{ sentinel_system_group }}"
+    group: "{{ sentinel_system_user.group }}"
     mode: "0770"
 
 - name: merge sentinel configuration between defaults and custom
@@ -25,7 +25,7 @@
     dest: "{{ sentinel_config_dir }}/config.yml"
     force: true
     owner: root
-    group: "{{ sentinel_system_group }}"
+    group: "{{ sentinel_system_user.group }}"
     mode: "0644"
   notify:
     - verify sentinel configuration
