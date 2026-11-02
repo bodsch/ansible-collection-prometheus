@@ -33,7 +33,7 @@ on:
       - '.yamllint'
 
 concurrency:
-  group: ci-${{ github.head_ref || github.ref_name }}
+  group: prometheus-ci-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 env:
