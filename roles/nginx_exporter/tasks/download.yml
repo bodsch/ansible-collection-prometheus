@@ -119,7 +119,7 @@
   delegate_to: "{{ nginx_exporter_delegate_to }}"
   run_once: "{{ 'false' if nginx_exporter_direct_download else 'true' }}"
   ansible.builtin.stat:
-    path: "{{ nginx_exporter_local_tmp_directory }}/{{ nginx_exporter_release.binary }}"
+    path: "{{ nginx_exporter_local_tmp_directory }}/nginx-prometheus-exporter"
   register: nginx_exporter_stat_binary
 
 - name: extract nginx_exporter archive
