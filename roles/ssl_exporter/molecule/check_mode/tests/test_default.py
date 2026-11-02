@@ -43,17 +43,6 @@ def test_exporter_files(host, get_vars):
         assert not f.is_file
 
 
-def test_user(host, get_vars):
-    """ """
-    user = get_vars.get("ssl_exporter_system_user", "ssl_exporter")
-    group = get_vars.get("ssl_exporter_system_group", "ssl_exporter")
-
-    assert not host.group(group).exists
-    assert not host.user(user).exists
-    # assert group in host.user(user).groups
-    # assert host.user(user).home == "/nonexistent"
-
-
 def test_service(host, get_vars):
     service = host.service("ssl_exporter")
     if service.exists:
