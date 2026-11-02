@@ -9,7 +9,7 @@
   become: true
   ansible.builtin.service:
     name: ssl_exporter
-    enabled: true
-    state: started
+    state: "{{ ssl_exporter_system_service.state | default('started') }}"
+    enabled: "{{ ssl_exporter_system_service.enabled | default(true) | bool }}"
 
 ...

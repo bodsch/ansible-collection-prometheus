@@ -3,15 +3,29 @@
 ssl_exporter_version: '2.4.3'
 ssl_exporter_ssl_plus: false
 
-ssl_exporter_system_group: ssl-exporter
-ssl_exporter_system_user: "{{ ssl_exporter_system_group }}"
+# ssl_exporter_state: installed
+
+ssl_exporter_system_user:
+  owner: ssl-exporter
+  group: ssl-exporter
+
+ssl_exporter_system_service:
+  state: started
+  enabled: true
+
+ssl_exporter_release:
+  provider: github
+  host: https://github.com
+  project:  ribbybibby
+  repository: ssl_exporter
+  file: ssl_exporter_{{ ssl_exporter_version }}_{{ ansible_facts.system | lower }}_{{ system_architecture }}.tar.gz
+  binary: ssl_exporter
+
 ssl_exporter_config_dir: /etc/ssl_exporter
 
 ssl_exporter_direct_download: false
 
 ssl_exporter_service: {}
-
-ssl_exporter_release: {}
 
 ssl_exporter_modules:
   https:
