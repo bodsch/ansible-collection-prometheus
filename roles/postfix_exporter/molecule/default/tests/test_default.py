@@ -20,3 +20,36 @@ testinfra_hosts = infra_hosts(host_name="instance")
 def test_files(host, files):
     f = host.file(files)
     assert f.exists
+
+
+def test_user(host, get_vars):
+    """ """
+    system_user = get_vars.get("postfix_exporter_system_user", {})
+
+    owner = system_user.get("owner", "postfix-exporter")
+    group = system_user.get("group", "postfix-exporter")
+
+    assert host.group(group).exists
+    assert host.user(owner).exists
+    assert group in host.user(owner).groups
+    assert host.user(owner).home == "/nonexistent"
+
+
+def test_additional_groups(host, get_vars):
+    """ """
+    system_user = get_vars.get("postfix_exporter_system_user", {})
+
+    owner = system_user.get("owner", "postfix-exporter")
+    group = system_user.get("group", "postfix-exporter")
+
+    additional_groups = get_vars.get("postfix_exporter_additional_groups", [])
+
+    groups = host.user(owner).groups
+
+    print(groups)
+    print(additional_groups)
+
+    # assert host.group(group).exists
+    # assert host.user(owner).exists
+    for ag in additional_groups:
+        assert ag in host.user(owner).groups

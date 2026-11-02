@@ -7,7 +7,6 @@
   ansible.builtin.systemd:
     daemon_reload: true
     force: true
-  notify: restart postfix_exporter
 
 - name: verify configuration  # noqa no-changed-when
   when:
@@ -19,7 +18,7 @@
 - name: reload postfix exporter
   when:
     - not running_in_check_mode
-    - postfix_exporter_service.state | default('started') == 'started'
+    - postfix_exporter_system_service.state | default('started') == 'started'
   become: true
   ansible.builtin.service:
     name: postfix_exporter
@@ -28,7 +27,7 @@
 - name: restart postfix exporter
   when:
     - not running_in_check_mode
-    - postfix_exporter_service.state | default('started') == 'started'
+    - postfix_exporter_system_service.state | default('started') == 'started'
   become: true
   ansible.builtin.service:
     name: postfix_exporter

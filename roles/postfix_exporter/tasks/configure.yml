@@ -10,10 +10,6 @@
   bodsch.core.directories:
     paths:
       - path: "{{ postfix_exporter_config_dir }}"
-      # - path: "{{ webmail_config.data_dir }}"
-      #   owner: "{{ webmail_system_user.owner }}"
-      #   group: "{{ webmail_system_user.group }}"
-      #   mode: "0750"
 
 - name: create config.yaml
   when:

@@ -1,10 +1,10 @@
 ---
 
-postfix_exporter_service:
+postfix_exporter_system_service:
   state: started
   enabled: true
 
-postfix_exporter_service_config:
+postfix_exporter_service:
   log:
     level: debug
   web:
