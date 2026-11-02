@@ -19,6 +19,8 @@
     mode: "0755"
     items:
       - name: "{{ promcheck_release.binary }}"
+        src: "promcheck_{{ ansible_facts.system | lower }}_{{ system_architecture }}"
+        link_name: "{{ promcheck_release.binary }}"
 
 - name: create custom fact file
   when:
