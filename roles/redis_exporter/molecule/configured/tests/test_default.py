@@ -15,7 +15,6 @@ testinfra_hosts = infra_hosts(host_name="instance")
     "files",
     [
         "/usr/bin/redis_exporter",
-        "/etc/redis_exporter/config.yml",
         "/lib/systemd/system/redis_exporter.service",
     ],
 )
@@ -46,7 +45,7 @@ def test_service(host, get_vars):
 @pytest.mark.parametrize(
     "sockets",
     [
-        "tcp://127.0.0.1:7979",
+        "tcp://127.0.0.1:9121",
     ],
 )
 def test_socket(host, sockets):
