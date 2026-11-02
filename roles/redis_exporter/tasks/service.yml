@@ -9,7 +9,7 @@
   become: true
   ansible.builtin.service:
     name: redis_exporter
-    enabled: true
-    state: started
+    state: "{{ redis_exporter_system_service.state | default('started') }}"
+    enabled: "{{ redis_exporter_system_service.enabled | default(true) | bool }}"
 
 ...
