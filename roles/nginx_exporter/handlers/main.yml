@@ -1,27 +1,28 @@
 ---
 
 - name: daemon-reload
+  when:
+    - ansible_facts.service_mgr == 'systemd'
   ansible.builtin.systemd:
     daemon_reload: true
     force: true
-  notify: restart nginx_exporter
-  when:
-    - ansible_facts.service_mgr == 'systemd'
 
 - name: restart nginx exporter
+  when:
+    - not running_in_check_mode
+    - nginx_exporter_system_service.state | default('started') == 'started'
   become: true
   ansible.builtin.service:
     name: nginx_exporter
     state: restarted
-  when:
-    - not running_in_check_mode
 
 - name: reload nginx exporter
+  when:
+    - not running_in_check_mode
+    - nginx_exporter_system_service.state | default('started') == 'started'
   become: true
   ansible.builtin.service:
     name: nginx_exporter
     state: reloaded
-  when:
-    - not running_in_check_mode
 
 ...
