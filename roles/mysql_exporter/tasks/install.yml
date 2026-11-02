@@ -3,18 +3,18 @@
 - name: user and group handling
   when:
     - not running_in_check_mode
-    - mysql_exporter_system_user != "root"
+    - mysql_exporter_system_user.owner != "root"
   block:
     - name: create mysql_exporter group
       ansible.builtin.group:
-        name: "{{ mysql_exporter_system_group }}"
+        name: "{{ mysql_exporter_system_user.group }}"
         state: present
         system: true
 
     - name: create mysql_exporter user
       ansible.builtin.user:
-        name: "{{ mysql_exporter_system_user }}"
-        groups: "{{ mysql_exporter_system_group }}"
+        name: "{{ mysql_exporter_system_user.owner }}"
+        groups: "{{ mysql_exporter_system_user.group }}"
         append: true
         shell: /usr/sbin/nologin
         system: true
@@ -27,8 +27,8 @@
   ansible.builtin.file:
     path: "{{ mysql_exporter_install_path }}"
     state: directory
-    owner: "{{ mysql_exporter_system_user }}"
-    group: "{{ mysql_exporter_system_group }}"
+    owner: "{{ mysql_exporter_system_user.owner }}"
+    group: "{{ mysql_exporter_system_user.group }}"
     mode: "0755"
 
 - name: deploy and activate mysql_exporter version {{ mysql_exporter_version }}
@@ -39,8 +39,8 @@
     install_dir: "{{ mysql_exporter_install_path }}"
     link_dir: "/usr/bin"
     remote_src: "{{ ('true' if mysql_exporter_direct_download else 'false') | bool }}"
-    owner: "{{ mysql_exporter_system_user }}"
-    group: "{{ mysql_exporter_system_group }}"
+    owner: "{{ mysql_exporter_system_user.owner }}"
+    group: "{{ mysql_exporter_system_user.group }}"
     mode: "0755"
     items:
       - name: "{{ mysql_exporter_release.binary }}"
@@ -59,7 +59,7 @@
         dest: "{{ mysql_exporter_defaults_directory }}/mysql_exporter"
         force: true
         owner: root
-        group: "{{ mysql_exporter_system_group }}"
+        group: "{{ mysql_exporter_system_user.group }}"
         mode: "0640"
       notify:
         - restart mysql exporter

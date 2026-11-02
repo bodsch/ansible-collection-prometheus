@@ -12,8 +12,8 @@ StartLimitIntervalSec   = 0
 Type                    = simple
 EnvironmentFile         = {{ mysql_exporter_defaults_directory }}/mysql_exporter
 
-User                    = {{ mysql_exporter_system_user }}
-Group                   = {{ mysql_exporter_system_group }}
+User                    = {{ mysql_exporter_system_user.owner }}
+Group                   = {{ mysql_exporter_system_user.group }}
 
 ExecReload              = /bin/kill -HUP $MAINPID
 ExecStart               = /usr/bin/{{ mysql_exporter_release.binary }} $OPTIONS
@@ -37,5 +37,5 @@ ProtectKernelTunables   = yes
 ProtectSystem           = strict
 
 [Install]
-Alias             = mysql-exporter.service
-WantedBy          = multi-user.target
+Alias                   = mysql-exporter.service
+WantedBy                = multi-user.target
