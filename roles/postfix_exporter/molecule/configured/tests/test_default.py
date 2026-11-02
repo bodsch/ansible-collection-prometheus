@@ -74,7 +74,6 @@ def test_additional_groups(host, get_vars):
         assert ag in host.user(owner).groups
 
 
-
 def test_service(host, get_vars):
     service = host.service("postfix_exporter")
     assert service.is_enabled
