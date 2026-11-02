@@ -12,6 +12,7 @@ ports:
   {% for x in promscout_ports %}
   - {{ x }}
   {% endfor %}
+
 {% endif %}
 {% if promscout_metrics_paths is defined and
       promscout_metrics_paths | count > 0 %}
@@ -19,6 +20,7 @@ metrics_paths:
   {% for x in promscout_metrics_paths %}
   - {{ x }}
   {% endfor %}
+
 {% endif %}
 {% if promscout_interval is defined and
       promscout_interval | string | length > 0 %}
@@ -76,6 +78,6 @@ cache_file: {{ promscout_cache_file }}
 #
 # Derivation order: target_info.service_name (OpenTelemetry) >
 # <name>_build_info > dominant metric namespace prefix.
-guess_job: false
+guess_job: {{ promscout_guess_job | bool | bodsch.core.config_bool(true_as='true', false_as='false')  }}
   {% endif %}
 {% endif %}

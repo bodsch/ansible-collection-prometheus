@@ -1,7 +1,7 @@
 {{ ansible_managed | comment }}
 
 [Unit]
-Description       = Prometheus service discovery for dockerd.
+Description       = Prometheus service discovery for classic systems.
 After             = network-online.target
 
 [Service]
@@ -9,8 +9,8 @@ Type              = simple
 Environment       = "GOMAXPROCS={{ ansible_facts.processor_vcpus | default(ansible_facts.processor_count) }}"
 EnvironmentFile   = {{ promscout_defaults_directory }}/promscout
 
-User              = {{ promscout_system_user }}
-Group             = {{ promscout_system_group }}
+User              = {{ promscout_system_user.owner }}
+Group             = {{ promscout_system_user.group }}
 
 ExecStart         = /usr/bin/{{ promscout_release.binary }} $OPTIONS
 

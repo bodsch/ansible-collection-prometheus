@@ -17,9 +17,11 @@ promscout_requirements:
 promscout_defaults_directory: /etc/default
 
 promscout_defaults_release:
-  download_url: https://github.com/bodsch/promscout/releases
+  provider: github
+  host: https://github.com
+  project:  bodsch
+  repository: promscout
   file: "promscout-{{ promscout_version }}-{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz"
-  checksum: "promscout-{{ promscout_version }}-{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz.sha256"
   binary: promscout
 
 # ---------------------------------------------
@@ -34,5 +36,13 @@ system_architecture: "{{ go_arch_map[ansible_facts.architecture] | default(ansib
 
 systemd_lib_directory: /lib/systemd/system
 
+_promscout_gh_token: "{{ lookup('env', 'GH_TOKEN') }}"
+_promscout_gh_user: "{{ lookup('env', 'GH_USER') }}"
+_promscout_fj_token: "{{ lookup('env', 'FJ_TOKEN') }}"
+_promscout_fj_user: "{{ lookup('env', 'FJ_USER') }}"
+
+# credentials matching the configured release provider (empty when unset)
+_promscout_scm_token: "{{ _promscout_fj_token if promscout_release.provider == 'forgejo' else _promscout_gh_token }}"
+_promscout_scm_user: "{{ _promscout_fj_user if promscout_release.provider == 'forgejo' else _promscout_gh_user }}"
 
 ...

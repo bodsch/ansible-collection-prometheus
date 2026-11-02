@@ -46,13 +46,15 @@ def test_files(host, get_vars):
 
 def test_user(host, get_vars):
     """ """
-    user = get_vars.get("promscout_system_user", "promscout")
-    group = get_vars.get("promscout_system_group", "promscout")
+    system_user = get_vars.get("promscout_system_user", {})
+
+    owner = system_user.get("owner", "promscout")
+    group = system_user.get("group", "promscout")
 
     assert host.group(group).exists
-    assert host.user(user).exists
-    assert group in host.user(user).groups
-    assert host.user(user).home == "/nonexistent"
+    assert host.user(owner).exists
+    assert group in host.user(owner).groups
+    assert host.user(owner).home == "/nonexistent"
 
 
 def test_service(host, get_vars):

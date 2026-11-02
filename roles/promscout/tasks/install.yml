@@ -3,27 +3,27 @@
 - name: user and group handling
   when:
     - not running_in_check_mode
-    - promscout_system_user != "root" or promscout_system_group != "root"
+    - promscout_system_user.owner != "root" or promscout_system_user.group != "root"
   block:
     - name: create promscout group
       ansible.builtin.group:
-        name: "{{ promscout_system_group }}"
+        name: "{{ promscout_system_user.group }}"
         state: present
         system: true
       when:
-        - promscout_system_group != "root"
+        - promscout_system_user.group != "root"
 
     - name: create promscout user
       ansible.builtin.user:
-        name: "{{ promscout_system_user }}"
-        groups: "{{ promscout_system_group }}"
+        name: "{{ promscout_system_user.owner }}"
+        groups: "{{ promscout_system_user.group }}"
         append: true
         shell: /usr/sbin/nologin
         system: true
         createhome: false
         home: /nonexistent
       when:
-        - promscout_system_user != "root"
+        - promscout_system_user.owner != "root"
 
 - name: create install directory
   when:
@@ -31,8 +31,8 @@
   ansible.builtin.file:
     path: "{{ promscout_install_path }}"
     state: directory
-    owner: "{{ promscout_system_user }}"
-    group: "{{ promscout_system_group }}"
+    owner: "{{ promscout_system_user.owner }}"
+    group: "{{ promscout_system_user.group }}"
     mode: "0755"
 
 - name: deploy and activate promscout version {{ promscout_version }}
@@ -43,8 +43,8 @@
     install_dir: "{{ promscout_install_path }}"
     link_dir: "/usr/bin"
     remote_src: "{{ ('true' if promscout_direct_download else 'false') | bool }}"
-    owner: "{{ promscout_system_user }}"
-    group: "{{ promscout_system_group }}"
+    owner: "{{ promscout_system_user.owner }}"
+    group: "{{ promscout_system_user.group }}"
     mode: "0755"
     items:
       - name: "{{ promscout_release.binary }}"
@@ -59,7 +59,7 @@
     path: "{{ promscout_config_dir }}"
     state: directory
     owner: root
-    group: "{{ promscout_system_group }}"
+    group: "{{ promscout_system_user.group }}"
     mode: "0770"
 
 - name: systemd
@@ -73,7 +73,7 @@
         dest: "{{ promscout_defaults_directory }}/promscout"
         force: true
         owner: root
-        group: "{{ promscout_system_group }}"
+        group: "{{ promscout_system_user.group }}"
         mode: "0640"
       notify:
         - restart promscout

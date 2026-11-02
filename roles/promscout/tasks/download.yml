@@ -1,8 +1,11 @@
 ---
 
 - name: define download information
+  when:
+    - not running_in_check_mode
   ansible.builtin.set_fact:
     promscout_release: "{{ promscout_defaults_release | combine(promscout_release, recursive=True) }}"
+  no_log: true
 
 - name: resolve promscout release
   when:
@@ -11,24 +14,25 @@
   delegate_to: localhost
   run_once: true
   bodsch.scm.scm_release:
-    provider: "github"
-    project: bodsch
-    repository: promscout
-    version: "{{ promscout_version }}" # "latest" | "2.53.0" | "v2.53.0"
-    architecture: "{{ ansible_facts.architecture }}"
+    provider: "{{ promscout_release.provider }}"
+    host: "{{ promscout_release.host }}"
+    project: "{{ promscout_release.project }}"
+    repository: "{{ promscout_release.repository }}"
+    version: "{{ promscout_version }}"
+    architecture: "{{ system_architecture }}"
     system: "{{ ansible_facts.system }}"
-    user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
-    password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
-  register: _release
+    user: "{{ _promscout_scm_user | default(omit, true) }}"
+    password: "{{ _promscout_scm_token | default(omit, true) }}"
+  register: _promscout_release
 
 - name: re-define promscout_version
   when:
     - not running_in_check_mode
     - promscout_version == "latest"
-    - _release.version is defined
-    - _release.version | length > 0
+    - _promscout_release.version is defined
+    - _promscout_release.version | length > 0
   ansible.builtin.set_fact:
-    promscout_version: "{{ _release.version }}"
+    promscout_version: "{{ _promscout_release.version }}"
 
 - name: define delegate instance for download handling
   when:
@@ -49,7 +53,7 @@
   ansible.builtin.file:
     path: "{{ promscout_local_tmp_directory }}"
     state: directory
-    mode: "0750"
+    mode: "0700"
   check_mode: false
 
 - name: detect the downloaded promscout archive
@@ -59,7 +63,7 @@
   delegate_to: "{{ promscout_delegate_to }}"
   run_once: "{{ 'false' if promscout_direct_download else 'true' }}"
   ansible.builtin.stat:
-    path: "{{ promscout_local_tmp_directory }}/{{ _release.file }}"
+    path: "{{ promscout_local_tmp_directory }}/{{ _promscout_release.file }}"
   register: promscout_stat_archive
 
 - name: download
@@ -68,17 +72,16 @@
     - promscout_stat_archive.stat is defined
     - not promscout_stat_archive.stat.exists | default(false) | bool
   block:
-
     - name: download promscout binary archive
       become: false
       delegate_to: "{{ promscout_delegate_to }}"
       run_once: "{{ 'false' if promscout_direct_download else 'true' }}"
       ansible.builtin.get_url:
-        url: "{{ _release.download_url }}"
-        url_username: "{{ lookup('env', 'GH_USER') | default(omit) }}"
-        url_password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
-        dest: "{{ promscout_local_tmp_directory }}/{{ _release.file }}"
-        checksum: "{{ _release.checksum_string | default(omit) }}"
+        url: "{{ _promscout_release.download_url }}"
+        url_username: "{{ _promscout_scm_user | default(omit, true) }}"
+        url_password: "{{ _promscout_scm_token | default(omit, true) }}"
+        dest: "{{ promscout_local_tmp_directory }}/{{ _promscout_release.file }}"
+        checksum: "{{ _promscout_release.checksum_string | default(omit) }}"
         mode: "0640"
       register: _download_archive
       until: _download_archive is succeeded
@@ -106,7 +109,7 @@
   delegate_to: "{{ promscout_delegate_to }}"
   run_once: "{{ 'false' if promscout_direct_download else 'true' }}"
   ansible.builtin.stat:
-    path: "{{ promscout_local_tmp_directory }}/{{ _release.file }}"
+    path: "{{ promscout_local_tmp_directory }}/{{ _promscout_release.file }}"
   register: promscout_stat_archive
 
 - name: detect extracted binary
@@ -131,7 +134,7 @@
   delegate_to: "{{ promscout_delegate_to }}"
   run_once: "{{ 'false' if promscout_direct_download else 'true' }}"
   ansible.builtin.unarchive:
-    src: "{{ promscout_local_tmp_directory }}/{{ _release.file }}"
+    src: "{{ promscout_local_tmp_directory }}/{{ _promscout_release.file }}"
     dest: "{{ promscout_local_tmp_directory }}/"
     remote_src: "{{ 'true' if promscout_direct_download else 'false' }}"
 
