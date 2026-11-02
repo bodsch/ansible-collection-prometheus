@@ -7,7 +7,7 @@
     path: "{{ node_exporter_config_dir }}"
     state: directory
     owner: root
-    group: "{{ node_exporter_system_group }}"
+    group: "{{ node_exporter_system_user.group }}"
     mode: "0775"
 
 - name: custom directories
@@ -26,7 +26,7 @@
         state: directory
         path: "{{ item }}"
         owner: root
-        group: "{{ node_exporter_system_group }}"
+        group: "{{ node_exporter_system_user.group }}"
         mode: "0775"
       loop: "{{ node_exporter_custom_dirs }}"
       loop_control:
@@ -41,7 +41,7 @@
     dest: "{{ node_exporter_config_dir }}/config.yml"
     force: true
     owner: root
-    group: "{{ node_exporter_system_group }}"
+    group: "{{ node_exporter_system_user.group }}"
     mode: "0640"
   notify:
     - restart node_exporter
