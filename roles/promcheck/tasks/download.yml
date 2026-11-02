@@ -137,5 +137,7 @@
     src: "{{ promcheck_local_tmp_directory }}/{{ _promcheck_release.file }}"
     dest: "{{ promcheck_local_tmp_directory }}/"
     remote_src: "{{ 'true' if promcheck_direct_download else 'false' }}"
+    extra_opts:
+      - --strip-components=1
 
 ...
