@@ -1,7 +1,10 @@
 ---
 
-node_exporter_system_user: node_exporter
-node_exporter_system_group: node_exporter
+
+node_exporter_system_user:
+  owner: node-exporter
+  group: node-exporter
+
 node_exporter_config_dir: /etc/node_exporter
 node_exporter_textfile_dir: /var/lib/node_exporter
 
