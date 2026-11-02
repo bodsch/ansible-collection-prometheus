@@ -9,7 +9,7 @@
   become: true
   ansible.builtin.service:
     name: pushgateway
-    enabled: true
-    state: started
+    state: "{{ pushgateway_system_service.state | default('started') }}"
+    enabled: "{{ pushgateway_system_service.enabled | default(true) | bool }}"
 
 ...

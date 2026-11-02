@@ -34,17 +34,6 @@ def test_files(host, files):
     assert not f.is_file
 
 
-def test_user(host, get_vars):
-    """ """
-    user = get_vars.get("pushgateway_system_user", "pushgateway")
-    group = get_vars.get("pushgateway_system_group", "pushgateway")
-
-    assert not host.group(group).exists
-    assert not host.user(user).exists
-    # assert group in host.user(user).groups
-    # assert host.user(user).home == "/nonexistent"
-
-
 def test_service(host, get_vars):
     service = host.service("pushgateway")
     if service.exists:

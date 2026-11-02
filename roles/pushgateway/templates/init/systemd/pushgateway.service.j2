@@ -10,8 +10,8 @@ Type             = simple
 Environment      = "GOMAXPROCS={{ ansible_facts.processor_vcpus | default(ansible_facts.processor_count) }}"
 EnvironmentFile  = {{ pushgateway_defaults_directory }}/pushgateway
 
-User             = {{ pushgateway_system_user }}
-Group            = {{ pushgateway_system_group }}
+User             = {{ pushgateway_system_user.owner }}
+Group            = {{ pushgateway_system_user.group }}
 
 ExecReload       = /bin/kill -HUP $MAINPID
 ExecStart        = /usr/bin/{{ pushgateway_release.binary }} $OPTIONS
