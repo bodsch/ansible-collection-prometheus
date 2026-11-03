@@ -10,12 +10,12 @@
     fail_key: false
   register: docker_sd_docker_group
 
-- name: add user {{ docker_sd_system_user }} to docker group
+- name: add user {{ docker_sd_system_user.owner }} to docker group
   when:
     - not running_in_check_mode
     - docker_sd_docker_group | bodsch.prometheus.docker_group()
   ansible.builtin.user:
-    name: "{{ docker_sd_system_user }}"
+    name: "{{ docker_sd_system_user.owner }}"
     groups: docker
     append: true
     state: present
@@ -27,14 +27,14 @@
     path: /run/docker.sock
   register: docker_sd_docker_socket
 
-- name: sets ACL for {{ docker_sd_system_user }} on /run/docker.sock
+- name: sets ACL for {{ docker_sd_system_user.owner }} on /run/docker.sock
   when:
     - not running_in_check_mode
     - docker_sd_docker_socket.stat.exists is defined
     - docker_sd_docker_socket.stat.exists
   ansible.posix.acl:
     path: /run/docker.sock
-    entity: "{{ docker_sd_system_user }}"
+    entity: "{{ docker_sd_system_user.owner }}"
     etype: user
     permissions: rw
     state: present

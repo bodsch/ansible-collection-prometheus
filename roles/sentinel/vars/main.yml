@@ -33,9 +33,11 @@ sentinel_defaults_targets: []
 sentinel_defaults_directory: /etc/default
 
 sentinel_defaults_release:
-  download_url: https://github.com/bodsch/sentinel/releases
+  provider: github
+  host: https://github.com
+  project:  bodsch
+  repository: sentinel
   file: sentinel-{{ sentinel_version }}-{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz
-  checksum: "sentinel-{{ sentinel_version }}-{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz.sha256"
   binary: sentinel
 
 go_arch_map:
@@ -45,5 +47,14 @@ go_arch_map:
 system_architecture: "{{ go_arch_map[ansible_facts.architecture] | default(ansible_facts.architecture) }}"
 
 systemd_lib_directory: /lib/systemd/system
+
+_sentinel_gh_token: "{{ lookup('env', 'GH_TOKEN') }}"
+_sentinel_gh_user: "{{ lookup('env', 'GH_USER') }}"
+_sentinel_fj_token: "{{ lookup('env', 'FJ_TOKEN') }}"
+_sentinel_fj_user: "{{ lookup('env', 'FJ_USER') }}"
+
+# credentials matching the configured release provider (empty when unset)
+_sentinel_scm_token: "{{ _sentinel_fj_token if sentinel_release.provider == 'forgejo' else _sentinel_gh_token }}"
+_sentinel_scm_user: "{{ _sentinel_fj_user if sentinel_release.provider == 'forgejo' else _sentinel_gh_user }}"
 
 ...

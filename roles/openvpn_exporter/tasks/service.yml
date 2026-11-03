@@ -6,11 +6,11 @@
 - name: ensure openvpn_exporter is enabled on boot
   when:
     - not running_in_check_mode
-    - openvpn_exporter_service.state | default('started') == 'started'
   become: true
   ansible.builtin.service:
     name: openvpn_exporter
-    enabled: true
-    state: started
+    state: "{{ openvpn_exporter_service.state | default('started') }}"
+    enabled: "{{ openvpn_exporter_service.enabled | default(true) | bool }}"
+
 
 ...

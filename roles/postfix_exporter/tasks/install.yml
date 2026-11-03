@@ -2,7 +2,7 @@
 
 - name: merge postfix_exporter configuration between defaults and custom
   ansible.builtin.set_fact:
-    postfix_exporter_service_config: "{{ postfix_exporter_defaults_service | combine(postfix_exporter_service_config, recursive=True) }}"
+    postfix_exporter_service: "{{ postfix_exporter_defaults_service | combine(postfix_exporter_service, recursive=True) }}"
 
 - name: user and group handling
   when:
@@ -24,6 +24,30 @@
         system: true
         createhome: false
         home: /nonexistent
+
+    - name: manage additional groups
+      when:
+        - postfix_exporter_additional_groups | default([]) | count > 0
+      block:
+        - name: get system groups
+          ansible.builtin.getent:
+            database: group
+            split: ':'
+          no_log: true
+          register: postfix_exporter_groups
+
+        - name: check system groups for '{{ postfix_exporter_additional_groups | join(',') }}'
+          ansible.builtin.set_fact:
+            postfix_exporter_additional_groups: "{{ postfix_exporter_additional_groups | bodsch.prometheus.verify_additional_groups(system_groups=postfix_exporter_groups) }}"
+
+        - name: add user {{ postfix_exporter_system_user.owner }} to additional groups
+          when:
+            - postfix_exporter_additional_groups | default([]) | count > 0
+          ansible.builtin.user:
+            name: "{{ postfix_exporter_system_user.owner }}"
+            groups: "{{ postfix_exporter_additional_groups | join(',') }}"
+            append: true
+            state: present
 
 - name: create install directory
   when:

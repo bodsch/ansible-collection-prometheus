@@ -9,8 +9,8 @@ Type              = simple
 Environment       = "GOMAXPROCS={{ ansible_facts.processor_vcpus | default(ansible_facts.processor_count) }}"
 EnvironmentFile   = {{ docker_sd_defaults_directory }}/docker-sd
 
-User              = {{ docker_sd_system_user }}
-Group             = {{ docker_sd_system_group }}
+User              = {{ docker_sd_system_user.owner }}
+Group             = {{ docker_sd_system_user.group }}
 
 ExecStart         = /usr/bin/{{ docker_sd_release.binary }} $OPTIONS
 

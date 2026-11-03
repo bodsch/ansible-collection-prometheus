@@ -50,20 +50,49 @@ def test_version(host, get_vars):
         assert f.is_file
 
 
+def test_user(host, get_vars):
+    """ """
+    system_user = get_vars.get("postfix_exporter_system_user", {})
+
+    owner = system_user.get("owner", "postfix-exporter")
+    group = system_user.get("group", "postfix-exporter")
+
+    assert host.group(group).exists
+    assert host.user(owner).exists
+    assert group in host.user(owner).groups
+    assert host.user(owner).home == "/nonexistent"
+
+
+def test_additional_groups(host, get_vars):
+    """ """
+    system_user = get_vars.get("postfix_exporter_system_user", {})
+
+    owner = system_user.get("owner", "postfix-exporter")
+    additional_groups = get_vars.get("postfix_exporter_additional_groups", [])
+
+    for ag in additional_groups:
+        assert ag in host.user(owner).groups
+
+
 def test_service(host, get_vars):
     service = host.service("postfix_exporter")
-    if service.exists:
-        assert service.is_enabled
-        assert service.is_running
+    assert service.is_enabled
+    assert service.is_running
 
 
 def test_open_port(host, get_vars):
+    """
+    """
+    print(",------------------------")
     for i in host.socket.get_listening_sockets():
-        print(i)
+        print(f"  {i}")
+    print("`------------------------")
+
+    listen_address = "127.0.0.1:9907"
 
     postfix_exporter_service = get_vars.get("postfix_exporter_service", {})
 
-    print(postfix_exporter_service)
+    print(f"configured service: {postfix_exporter_service}")
 
     if isinstance(postfix_exporter_service, dict):
         postfix_exporter_web = postfix_exporter_service.get("web", {})
@@ -72,7 +101,7 @@ def test_open_port(host, get_vars):
     if not listen_address:
         listen_address = "127.0.0.1:9907"
 
-    print(listen_address)
+    print(f"listen_address: {listen_address}")
 
     service = host.socket(f"tcp://{listen_address}")
     assert service.is_listening

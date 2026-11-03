@@ -1,12 +1,11 @@
 ---
 
 - name: daemon-reload
+  when:
+    - ansible_facts.service_mgr == 'systemd'
   ansible.builtin.systemd:
     daemon_reload: true
     force: true
-  notify: restart sentinel
-  when:
-    - ansible_facts.service_mgr == 'systemd'
 
 - name: verify sentinel configuration  # noqa no-changed-when
   become: true
@@ -16,19 +15,21 @@
       --config {{ sentinel_config_dir }}/config.yml
 
 - name: reload sentinel
+  when:
+    - not running_in_check_mode
+    - sentinel_system_service.state | default('started') == 'started'
   become: true
   ansible.builtin.service:
     name: sentinel
     state: reloaded
-  when:
-    - not running_in_check_mode
 
 - name: restart sentinel
+  when:
+    - not running_in_check_mode
+    - sentinel_system_service.state | default('started') == 'started'
   become: true
   ansible.builtin.service:
     name: sentinel
     state: restarted
-  when:
-    - not running_in_check_mode
 
 ...

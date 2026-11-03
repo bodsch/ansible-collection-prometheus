@@ -35,7 +35,7 @@
     path: "{{ json_exporter_config_dir }}"
     state: directory
     owner: root
-    group: "{{ json_exporter_system_group }}"
+    group: "{{ json_exporter_system_user.group }}"
     mode: "0770"
 
 - name: create json_exporter configuration
@@ -46,7 +46,7 @@
     dest: "{{ json_exporter_config_dir }}/config.yml"
     force: true
     owner: root
-    group: "{{ json_exporter_system_group }}"
+    group: "{{ json_exporter_system_user.group }}"
     mode: "0644"
   notify:
     - verify configuration

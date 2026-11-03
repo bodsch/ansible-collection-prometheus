@@ -16,8 +16,7 @@ on:
       - "!README.md"
       - 'roles/alertmanager/**'
       - '.github/workflows/alertmanager.yml'
-      - '.config/ansible-lint.yml'
-      - '.yamllint'
+
   pull_request:
     branches:
       - 'main'
@@ -29,11 +28,9 @@ on:
       - "!README.md"
       - 'roles/alertmanager/**'
       - '.github/workflows/alertmanager.yml'
-      - '.config/ansible-lint.yml'
-      - '.yamllint'
 
 concurrency:
-  group: ci-${{ github.head_ref || github.ref_name }}
+  group: alertmanager-ci-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 env:

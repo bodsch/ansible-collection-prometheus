@@ -9,7 +9,7 @@
   become: true
   ansible.builtin.service:
     name: promscout
-    enabled: true
-    state: started
+    state: "{{ promscout_system_service.state | default('started') }}"
+    enabled: "{{ promscout_system_service.enabled | default(true) | bool }}"
 
 ...

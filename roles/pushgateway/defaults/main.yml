@@ -2,12 +2,26 @@
 
 pushgateway_version: "1.11.2"
 
-pushgateway_system_user: pushgateway
-pushgateway_system_group: pushgateway
+# pushgateway_state: installed
+
+pushgateway_system_user:
+  owner: pushgateway
+  group: pushgateway
+
+pushgateway_system_service:
+  state: started
+  enabled: true
+
+pushgateway_release:
+  provider: github
+  host: https://github.com
+  project:  prometheus
+  repository: pushgateway
+  file: "pushgateway-{{ pushgateway_version }}.{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz"
+  binary: pushgateway
 
 pushgateway_direct_download: false
 
-pushgateway_release: {}
 pushgateway_service: {}
 
 ...

@@ -37,17 +37,20 @@ def test_files(host, files):
 
 def test_user(host, get_vars):
     """ """
-    user = get_vars.get("pushgateway_system_user", "pushgateway")
-    group = get_vars.get("pushgateway_system_group", "pushgateway")
+    system_user = get_vars.get("pushgateway_system_user", {})
+
+    owner = system_user.get("owner", "pushgateway")
+    group = system_user.get("group", "pushgateway")
 
     assert host.group(group).exists
-    assert host.user(user).exists
-    assert group in host.user(user).groups
-    assert host.user(user).home == "/nonexistent"
+    assert host.user(owner).exists
+    assert group in host.user(owner).groups
+    assert host.user(owner).home == "/nonexistent"
 
 
 def test_service(host, get_vars):
     service = host.service("pushgateway")
+    assert service.is_enabled
     assert service.is_running
 
 

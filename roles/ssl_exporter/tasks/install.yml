@@ -3,18 +3,18 @@
 - name: user and group handling
   when:
     - not running_in_check_mode
-    - ssl_exporter_system_user != "root"
+    - ssl_exporter_system_user.owner != "root"
   block:
     - name: create ssl_exporter group
       ansible.builtin.group:
-        name: "{{ ssl_exporter_system_group }}"
+        name: "{{ ssl_exporter_system_user.group }}"
         state: present
         system: true
 
     - name: create ssl_exporter user
       ansible.builtin.user:
-        name: "{{ ssl_exporter_system_user }}"
-        groups: "{{ ssl_exporter_system_group }}"
+        name: "{{ ssl_exporter_system_user.owner }}"
+        groups: "{{ ssl_exporter_system_user.group }}"
         append: true
         shell: /usr/sbin/nologin
         system: true
@@ -27,8 +27,8 @@
   ansible.builtin.file:
     path: "{{ ssl_exporter_install_path }}"
     state: directory
-    owner: "{{ ssl_exporter_system_user }}"
-    group: "{{ ssl_exporter_system_group }}"
+    owner: "{{ ssl_exporter_system_user.owner }}"
+    group: "{{ ssl_exporter_system_user.group }}"
     mode: "0755"
 
 - name: deploy and activate ssl_exporter version {{ ssl_exporter_version }}
@@ -39,8 +39,8 @@
     install_dir: "{{ ssl_exporter_install_path }}"
     link_dir: "/usr/bin"
     remote_src: "{{ ('true' if ssl_exporter_direct_download else 'false') | bool }}"
-    owner: "{{ ssl_exporter_system_user }}"
-    group: "{{ ssl_exporter_system_group }}"
+    owner: "{{ ssl_exporter_system_user.owner }}"
+    group: "{{ ssl_exporter_system_user.group }}"
     mode: "0755"
     items:
       - name: "{{ ssl_exporter_release.binary }}"
@@ -59,7 +59,7 @@
         dest: "{{ ssl_exporter_defaults_directory }}/ssl_exporter"
         force: true
         owner: root
-        group: "{{ ssl_exporter_system_group }}"
+        group: "{{ ssl_exporter_system_user.group }}"
         mode: "0640"
       notify:
         - restart ssl exporter

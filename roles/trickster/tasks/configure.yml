@@ -6,8 +6,8 @@
   ansible.builtin.file:
     path: "{{ trickster_service_config.config_file | dirname }}"
     state: directory
-    owner: "{{ trickster_system_user }}"
-    group: "{{ trickster_system_group }}"
+    owner: "{{ trickster_system_user.owner }}"
+    group: "{{ trickster_system_user.group }}"
     mode: "0755"
 
 - name: create trickster config

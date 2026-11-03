@@ -11,8 +11,8 @@ StartLimitIntervalSec   = 0
 Type                    = simple
 EnvironmentFile         = {{ ssl_exporter_defaults_directory }}/ssl_exporter
 
-User                    = {{ ssl_exporter_system_user }}
-Group                   = {{ ssl_exporter_system_group }}
+User                    = {{ ssl_exporter_system_user.owner }}
+Group                   = {{ ssl_exporter_system_user.group }}
 
 ExecReload              = /bin/kill -HUP $MAINPID
 ExecStart               = /usr/bin/{{ ssl_exporter_release.binary }} $OPTIONS

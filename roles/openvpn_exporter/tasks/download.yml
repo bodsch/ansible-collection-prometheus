@@ -14,24 +14,25 @@
   delegate_to: localhost
   run_once: true
   bodsch.scm.scm_release:
-    provider: "github"
-    project: bodsch
-    repository: openvpn_exporter
+    provider: "{{ openvpn_exporter_release.provider }}"
+    host: "{{ openvpn_exporter_release.host }}"
+    project: "{{ openvpn_exporter_release.project }}"
+    repository: "{{ openvpn_exporter_release.repository }}"
     version: "{{ openvpn_exporter_version }}"
     architecture: "{{ system_architecture }}"
     system: "{{ ansible_facts.system }}"
-    user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
-    password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
-  register: _release
+    user: "{{ _openvpn_exporter_scm_user | default(omit, true) }}"
+    password: "{{ _openvpn_exporter_scm_token | default(omit, true) }}"
+  register: _openvpn_exporter_release
 
 - name: re-define openvpn_exporter_version
   when:
     - not running_in_check_mode
     - openvpn_exporter_version == "latest"
-    - _release.version is defined
-    - _release.version | length > 0
+    - _openvpn_exporter_release.version is defined
+    - _openvpn_exporter_release.version | length > 0
   ansible.builtin.set_fact:
-    openvpn_exporter_version: "{{ _release.version }}"
+    openvpn_exporter_version: "{{ _openvpn_exporter_release.version }}"
 
 - name: define delegate instance for download handling
   when:
@@ -62,7 +63,7 @@
   delegate_to: "{{ openvpn_exporter_delegate_to }}"
   run_once: "{{ 'false' if openvpn_exporter_direct_download else 'true' }}"
   ansible.builtin.stat:
-    path: "{{ openvpn_exporter_local_tmp_directory }}/{{ _release.file }}"
+    path: "{{ openvpn_exporter_local_tmp_directory }}/{{ _openvpn_exporter_release.file }}"
   register: openvpn_exporter_stat_archive
 
 - name: download
@@ -76,11 +77,11 @@
       delegate_to: "{{ openvpn_exporter_delegate_to }}"
       run_once: "{{ 'false' if openvpn_exporter_direct_download else 'true' }}"
       ansible.builtin.get_url:
-        url: "{{ _release.download_url }}"
-        url_username: "{{ lookup('env', 'GH_USER') | default(omit) }}"
-        url_password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
-        dest: "{{ openvpn_exporter_local_tmp_directory }}/{{ _release.file }}"
-        checksum: "{{ _release.checksum_string | default(omit) }}"
+        url: "{{ _openvpn_exporter_release.download_url }}"
+        url_username: "{{ _openvpn_exporter_scm_user | default(omit, true) }}"
+        url_password: "{{ _openvpn_exporter_scm_token | default(omit, true) }}"
+        dest: "{{ openvpn_exporter_local_tmp_directory }}/{{ _openvpn_exporter_release.file }}"
+        checksum: "{{ _openvpn_exporter_release.checksum_string | default(omit) }}"
         mode: "0640"
       register: _download_archive
       until: _download_archive is succeeded
@@ -108,7 +109,7 @@
   delegate_to: "{{ openvpn_exporter_delegate_to }}"
   run_once: "{{ 'false' if openvpn_exporter_direct_download else 'true' }}"
   ansible.builtin.stat:
-    path: "{{ openvpn_exporter_local_tmp_directory }}/{{ _release.file }}"
+    path: "{{ openvpn_exporter_local_tmp_directory }}/{{ _openvpn_exporter_release.file }}"
   register: openvpn_exporter_stat_archive
 
 - name: detect extracted binary
@@ -133,9 +134,10 @@
   delegate_to: "{{ openvpn_exporter_delegate_to }}"
   run_once: "{{ 'false' if openvpn_exporter_direct_download else 'true' }}"
   ansible.builtin.unarchive:
-    src: "{{ openvpn_exporter_local_tmp_directory }}/{{ _release.file }}"
+    src: "{{ openvpn_exporter_local_tmp_directory }}/{{ _openvpn_exporter_release.file }}"
     dest: "{{ openvpn_exporter_local_tmp_directory }}/"
     remote_src: "{{ 'true' if openvpn_exporter_direct_download else 'false' }}"
     extra_opts:
       - --strip-components=1
+
 ...

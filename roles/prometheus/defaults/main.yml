@@ -2,6 +2,24 @@
 
 prometheus_version: 3.10.0
 
+# prometheus_state: installed
+
+prometheus_system_user:
+  owner: prometheus
+  group: prometheus
+
+prometheus_system_service:
+  state: started
+  enabled: true
+
+prometheus_release:
+  provider: github
+  host: https://github.com
+  project:  prometheus
+  repository: prometheus
+  file: "prometheus-{{ prometheus_version }}.{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz"
+  binary: prometheus
+
 prometheus_scm:
   use_tags: true
   without_beta: false
@@ -11,10 +29,6 @@ prometheus_scm:
     - "beta"
     - "rc"
 
-# prometheus_release_download_url: https://github.com/prometheus/prometheus/releases
-
-prometheus_system_user: prometheus
-prometheus_system_group: prometheus
 prometheus_config_dir: /etc/prometheus
 prometheus_data_dir: /var/lib/prometheus
 
@@ -22,7 +36,6 @@ prometheus_enable_experimental: false
 
 prometheus_direct_download: false
 
-prometheus_release: {}
 prometheus_service: {}
 
 prometheus_global: {}
@@ -78,18 +91,5 @@ prometheus_file_sd_targets:
       labels:
         service: prometheus
         host: "{{ ansible_facts.hostname }}"
-
-# prometheus_web:
-#   http_listen_address: "0.0.0.0"
-#   http_listen_port: "9090"
-#   telemetry_path: "/metrics"
-#   external_url: ""
-#
-# prometheus_storage:
-#   retention: "30d"
-#   # Available since Prometheus 2.7.0
-#   # [EXPERIMENTAL] Maximum number of bytes that can be stored for blocks.
-#   # Units supported: KB, MB, GB, TB, PB.
-#   retention_size: "0"
 
 ...

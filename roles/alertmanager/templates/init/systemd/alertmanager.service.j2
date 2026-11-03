@@ -9,8 +9,8 @@ After            = network-online.target
 Type             = simple
 EnvironmentFile  = {{ alertmanager_defaults_directory }}/alertmanager
 
-User             = {{ alertmanager_system_user }}
-Group            = {{ alertmanager_system_group }}
+User             = {{ alertmanager_system_user.owner }}
+Group            = {{ alertmanager_system_user.group }}
 
 ExecStartPre     = /usr/bin/amtool check-config --verbose {{ alertmanager_config_dir }}/alertmanager.yml
 ExecStart        = /usr/bin/{{ alertmanager_release.binary }} $OPTIONS

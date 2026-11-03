@@ -60,13 +60,15 @@ def test_version(host, get_vars):
 
 def test_user(host, get_vars):
     """ """
-    user = get_vars.get("sentinel_system_user", "sentinel")
-    group = get_vars.get("sentinel_system_group", "sentinel")
+    system_user = get_vars.get("sentinel_system_user", {})
+
+    owner = system_user.get("owner", "sentinel")
+    group = system_user.get("group", "sentinel")
 
     assert host.group(group).exists
-    assert host.user(user).exists
-    assert group in host.user(user).groups
-    assert host.user(user).home == "/nonexistent"
+    assert host.user(owner).exists
+    assert group in host.user(owner).groups
+    assert host.user(owner).home == "/nonexistent"
 
 
 def test_service(host, get_vars):

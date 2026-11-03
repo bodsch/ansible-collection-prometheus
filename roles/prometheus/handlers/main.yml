@@ -1,14 +1,17 @@
 ---
 
 - name: daemon-reload
+  when:
+    - not running_in_check_mode
+    - ansible_facts.service_mgr | lower == "systemd"
   become: true
   ansible.builtin.systemd:
     daemon_reload: true
     force: true
-  when:
-    - ansible_facts.service_mgr | lower == "systemd"
 
 - name: validate prometheus config
+  when:
+    - not running_in_check_mode
   bodsch.prometheus.promtool:
     state: check
     config: "{{ prometheus_config_dir }}/prometheus.yml"
@@ -17,32 +20,38 @@
     - restart prometheus
 
 - name: summary of changes or failed
-  ansible.builtin.debug:
-    msg: "{{ _created_alert_rules }}"
   when:
+    - not running_in_check_mode
     - _created_alert_rules.changed or
       _created_alert_rules.failed
+  ansible.builtin.debug:
+    msg: "{{ _created_alert_rules }}"
 
 - name: reload prometheus
+  when:
+    - not running_in_check_mode
+    - prometheus_system_service.state | default('started') == 'started'
   become: true
   ansible.builtin.service:
     name: prometheus
     state: reloaded
-  when:
-    - not running_in_check_mode
 
 - name: restart prometheus
+  when:
+    - not running_in_check_mode
+    - prometheus_system_service.state | default('started') == 'started'
+    - prometheus_valid_config is defined
+    - prometheus_valid_config.rc is defined
+    - prometheus_valid_config.rc == 0
   become: true
   ansible.builtin.service:
     name: prometheus
     state: restarted
-  when:
-    - not running_in_check_mode
-    - prometheus_valid_config is defined
-    - prometheus_valid_config.rc is defined
-    - prometheus_valid_config.rc == 0
 
 - name: simple restart prometheus
+  when:
+    - not running_in_check_mode
+    - prometheus_system_service.state | default('started') == 'started'
   become: true
   ansible.builtin.service:
     name: prometheus

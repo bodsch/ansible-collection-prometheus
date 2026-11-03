@@ -9,7 +9,7 @@
     - not running_in_check_mode
   ansible.builtin.service:
     name: json_exporter
-    enabled: true
-    state: started
+    state: "{{ json_exporter_system_service.state | default('started') }}"
+    enabled: "{{ json_exporter_system_service.enabled | default(true) | bool }}"
 
 ...

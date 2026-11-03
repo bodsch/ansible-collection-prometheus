@@ -2,10 +2,24 @@
 
 redis_exporter_version: '1.80.1'
 
-redis_exporter_release: {}
+# redis_exporter_state: installed
 
-redis_exporter_system_group: redis-exporter
-redis_exporter_system_user: redis-exporter
+redis_exporter_system_user:
+  owner: redis-exporter
+  group: redis-exporter
+
+redis_exporter_system_service:
+  state: started
+  enabled: true
+
+redis_exporter_release:
+  provider: github
+  host: https://github.com
+  project:  oliver006
+  repository: redis_exporter
+  file: "redis_exporter-v{{ redis_exporter_version }}.{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz"
+  binary: redis_exporter
+
 redis_exporter_config_dir: /etc/redis_exporter
 
 redis_exporter_direct_download: false

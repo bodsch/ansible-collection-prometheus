@@ -22,10 +22,10 @@
   tags:
     - bind_exporter_install
 
-- name: configure
-  ansible.builtin.import_tasks: configure.yml
-  tags:
-    - bind_exporter_configure
+# - name: configure
+#   ansible.builtin.import_tasks: configure.yml
+#   tags:
+#     - bind_exporter_configure
 
 - name: service
   ansible.builtin.import_tasks: service.yml

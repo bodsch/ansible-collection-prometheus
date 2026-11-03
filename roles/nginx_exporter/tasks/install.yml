@@ -3,18 +3,18 @@
 - name: user and group handling
   when:
     - not running_in_check_mode
-    - nginx_exporter_system_user != "root"
+    - nginx_exporter_system_user.owner != "root"
   block:
     - name: create nginx_exporter group
       ansible.builtin.group:
-        name: "{{ nginx_exporter_system_group }}"
+        name: "{{ nginx_exporter_system_user.group }}"
         state: present
         system: true
 
     - name: create nginx_exporter user
       ansible.builtin.user:
-        name: "{{ nginx_exporter_system_user }}"
-        groups: "{{ nginx_exporter_system_group }}"
+        name: "{{ nginx_exporter_system_user.owner }}"
+        groups: "{{ nginx_exporter_system_user.group }}"
         append: true
         shell: /usr/sbin/nologin
         system: true
@@ -27,8 +27,8 @@
   ansible.builtin.file:
     path: "{{ nginx_exporter_install_path }}"
     state: directory
-    owner: "{{ nginx_exporter_system_user }}"
-    group: "{{ nginx_exporter_system_group }}"
+    owner: "{{ nginx_exporter_system_user.owner }}"
+    group: "{{ nginx_exporter_system_user.group }}"
     mode: "0755"
 
 - name: deploy and activate nginx_exporter version {{ nginx_exporter_version }}
@@ -39,11 +39,13 @@
     install_dir: "{{ nginx_exporter_install_path }}"
     link_dir: "/usr/bin"
     remote_src: "{{ ('true' if nginx_exporter_direct_download else 'false') | bool }}"
-    owner: "{{ nginx_exporter_system_user }}"
-    group: "{{ nginx_exporter_system_group }}"
+    owner: "{{ nginx_exporter_system_user.owner }}"
+    group: "{{ nginx_exporter_system_user.group }}"
     mode: "0755"
     items:
       - name: "{{ nginx_exporter_release.binary }}"
+        src: "nginx-prometheus-exporter"
+        link_name: "{{ nginx_exporter_release.binary }}"
         capability: "cap_net_raw+ep"
   notify:
     - restart nginx exporter
@@ -59,7 +61,7 @@
         dest: "{{ nginx_exporter_defaults_directory }}/nginx_exporter"
         force: true
         owner: root
-        group: "{{ nginx_exporter_system_group }}"
+        group: "{{ nginx_exporter_system_user.group }}"
         mode: "0640"
       notify:
         - restart nginx exporter
@@ -103,3 +105,5 @@
     name: nginx_exporter
     facts:
       version: "{{ nginx_exporter_version }}"
+
+...

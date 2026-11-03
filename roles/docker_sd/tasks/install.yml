@@ -3,27 +3,27 @@
 - name: user and group handling
   when:
     - not running_in_check_mode
-    - docker_sd_system_user != "root" or docker_sd_system_group != "root"
+    - docker_sd_system_user.owner != "root" or docker_sd_system_user.group != "root"
   block:
     - name: create docker-sd group
       ansible.builtin.group:
-        name: "{{ docker_sd_system_group }}"
+        name: "{{ docker_sd_system_user.group }}"
         state: present
         system: true
       when:
-        - docker_sd_system_group != "root"
+        - docker_sd_system_user.group != "root"
 
     - name: create docker-sd user
       ansible.builtin.user:
-        name: "{{ docker_sd_system_user }}"
-        groups: "{{ docker_sd_system_group }}"
+        name: "{{ docker_sd_system_user.owner }}"
+        groups: "{{ docker_sd_system_user.group }}"
         append: true
         shell: /usr/sbin/nologin
         system: true
         createhome: false
         home: /nonexistent
       when:
-        - docker_sd_system_user != "root"
+        - docker_sd_system_user.owner != "root"
 
 - name: create install directory
   when:
@@ -31,8 +31,8 @@
   ansible.builtin.file:
     path: "{{ docker_sd_install_path }}"
     state: directory
-    owner: "{{ docker_sd_system_user }}"
-    group: "{{ docker_sd_system_group }}"
+    owner: "{{ docker_sd_system_user.owner }}"
+    group: "{{ docker_sd_system_user.group }}"
     mode: "0755"
 
 - name: deploy and activate docker_sd version {{ docker_sd_version }}
@@ -43,8 +43,8 @@
     install_dir: "{{ docker_sd_install_path }}"
     link_dir: "/usr/bin"
     remote_src: "{{ ('true' if docker_sd_direct_download else 'false') | bool }}"
-    owner: "{{ docker_sd_system_user }}"
-    group: "{{ docker_sd_system_group }}"
+    owner: "{{ docker_sd_system_user.owner }}"
+    group: "{{ docker_sd_system_user.group }}"
     mode: "0755"
     items:
       - name: "{{ docker_sd_release.binary }}"
@@ -59,7 +59,7 @@
     path: "{{ docker_sd_config_dir }}"
     state: directory
     owner: root
-    group: "{{ docker_sd_system_group }}"
+    group: "{{ docker_sd_system_user.group }}"
     mode: "0770"
 
 - name: systemd
@@ -73,7 +73,7 @@
         dest: "{{ docker_sd_defaults_directory }}/docker-sd"
         force: true
         owner: root
-        group: "{{ docker_sd_system_group }}"
+        group: "{{ docker_sd_system_user.group }}"
         mode: "0640"
       notify:
         - restart docker-sd

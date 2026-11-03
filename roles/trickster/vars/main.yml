@@ -273,7 +273,10 @@ trickster_defaults_logging:
 trickster_defaults_directory: /etc/default
 
 trickster_defaults_release:
-  download_url: https://github.com/trickstercache/trickster/releases
+  provider: github
+  host: https://github.com
+  project:  trickstercache
+  repository: trickster
   file: trickster-{{ trickster_version }}.tar.gz
   binary: trickster
 
@@ -286,3 +289,14 @@ go_arch_map:
 system_architecture: "{{ go_arch_map[ansible_facts.architecture] | default(ansible_facts.architecture) }}"
 
 systemd_lib_directory: /lib/systemd/system
+
+_trickster_gh_token: "{{ lookup('env', 'GH_TOKEN') }}"
+_trickster_gh_user: "{{ lookup('env', 'GH_USER') }}"
+_trickster_fj_token: "{{ lookup('env', 'FJ_TOKEN') }}"
+_trickster_fj_user: "{{ lookup('env', 'FJ_USER') }}"
+
+# credentials matching the configured release provider (empty when unset)
+_trickster_scm_token: "{{ _trickster_fj_token if trickster_release.provider == 'forgejo' else _trickster_gh_token }}"
+_trickster_scm_user: "{{ _trickster_fj_user if trickster_release.provider == 'forgejo' else _trickster_gh_user }}"
+
+...

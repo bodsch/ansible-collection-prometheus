@@ -2,10 +2,24 @@
 
 json_exporter_version: '0.7.0'
 
-json_exporter_release: {}
+# json_exporter_state: installed
 
-json_exporter_system_group: json-exporter
-json_exporter_system_user: json-exporter
+json_exporter_system_user:
+  owner: json-exporter
+  group: json-exporter
+
+json_exporter_system_service:
+  state: started
+  enabled: true
+
+json_exporter_release:
+  provider: github
+  host: https://github.com
+  project:  prometheus-community
+  repository: json_exporter
+  file: json_exporter-{{ json_exporter_version }}.{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz
+  binary: json_exporter
+
 json_exporter_config_dir: /etc/json_exporter
 
 json_exporter_direct_download: false

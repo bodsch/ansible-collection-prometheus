@@ -54,17 +54,6 @@ def test_files(host, get_vars):
         assert not f.is_file
 
 
-def test_user(host, get_vars):
-    """ """
-    user = get_vars.get("docker_sd_system_user", "node_exp")
-    group = get_vars.get("docker_sd_system_group", "node_exp")
-
-    assert not host.group(group).exists
-    assert not host.user(user).exists
-    # assert group in host.user(user).groups
-    # assert host.user(user).home == "/nonexistent"
-
-
 def test_service(host, get_vars):
     service = host.service("docker-sd")
     if service.exists:

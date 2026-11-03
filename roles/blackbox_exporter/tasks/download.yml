@@ -1,33 +1,38 @@
 ---
 
-- name: get latest release
-  when:
-    - not running_in_check_mode
-    - blackbox_exporter_version == "latest"
-  delegate_to: localhost
-  become: false
-  run_once: true
-  block:
-    - name: get latest release
-      delegate_to: localhost
-      become: false
-      run_once: true
-      bodsch.scm.github_latest:
-        project: prometheus
-        repository: blackbox_exporter
-        user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
-        password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
-      register: _latest_release
-
-    - name: re-define blackbox_exporter_version
-      ansible.builtin.set_fact:
-        blackbox_exporter_version: "{{ _latest_release.latest_release }}"
-
 - name: define download information
   when:
     - not running_in_check_mode
   ansible.builtin.set_fact:
     blackbox_exporter_release: "{{ blackbox_exporter_defaults_release | combine(blackbox_exporter_release, recursive=True) }}"
+  no_log: true
+
+- name: resolve blackbox_exporter release
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: localhost
+  run_once: true
+  bodsch.scm.scm_release:
+    provider: "{{ blackbox_exporter_release.provider }}"
+    host: "{{ blackbox_exporter_release.host }}"
+    project: "{{ blackbox_exporter_release.project }}"
+    repository: "{{ blackbox_exporter_release.repository }}"
+    version: "{{ blackbox_exporter_version }}"
+    architecture: "{{ system_architecture }}"
+    system: "{{ ansible_facts.system }}"
+    user: "{{ _blackbox_exporter_scm_user | default(omit, true) }}"
+    password: "{{ _blackbox_exporter_scm_token | default(omit, true) }}"
+  register: _blackbox_exporter_release
+
+- name: re-define blackbox_exporter_version
+  when:
+    - not running_in_check_mode
+    - blackbox_exporter_version == "latest"
+    - _blackbox_exporter_release.version is defined
+    - _blackbox_exporter_release.version | length > 0
+  ansible.builtin.set_fact:
+    blackbox_exporter_version: "{{ _blackbox_exporter_release.version }}"
 
 - name: define delegate instance for download handling
   when:
@@ -36,8 +41,8 @@
   ansible.builtin.set_fact:
     blackbox_exporter_delegate_to: "{{ ansible_facts.host }}"
     blackbox_exporter_local_tmp_directory: "{{
-        lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
-        default('/var/cache/ansible/blackbox_exporter', true) }}/{{ blackbox_exporter_version }}"
+      lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
+      default('/var/cache/ansible/blackbox_exporter', true) }}/{{ blackbox_exporter_version }}"
 
 - name: create download directory
   when:
@@ -48,7 +53,7 @@
   ansible.builtin.file:
     path: "{{ blackbox_exporter_local_tmp_directory }}"
     state: directory
-    mode: "0750"
+    mode: "0700"
   check_mode: false
 
 - name: detect the downloaded blackbox_exporter archive
@@ -58,53 +63,31 @@
   delegate_to: "{{ blackbox_exporter_delegate_to }}"
   run_once: "{{ 'false' if blackbox_exporter_direct_download else 'true' }}"
   ansible.builtin.stat:
-    path: "{{ blackbox_exporter_local_tmp_directory }}/{{ blackbox_exporter_release.file }}"
-  register: stat_blackbox_exporter_archive
+    path: "{{ blackbox_exporter_local_tmp_directory }}/{{ _blackbox_exporter_release.file }}"
+  register: blackbox_exporter_stat_archive
 
 - name: download
   when:
     - not running_in_check_mode
-    - stat_blackbox_exporter_archive.stat is defined
-    - not stat_blackbox_exporter_archive.stat.exists | default('false')
+    - blackbox_exporter_stat_archive.stat is defined
+    - not blackbox_exporter_stat_archive.stat.exists | default(false) | bool
   block:
-    - name: checksum
-      become: false
-      delegate_to: localhost
-      run_once: true
-      block:
-        - name: get checksum list
-          bodsch.scm.github_checksum:
-            project: prometheus
-            repository: blackbox_exporter
-            checksum_file: sha256sums.txt
-            user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
-            password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
-            architecture: "{{ ansible_facts.architecture }}"
-            system: "{{ ansible_facts.system }}"
-            version: "v{{ blackbox_exporter_version }}"
-          register: _latest_checksum
-
-        - name: define checksum for {{ system_architecture }} architecture
-          ansible.builtin.set_fact:
-            __blackbox_exporter_checksum: "sha256:{{ _latest_checksum.checksum }}"
-          when:
-            - _latest_checksum.rc == 0
-            - _latest_checksum.checksum is defined
-            - _latest_checksum.checksum | string | length > 0
-
     - name: download blackbox_exporter binary archive
       become: false
       delegate_to: "{{ blackbox_exporter_delegate_to }}"
       run_once: "{{ 'false' if blackbox_exporter_direct_download else 'true' }}"
       ansible.builtin.get_url:
-        url: "{{ blackbox_exporter_release.download_url }}/download/v{{ blackbox_exporter_version }}/{{ blackbox_exporter_release.file }}"
-        dest: "{{ blackbox_exporter_local_tmp_directory }}/{{ blackbox_exporter_release.file }}"
-        checksum: "{{ __blackbox_exporter_checksum | default(omit) }}"
+        url: "{{ _blackbox_exporter_release.download_url }}"
+        url_username: "{{ _blackbox_exporter_scm_user | default(omit, true) }}"
+        url_password: "{{ _blackbox_exporter_scm_token | default(omit, true) }}"
+        dest: "{{ blackbox_exporter_local_tmp_directory }}/{{ _blackbox_exporter_release.file }}"
+        checksum: "{{ _blackbox_exporter_release.checksum_string | default(omit) }}"
         mode: "0640"
       register: _download_archive
       until: _download_archive is succeeded
       retries: 5
       delay: 2
+      check_mode: false
 
   rescue:
     - name: delete download directory
@@ -119,6 +102,16 @@
       ansible.builtin.fail:
         msg: A serious error occurred when downloading the archive.
 
+- name: detect downloaded file
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ blackbox_exporter_delegate_to }}"
+  run_once: "{{ 'false' if blackbox_exporter_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ blackbox_exporter_local_tmp_directory }}/{{ _blackbox_exporter_release.file }}"
+  register: blackbox_exporter_stat_archive
+
 - name: detect extracted binary
   when:
     - not running_in_check_mode
@@ -127,20 +120,23 @@
   run_once: "{{ 'false' if blackbox_exporter_direct_download else 'true' }}"
   ansible.builtin.stat:
     path: "{{ blackbox_exporter_local_tmp_directory }}/{{ blackbox_exporter_release.binary }}"
-  register: stat_blackbox_exporter_binary
+  register: blackbox_exporter_stat_binary
 
 - name: extract blackbox_exporter archive
   when:
     - not running_in_check_mode
-    - stat_blackbox_exporter_binary.stat is defined
-    - not stat_blackbox_exporter_binary.stat.exists | default('false')
+    - blackbox_exporter_stat_archive.stat is defined
+    - blackbox_exporter_stat_archive.stat.exists | default('false') | bool
+    - blackbox_exporter_stat_archive.stat.mimetype in ["application/zip","application/gzip"]
+    - blackbox_exporter_stat_binary.stat is defined
+    - not blackbox_exporter_stat_binary.stat.exists | default('false') | bool
   become: false
   delegate_to: "{{ blackbox_exporter_delegate_to }}"
   run_once: "{{ 'false' if blackbox_exporter_direct_download else 'true' }}"
   ansible.builtin.unarchive:
-    src: "{{ blackbox_exporter_local_tmp_directory }}/{{ blackbox_exporter_release.file }}"
+    src: "{{ blackbox_exporter_local_tmp_directory }}/{{ _blackbox_exporter_release.file }}"
     dest: "{{ blackbox_exporter_local_tmp_directory }}/"
-    copy: false
+    remote_src: "{{ 'true' if blackbox_exporter_direct_download else 'false' }}"
     extra_opts:
       - --strip-components=1
 

@@ -45,13 +45,15 @@ def test_exporter_files(host, get_vars):
 
 def test_user(host, get_vars):
     """ """
-    user = get_vars.get("ssl_exporter_system_user", "ssl_exporter")
-    group = get_vars.get("ssl_exporter_system_group", "ssl_exporter")
+    system_user = get_vars.get("ssl_exporter_system_user", {})
+
+    owner = system_user.get("owner", "ssl-exporter")
+    group = system_user.get("group", "ssl-exporter")
 
     assert host.group(group).exists
-    assert host.user(user).exists
-    assert group in host.user(user).groups
-    assert host.user(user).home == "/nonexistent"
+    assert host.user(owner).exists
+    assert group in host.user(owner).groups
+    assert host.user(owner).home == "/nonexistent"
 
 
 def test_service(host, get_vars):

@@ -56,13 +56,15 @@ def test_files(host, get_vars):
 
 def test_user(host, get_vars):
     """ """
-    user = get_vars.get("node_exporter_system_user", "node_exp")
-    group = get_vars.get("node_exporter_system_group", "node_exp")
+    system_user = get_vars.get("node_exporter_system_user", {})
+
+    owner = system_user.get("owner", "node-exporter")
+    group = system_user.get("group", "node-exporter")
 
     assert host.group(group).exists
-    assert host.user(user).exists
-    assert group in host.user(user).groups
-    assert host.user(user).home == "/nonexistent"
+    assert host.user(owner).exists
+    assert group in host.user(owner).groups
+    assert host.user(owner).home == "/nonexistent"
 
 
 def test_service(host, get_vars):

@@ -3,18 +3,18 @@
 - name: user and group handling
   when:
     - not running_in_check_mode
-    - trickster_system_user != "root"
+    - trickster_system_user.owner != "root"
   block:
     - name: create trickster group
       ansible.builtin.group:
-        name: "{{ trickster_system_group }}"
+        name: "{{ trickster_system_user.group }}"
         state: present
         system: true
 
     - name: create trickster user
       ansible.builtin.user:
-        name: "{{ trickster_system_user }}"
-        groups: "{{ trickster_system_group }}"
+        name: "{{ trickster_system_user.owner }}"
+        groups: "{{ trickster_system_user.group }}"
         append: true
         shell: /usr/sbin/nologin
         system: true
@@ -27,8 +27,8 @@
   ansible.builtin.file:
     path: "{{ trickster_install_path }}"
     state: directory
-    owner: "{{ trickster_system_user }}"
-    group: "{{ trickster_system_group }}"
+    owner: "{{ trickster_system_user.owner }}"
+    group: "{{ trickster_system_user.group }}"
     mode: "0755"
 
 - name: deploy and activate trickster version {{ trickster_version }}
@@ -39,8 +39,8 @@
     install_dir: "{{ trickster_install_path }}"
     link_dir: "/usr/bin"
     remote_src: "{{ ('true' if trickster_direct_download else 'false') | bool }}"
-    owner: "{{ trickster_system_user }}"
-    group: "{{ trickster_system_group }}"
+    owner: "{{ trickster_system_user.owner }}"
+    group: "{{ trickster_system_user.group }}"
     mode: "0755"
     items:
       - name: "{{ trickster_release.binary }}"
@@ -55,8 +55,8 @@
     - trickster_service.persistence.file | string | length > 0
   ansible.builtin.file:
     state: directory
-    owner: "{{ trickster_system_user }}"
-    group: "{{ trickster_system_group }}"
+    owner: "{{ trickster_system_user.owner }}"
+    group: "{{ trickster_system_user.group }}"
     mode: "0750"
     path: "{{ trickster_service.persistence.file | dirname }}"
 
@@ -71,7 +71,7 @@
         dest: "{{ trickster_defaults_directory }}/trickster"
         force: true
         owner: root
-        group: "{{ trickster_system_group }}"
+        group: "{{ trickster_system_user.group }}"
         mode: "0640"
       notify:
         - restart trickster

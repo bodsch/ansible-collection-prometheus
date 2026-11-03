@@ -6,11 +6,11 @@
 - name: ensure postfix_exporter is enabled on boot
   when:
     - not running_in_check_mode
-    - postfix_exporter_service.state | default('started') == 'started'
   become: true
   ansible.builtin.service:
     name: postfix_exporter
-    enabled: true
-    state: started
+    state: "{{ postfix_exporter_system_service.state | default('started') }}"
+    enabled: "{{ postfix_exporter_system_service.enabled | default(true) | bool }}"
+
 
 ...

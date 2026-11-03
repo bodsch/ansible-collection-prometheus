@@ -6,8 +6,8 @@
   ansible.builtin.file:
     state: directory
     path: "{{ node_exporter_install_path }}/collector-scripts"
-    owner: "{{ node_exporter_system_user }}"
-    group: "{{ node_exporter_system_group }}"
+    owner: "{{ node_exporter_system_user.owner }}"
+    group: "{{ node_exporter_system_user.group }}"
     mode: "0755"
 
 - name: install external collector scripts
@@ -117,8 +117,8 @@
     - not running_in_check_mode
   ansible.builtin.file:
     path: "{{ node_exporter_install_path }}/collector-scripts"
-    owner: "{{ node_exporter_system_user }}"
-    group: "{{ node_exporter_system_group }}"
+    owner: "{{ node_exporter_system_user.owner }}"
+    group: "{{ node_exporter_system_user.group }}"
     mode: "0755"
     recurse: true
 

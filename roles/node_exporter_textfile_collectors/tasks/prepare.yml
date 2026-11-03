@@ -11,9 +11,9 @@
 - name: install dependency
   when:
     - not running_in_check_mode
-    - node_exporter_requirements | default([]) | count > 0
+    - node_exporter_collector_requirements | default([]) | count > 0
   package:
-    name: "{{ node_exporter_requirements }}"
+    name: "{{ node_exporter_collector_requirements }}"
     state: present
 
 - name: create configurations directory for collector scripts
@@ -22,8 +22,8 @@
   file:
     state: directory
     path: "{{ node_exporter_config_dir }}/collector-scripts"
-    owner: "{{ node_exporter_system_user }}"
-    group: "{{ node_exporter_system_group }}"
+    owner: "{{ node_exporter_system_user.owner }}"
+    group: "{{ node_exporter_system_user.group }}"
     mode: "0750"
 
 - name: create env directory for configurations
@@ -32,8 +32,8 @@
   file:
     state: directory
     path: "{{ node_exporter_config_dir }}/.env"
-    owner: "{{ node_exporter_system_user }}"
-    group: "{{ node_exporter_system_group }}"
+    owner: "{{ node_exporter_system_user.owner }}"
+    group: "{{ node_exporter_system_user.group }}"
     mode: "0750"
 
 ...

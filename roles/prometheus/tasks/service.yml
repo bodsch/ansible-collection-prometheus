@@ -16,7 +16,8 @@
     - not running_in_check_mode
   ansible.builtin.service:
     name: prometheus
-    enabled: true
-    state: started
+    state: "{{ prometheus_system_service.state | default('started') }}"
+    enabled: "{{ prometheus_system_service.enabled | default(true) | bool }}"
+
 
 ...

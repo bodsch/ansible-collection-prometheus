@@ -3,18 +3,18 @@
 - name: user and group handling
   when:
     - not running_in_check_mode
-    - mongodb_exporter_system_user != "root"
+    - mongodb_exporter_system_user.owner != "root"
   block:
     - name: create mongodb_exporter group
       ansible.builtin.group:
-        name: "{{ mongodb_exporter_system_group }}"
+        name: "{{ mongodb_exporter_system_user.group }}"
         state: present
         system: true
 
     - name: create mongodb_exporter user
       ansible.builtin.user:
-        name: "{{ mongodb_exporter_system_user }}"
-        groups: "{{ mongodb_exporter_system_group }}"
+        name: "{{ mongodb_exporter_system_user.owner }}"
+        groups: "{{ mongodb_exporter_system_user.group }}"
         append: true
         shell: /usr/sbin/nologin
         system: true
@@ -27,8 +27,8 @@
   ansible.builtin.file:
     path: "{{ mongodb_exporter_install_path }}"
     state: directory
-    owner: "{{ mongodb_exporter_system_user }}"
-    group: "{{ mongodb_exporter_system_group }}"
+    owner: "{{ mongodb_exporter_system_user.owner }}"
+    group: "{{ mongodb_exporter_system_user.group }}"
     mode: "0755"
 
 - name: deploy and activate mongodb_exporter version {{ mongodb_exporter_version }}
@@ -39,8 +39,8 @@
     install_dir: "{{ mongodb_exporter_install_path }}"
     link_dir: "/usr/bin"
     remote_src: "{{ ('true' if mongodb_exporter_direct_download else 'false') | bool }}"
-    owner: "{{ mongodb_exporter_system_user }}"
-    group: "{{ mongodb_exporter_system_group }}"
+    owner: "{{ mongodb_exporter_system_user.owner }}"
+    group: "{{ mongodb_exporter_system_user.group }}"
     mode: "0755"
     items:
       - name: "{{ mongodb_exporter_release.binary }}"
@@ -59,7 +59,7 @@
         dest: "{{ mongodb_exporter_defaults_directory }}/mongodb_exporter"
         force: true
         owner: root
-        group: "{{ mongodb_exporter_system_group }}"
+        group: "{{ mongodb_exporter_system_user.group }}"
         mode: "0640"
       notify:
         - restart mongodb exporter

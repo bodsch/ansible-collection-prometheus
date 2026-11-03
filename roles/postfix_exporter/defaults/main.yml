@@ -1,16 +1,19 @@
 ---
 
-postfix_exporter_version: '1.0.0-rc'
+postfix_exporter_version: '1.0.0'
+
+# postfix_exporter_state: installed
 
 postfix_exporter_system_user:
   owner:  postfix-exporter
   group: postfix-exporter
 
-postfix_exporter_service:
+postfix_exporter_system_service:
   state: stopped
   enabled: false
 
-postfix_exporter_config_dir: /etc/postfix_exporter
+postfix_exporter_additional_groups:
+  - postdrop
 
 postfix_exporter_release:
   provider: github
@@ -20,7 +23,7 @@ postfix_exporter_release:
   file: "postfix_exporter-{{ postfix_exporter_version }}_{{ ansible_facts.system | lower }}_{{ system_architecture }}.tar.gz"
   binary: "postfix_exporter"
 
-postfix_exporter_service_config:
+postfix_exporter_service:
   log:
     level: info
   web:
@@ -31,6 +34,8 @@ postfix_exporter_service_config:
       file: ""                                      #
   config:
     file: ""
+
+postfix_exporter_config_dir: /etc/postfix_exporter
 
 postfix_exporter_config: {}
 

@@ -17,7 +17,7 @@
     - not running_in_check_mode
   ansible.builtin.service:
     name: alertmanager
-    enabled: true
-    state: started
+    state: "{{ alertmanager_system_service.state | default('started') }}"
+    enabled: "{{ alertmanager_system_service.enabled | default(true) | bool }}"
 
 ...

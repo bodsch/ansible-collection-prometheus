@@ -8,7 +8,7 @@ node_exporter_local_tmp_directory: "{{
   lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
   default(lookup('env', 'HOME') ~ '/.cache/ansible/node_exporter_collector_scripts', true) }}"
 
-node_exporter_requirements:
+node_exporter_collector_requirements:
   - file
   - rsync
 

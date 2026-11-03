@@ -9,7 +9,7 @@
     - not running_in_check_mode
   ansible.builtin.service:
     name: sentinel
-    enabled: true
-    state: started
+    state: "{{ sentinel_system_service.state | default('started') }}"
+    enabled: "{{ sentinel_system_service.enabled | default(true) | bool }}"
 
 ...

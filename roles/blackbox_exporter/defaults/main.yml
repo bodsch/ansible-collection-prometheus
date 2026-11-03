@@ -3,15 +3,31 @@
 blackbox_exporter_version: '0.28.0'
 blackbox_exporter_blackbox_plus: false
 
-blackbox_exporter_system_group: blackbox-exporter
-blackbox_exporter_system_user: "{{ blackbox_exporter_system_group }}"
+# blackbox_exporter_state: installed
+
+blackbox_exporter_system_user:
+  owner: blackbox-exporter
+  group: blackbox-exporter
+
+blackbox_exporter_system_service:
+  state: started
+  enabled: true
+
+blackbox_exporter_release:
+  provider: github
+  host: https://github.com
+  project:  prometheus
+  repository: blackbox_exporter
+  file: blackbox_exporter-{{ blackbox_exporter_version }}.{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz
+  binary: blackbox_exporter
+
 blackbox_exporter_config_dir: /etc/blackbox_exporter
+
+blackbox_exporter_data_dir: /var/lib/blackbox_exporter
 
 blackbox_exporter_direct_download: false
 
 blackbox_exporter_service: {}
-
-blackbox_exporter_release: {}
 
 blackbox_exporter_modules: {}
 

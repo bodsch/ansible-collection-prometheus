@@ -1,44 +1,45 @@
 ---
 
 - name: daemon-reload
+  when:
+    - ansible_facts.service_mgr == 'systemd'
   ansible.builtin.systemd:
     daemon_reload: true
     force: true
-  notify: restart alertmanager
-  when:
-    - ansible_facts.service_mgr == 'systemd'
 
-- name: validate config
-  bodsch.prometheus.amtool:
-    verbose: false
-    state: check
-    config: "{{ alertmanager_config_dir }}/alertmanager.yml"
-  register: alertmanger_valid_config
+- name: validate alertmanger config
   when:
     - not running_in_check_mode
     - alertmanger_config is defined
     - alertmanger_config.changed is defined
     - alertmanger_config.changed
+  bodsch.prometheus.amtool:
+    verbose: false
+    state: check
+    config: "{{ alertmanager_config_dir }}/alertmanager.yml"
+  register: alertmanger_valid_config
   notify:
     - restart alertmanager
 
 - name: reload alertmanager
+  when:
+    - not running_in_check_mode
+    - alertmanager_system_service.state | default('started') == 'started'
   become: true
   ansible.builtin.service:
     name: alertmanager
     state: reloaded
-  when:
-    - not running_in_check_mode
 
 - name: restart alertmanager
-  become: true
-  ansible.builtin.service:
-    name: alertmanager
-    state: restarted
   when:
     - not running_in_check_mode
     - alertmanger_valid_config is defined
     - alertmanger_valid_config.rc is defined
     - alertmanger_valid_config.rc == 0
+    - alertmanager_system_service.state | default('started') == 'started'
+  become: true
+  ansible.builtin.service:
+    name: alertmanager
+    state: restarted
 
 ...

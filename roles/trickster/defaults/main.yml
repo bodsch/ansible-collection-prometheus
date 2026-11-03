@@ -2,6 +2,24 @@
 
 trickster_version: '2.2.0'
 
+# trickster_state: installed
+
+trickster_system_user:
+  owner: trickster
+  group: trickster
+
+trickster_system_service:
+  state: started
+  enabled: true
+
+trickster_release:
+  provider: github
+  host: https://github.com
+  project:  trickstercache
+  repository: trickster
+  file: trickster-{{ trickster_version }}.tar.gz
+  binary: trickster
+
 trickster_scm:
   use_tags: true
   without_beta: false
@@ -10,17 +28,10 @@ trickster_scm:
     # - ".*beta"
     # - ".*rc"
 
-trickster_release: {}
-
 trickster_direct_download: false
-
-trickster_system_user: trickster
-trickster_system_group: trickster
 
 trickster_bin: /bin/trickster
 trickster_config_dir: /etc/trickster
-
-trickster_service_state: started
 
 trickster_service_config: {}
 

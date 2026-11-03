@@ -3,18 +3,18 @@
 - name: user and group handling
   when:
     - not running_in_check_mode
-    - blackbox_exporter_system_user != "root"
+    - blackbox_exporter_system_user.owner != "root"
   block:
     - name: create blackbox_exporter group
       ansible.builtin.group:
-        name: "{{ blackbox_exporter_system_group }}"
+        name: "{{ blackbox_exporter_system_user.group }}"
         state: present
         system: true
 
     - name: create blackbox_exporter user
       ansible.builtin.user:
-        name: "{{ blackbox_exporter_system_user }}"
-        groups: "{{ blackbox_exporter_system_group }}"
+        name: "{{ blackbox_exporter_system_user.owner }}"
+        groups: "{{ blackbox_exporter_system_user.group }}"
         append: true
         shell: /usr/sbin/nologin
         system: true
@@ -27,8 +27,8 @@
   ansible.builtin.file:
     path: "{{ blackbox_exporter_install_path }}"
     state: directory
-    owner: "{{ blackbox_exporter_system_user }}"
-    group: "{{ blackbox_exporter_system_group }}"
+    owner: "{{ blackbox_exporter_system_user.owner }}"
+    group: "{{ blackbox_exporter_system_user.group }}"
     mode: "0755"
 
 - name: deploy and activate blackbox_exporter version {{ blackbox_exporter_version }}
@@ -39,8 +39,8 @@
     install_dir: "{{ blackbox_exporter_install_path }}"
     link_dir: "/usr/bin"
     remote_src: "{{ ('true' if blackbox_exporter_direct_download else 'false') | bool }}"
-    owner: "{{ blackbox_exporter_system_user }}"
-    group: "{{ blackbox_exporter_system_group }}"
+    owner: "{{ blackbox_exporter_system_user.owner }}"
+    group: "{{ blackbox_exporter_system_user.group }}"
     mode: "0755"
     items:
       - name: "{{ blackbox_exporter_release.binary }}"
@@ -59,7 +59,7 @@
         dest: "{{ blackbox_exporter_defaults_directory }}/blackbox_exporter"
         force: true
         owner: root
-        group: "{{ blackbox_exporter_system_group }}"
+        group: "{{ blackbox_exporter_system_user.group }}"
         mode: "0640"
       notify:
         - restart blackbox exporter

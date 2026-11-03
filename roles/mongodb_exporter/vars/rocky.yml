@@ -1,6 +1,0 @@
----
-
-mongodb_exporter_requirements:
-  - iproute
-
-...

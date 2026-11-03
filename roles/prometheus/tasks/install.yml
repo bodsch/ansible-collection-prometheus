@@ -3,18 +3,18 @@
 - name: user and group handling
   when:
     - not running_in_check_mode
-    - prometheus_system_user != "root"
+    - prometheus_system_user.owner != "root"
   block:
     - name: create prometheus group
       ansible.builtin.group:
-        name: "{{ prometheus_system_group }}"
+        name: "{{ prometheus_system_user.group }}"
         state: present
         system: true
 
     - name: create prometheus user
       ansible.builtin.user:
-        name: "{{ prometheus_system_user }}"
-        groups: "{{ prometheus_system_group }}"
+        name: "{{ prometheus_system_user.owner }}"
+        groups: "{{ prometheus_system_user.group }}"
         append: true
         shell: /usr/sbin/nologin
         system: true
@@ -25,15 +25,25 @@
   ansible.builtin.set_fact:
     prometheus_service: "{{ prometheus_defaults_service | combine(prometheus_service, recursive=True) }}"
 
-- name: create install directory
+- name: create prometheus directories
   when:
     - not running_in_check_mode
-  ansible.builtin.file:
-    path: "{{ prometheus_install_path }}"
-    state: directory
-    owner: "{{ prometheus_system_user }}"
-    group: "{{ prometheus_system_group }}"
+  bodsch.core.directories:
+    owner: "{{ prometheus_system_user.owner }}"
+    group: "{{ prometheus_system_user.group }}"
     mode: "0755"
+    paths:
+      - path: "{{ prometheus_install_path }}"
+        owner: root
+      - path: "{{ prometheus_data_dir }}"
+      - path: "{{ prometheus_config_dir }}"
+        mode: "0770"
+      - path: "{{ prometheus_config_dir }}/rules"
+        mode: "0750"
+      - path: "{{ prometheus_config_dir }}/targets"
+        mode: "0750"
+      - path: "{{ prometheus_config_dir }}/file_sd"
+        mode: "0750"
 
 - name: deploy and activate prometheus version {{ prometheus_version }}
   when:
@@ -43,64 +53,14 @@
     install_dir: "{{ prometheus_install_path }}"
     link_dir: "/usr/bin"
     remote_src: "{{ ('true' if prometheus_direct_download else 'false') | bool }}"
-    owner: "{{ prometheus_system_user }}"
-    group: "{{ prometheus_system_group }}"
+    owner: "{{ prometheus_system_user.owner }}"
+    group: "{{ prometheus_system_user.group }}"
     mode: "0755"
     items:
       - name: "{{ prometheus_release.binary }}"
       - name: promtool
   notify:
     - restart prometheus
-
-- name: create prometheus data directory
-  when:
-    - not running_in_check_mode
-  ansible.builtin.file:
-    path: "{{ prometheus_data_dir }}"
-    state: directory
-    owner: "{{ prometheus_system_user }}"
-    group: "{{ prometheus_system_group }}"
-    mode: "0755"
-
-- name: create prometheus configuration directory
-  when:
-    - not running_in_check_mode
-  ansible.builtin.file:
-    path: "{{ prometheus_config_dir }}"
-    state: directory
-    owner: root
-    group: "{{ prometheus_system_group }}"
-    mode: "0770"
-
-- name: create rules directory
-  when:
-    - not running_in_check_mode
-  ansible.builtin.file:
-    state: directory
-    path: "{{ prometheus_config_dir }}/rules"
-    owner: "{{ prometheus_system_user }}"
-    group: "{{ prometheus_system_group }}"
-    mode: "0750"
-
-- name: create targets directory
-  when:
-    - not running_in_check_mode
-  ansible.builtin.file:
-    state: directory
-    path: "{{ prometheus_config_dir }}/targets"
-    owner: "{{ prometheus_system_user }}"
-    group: "{{ prometheus_system_group }}"
-    mode: "0750"
-
-- name: create file_sd directory
-  when:
-    - not running_in_check_mode
-  ansible.builtin.file:
-    state: directory
-    path: "{{ prometheus_config_dir }}/file_sd"
-    owner: "{{ prometheus_system_user }}"
-    group: "{{ prometheus_system_group }}"
-    mode: "0750"
 
 - name: systemd
   when:
@@ -113,7 +73,7 @@
         dest: "{{ prometheus_defaults_directory }}/prometheus"
         force: true
         owner: root
-        group: "{{ prometheus_system_group }}"
+        group: "{{ prometheus_system_user.group }}"
         mode: "0640"
       notify:
         - simple restart prometheus

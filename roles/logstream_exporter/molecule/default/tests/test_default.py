@@ -23,15 +23,18 @@ def test_files(host, files):
     f = host.file(files)
     assert f.exists
 
+
 def test_user(host, get_vars):
     """ """
-    user = get_vars.get("logstream_exporter_system_user", "logstream_exporter")
-    group = get_vars.get("logstream_exporter_system_group", "logstream_exporter")
+    system_user = get_vars.get("logstream_exporter_system_user", {})
+
+    owner = system_user.get("owner", "logstream-exporter")
+    group = system_user.get("group", "logstream-exporter")
 
     assert host.group(group).exists
-    assert host.user(user).exists
-    assert group in host.user(user).groups
-    assert host.user(user).home == "/nonexistent"
+    assert host.user(owner).exists
+    assert group in host.user(owner).groups
+    assert host.user(owner).home == "/nonexistent"
 
 
 def test_service(host, get_vars):

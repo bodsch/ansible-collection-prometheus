@@ -3,18 +3,18 @@
 - name: user and group handling
   when:
     - not running_in_check_mode
-    - bind_exporter_system_user != "root"
+    - bind_exporter_system_user.owner != "root"
   block:
     - name: create bind_exporter group
       ansible.builtin.group:
-        name: "{{ bind_exporter_system_group }}"
+        name: "{{ bind_exporter_system_user.group }}"
         state: present
         system: true
 
     - name: create bind_exporter user
       ansible.builtin.user:
-        name: "{{ bind_exporter_system_user }}"
-        groups: "{{ bind_exporter_system_group }}"
+        name: "{{ bind_exporter_system_user.owner }}"
+        groups: "{{ bind_exporter_system_user.group }}"
         append: true
         shell: /usr/sbin/nologin
         system: true
@@ -27,8 +27,8 @@
   ansible.builtin.file:
     path: "{{ bind_exporter_install_path }}"
     state: directory
-    owner: "{{ bind_exporter_system_user }}"
-    group: "{{ bind_exporter_system_group }}"
+    owner: "{{ bind_exporter_system_user.owner }}"
+    group: "{{ bind_exporter_system_user.group }}"
     mode: "0755"
 
 - name: deploy and activate bind_exporter version {{ bind_exporter_version }}
@@ -39,8 +39,8 @@
     install_dir: "{{ bind_exporter_install_path }}"
     link_dir: "/usr/bin"
     remote_src: "{{ ('true' if bind_exporter_direct_download else 'false') | bool }}"
-    owner: "{{ bind_exporter_system_user }}"
-    group: "{{ bind_exporter_system_group }}"
+    owner: "{{ bind_exporter_system_user.owner }}"
+    group: "{{ bind_exporter_system_user.group }}"
     mode: "0755"
     items:
       - name: "{{ bind_exporter_release.binary }}"
@@ -59,7 +59,7 @@
         dest: "{{ bind_exporter_defaults_directory }}/bind_exporter"
         force: true
         owner: root
-        group: "{{ bind_exporter_system_group }}"
+        group: "{{ bind_exporter_system_user.group }}"
         mode: "0640"
       notify:
         - restart bind exporter

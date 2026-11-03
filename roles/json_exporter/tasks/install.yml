@@ -3,18 +3,18 @@
 - name: user and group handling
   when:
     - not running_in_check_mode
-    - json_exporter_system_user != "root"
+    - json_exporter_system_user.owner != "root"
   block:
     - name: create json_exporter group
       ansible.builtin.group:
-        name: "{{ json_exporter_system_group }}"
+        name: "{{ json_exporter_system_user.group }}"
         state: present
         system: true
 
     - name: create json_exporter user
       ansible.builtin.user:
-        name: "{{ json_exporter_system_user }}"
-        groups: "{{ json_exporter_system_group }}"
+        name: "{{ json_exporter_system_user.owner }}"
+        groups: "{{ json_exporter_system_user.group }}"
         append: true
         shell: /usr/sbin/nologin
         system: true
@@ -27,8 +27,8 @@
   ansible.builtin.file:
     path: "{{ json_exporter_install_path }}"
     state: directory
-    owner: "{{ json_exporter_system_user }}"
-    group: "{{ json_exporter_system_group }}"
+    owner: "{{ json_exporter_system_user.owner }}"
+    group: "{{ json_exporter_system_user.group }}"
     mode: "0755"
 
 - name: deploy and activate json_exporter version {{ json_exporter_version }}
@@ -39,8 +39,8 @@
     install_dir: "{{ json_exporter_install_path }}"
     link_dir: "/usr/bin"
     remote_src: "{{ ('true' if json_exporter_direct_download else 'false') | bool }}"
-    owner: "{{ json_exporter_system_user }}"
-    group: "{{ json_exporter_system_group }}"
+    owner: "{{ json_exporter_system_user.owner }}"
+    group: "{{ json_exporter_system_user.group }}"
     mode: "0755"
     items:
       - name: "{{ json_exporter_release.binary }}"
@@ -59,7 +59,7 @@
         dest: "{{ json_exporter_defaults_directory }}/json_exporter"
         force: true
         owner: root
-        group: "{{ json_exporter_system_group }}"
+        group: "{{ json_exporter_system_user.group }}"
         mode: "0640"
       notify:
         - restart json exporter

@@ -9,8 +9,8 @@ After             = network.target
 [Service]
 EnvironmentFile   = {{ trickster_defaults_directory }}/trickster
 
-User             = {{ trickster_system_user }}
-Group            = {{ trickster_system_group }}
+User             = {{ trickster_system_user.owner }}
+Group            = {{ trickster_system_user.group }}
 
 # ExecStartPre      = /bin/bash -l -c 'env >/tmp/trickster.err'
 ExecStartPre     = /usr/bin/trickster $OPTIONS --log-level debug --validate-config

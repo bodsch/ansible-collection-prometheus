@@ -4,7 +4,7 @@
   when:
     - not running_in_check_mode
   ansible.builtin.set_fact:
-    openvpn_exporter_service_config: "{{ openvpn_exporter_defaults_service | combine(openvpn_exporter_service_config, recursive=True) }}"
+    openvpn_exporter_service: "{{ openvpn_exporter_defaults_service | combine(openvpn_exporter_service, recursive=True) }}"
 
 - name: define openvpn_exporter_management_group
   when:

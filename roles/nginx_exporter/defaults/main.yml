@@ -3,15 +3,27 @@
 nginx_exporter_version: '1.5.1'
 nginx_exporter_nginx_plus: false
 
-nginx_exporter_system_group: nginx-exporter
-nginx_exporter_system_user: "{{ nginx_exporter_system_group }}"
+# nginx_exporter_state: installed
+
+nginx_exporter_system_user:
+  owner: nginx-exporter
+  group: nginx-exporter
+
+nginx_exporter_system_service:
+  state: started
+  enabled: true
+
+nginx_exporter_release:
+  provider: github
+  host: https://github.com
+  project:  nginxinc
+  repository: nginx-prometheus-exporter
+  file: nginx-prometheus-exporter_{{ nginx_exporter_version }}_{{ ansible_facts.system | lower }}_{{ system_architecture }}.tar.gz
+  binary: nginx_exporter
+
 nginx_exporter_config_dir: /etc/nginx_exporter
 
 nginx_exporter_direct_download: false
-
-nginx_exporter_release:
-  download_url: https://github.com/nginxinc/nginx-prometheus-exporter/releases
-  file: nginx-prometheus-exporter_{{ nginx_exporter_version }}_{{ ansible_facts.system | lower }}_{{ system_architecture }}.tar.gz
 
 nginx_exporter_service: {}
 #   nginx:

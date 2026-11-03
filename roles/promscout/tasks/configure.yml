@@ -1,11 +1,5 @@
 ---
 
-# - name: merge promscout configuration between defaults and custom
-#   ansible.builtin.set_fact:
-#     promscout_rest_api: "{{ promscout_defaults_rest_api | combine(promscout_rest_api, recursive=True) }}"
-#     promscout_hosts: "{{ promscout_defaults_hosts | union(promscout_hosts) }}"
-#     promscout_addition_labels: "{{ promscout_defaults_addition_labels | union(promscout_addition_labels) }}"
-
 - name: create promscout configuration directory
   when:
     - not running_in_check_mode
@@ -13,7 +7,7 @@
     path: "{{ promscout_config_dir }}"
     state: directory
     owner: root
-    group: "{{ promscout_system_group }}"
+    group: "{{ promscout_system_user.group }}"
     mode: "0770"
 
 - name: create promscout configuration
@@ -24,7 +18,7 @@
     dest: "{{ promscout_config_dir }}/config.yml"
     force: true
     owner: root
-    group: "{{ promscout_system_group }}"
+    group: "{{ promscout_system_user.group }}"
     mode: "0640"
   notify:
     - restart promscout

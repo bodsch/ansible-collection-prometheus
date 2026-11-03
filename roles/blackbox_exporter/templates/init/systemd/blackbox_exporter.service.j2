@@ -11,8 +11,8 @@ StartLimitIntervalSec   = 0
 Type                    = simple
 EnvironmentFile         = {{ blackbox_exporter_defaults_directory }}/blackbox_exporter
 
-User                    = {{ blackbox_exporter_system_user }}
-Group                   = {{ blackbox_exporter_system_group }}
+User                    = {{ blackbox_exporter_system_user.owner }}
+Group                   = {{ blackbox_exporter_system_user.group }}
 
 ExecReload              = /bin/kill -HUP $MAINPID
 ExecStartPre            = /usr/bin/{{ blackbox_exporter_release.binary }} --config.file {{ blackbox_exporter_service.config.file }} --config.check

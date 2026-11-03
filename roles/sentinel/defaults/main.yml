@@ -2,10 +2,24 @@
 
 sentinel_version: '0.9.0'
 
-sentinel_release: {}
+# sentinel_state: installed
 
-sentinel_system_group: sentinel
-sentinel_system_user: sentinel
+sentinel_system_user:
+  owner: sentinel
+  group: sentinel
+
+sentinel_system_service:
+  state: started
+  enabled: true
+
+sentinel_release:
+  provider: github
+  host: https://github.com
+  project:  bodsch
+  repository: sentinel
+  file: sentinel-{{ sentinel_version }}-{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz
+  binary: sentinel
+
 sentinel_config_dir: /etc/sentinel
 
 sentinel_direct_download: false

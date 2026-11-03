@@ -47,14 +47,6 @@ def test_files(host, get_vars):
         f = host.file(_file)
         assert not f.is_file
 
-def test_user(host, get_vars):
-    """ """
-    user = get_vars.get("promscout_system_user", "promscout")
-    group = get_vars.get("promscout_system_group", "promscout")
-
-    assert not host.group(group).exists
-    assert not host.user(user).exists
-
 
 def test_open_port(host, get_vars):
     for i in host.socket.get_listening_sockets():

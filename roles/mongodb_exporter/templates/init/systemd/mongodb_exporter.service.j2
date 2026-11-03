@@ -12,8 +12,8 @@ StartLimitIntervalSec   = 0
 Type                    = simple
 EnvironmentFile         = {{ mongodb_exporter_defaults_directory }}/mongodb_exporter
 
-User                    = {{ mongodb_exporter_system_user }}
-Group                   = {{ mongodb_exporter_system_group }}
+User                    = {{ mongodb_exporter_system_user.owner }}
+Group                   = {{ mongodb_exporter_system_user.group }}
 
 ExecReload              = /bin/kill -HUP $MAINPID
 ExecStart               = /usr/bin/{{ mongodb_exporter_release.binary }} $OPTIONS

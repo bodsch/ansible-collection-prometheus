@@ -9,8 +9,8 @@ After             = network-online.target
 Type              = simple
 EnvironmentFile   = {{ sentinel_defaults_directory }}/sentinel
 
-User              = {{ sentinel_system_user }}
-Group             = {{ sentinel_system_group }}
+User              = {{ sentinel_system_user.owner }}
+Group             = {{ sentinel_system_user.group }}
 
 ExecReload        = /bin/kill -HUP $MAINPID
 ExecStart         = /usr/bin/{{ sentinel_release.binary }} $OPTIONS

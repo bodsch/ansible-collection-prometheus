@@ -9,7 +9,7 @@
   become: true
   ansible.builtin.service:
     name: node_exporter
-    enabled: true
-    state: started
+    state: "{{ node_exporter_system_service.state | default('started') }}"
+    enabled: "{{ node_exporter_system_service.enabled | default(true) | bool }}"
 
 ...

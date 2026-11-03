@@ -2,13 +2,27 @@
 
 promscout_version: "2.0.0"
 
-promscout_system_user: promscout
-promscout_system_group: promscout
+# promscout_state: installed
+
+promscout_system_user:
+  owner: promscout
+  group: promscout
+
+promscout_system_service:
+  state: started
+  enabled: true
+
+promscout_release:
+  provider: github
+  host: https://github.com
+  project:  bodsch
+  repository: promscout
+  file: "promscout-{{ promscout_version }}-{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz"
+  binary: promscout
+
 promscout_config_dir: /etc/promscout
 
 promscout_direct_download: false
-
-promscout_release: {}
 
 # CIDR network that will be scanned for Prometheus exporters.
 # Example: 192.168.0.0/24, 10.10.0.0/16

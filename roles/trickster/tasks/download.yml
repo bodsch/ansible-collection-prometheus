@@ -14,25 +14,25 @@
   delegate_to: localhost
   run_once: true
   bodsch.scm.scm_release:
-    provider: "github"
-    project: trickstercache
-    repository: trickster
+    provider: "{{ trickster_release.provider }}"
+    host: "{{ trickster_release.host }}"
+    project: "{{ trickster_release.project }}"
+    repository: "{{ trickster_release.repository }}"
     version: "{{ trickster_version }}"
     architecture: "{{ system_architecture }}"
     system: "{{ ansible_facts.system }}"
-    # asset: "trickster-{version}.{system}-{arch}.tar.gz"
-    user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
-    password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
-  register: _release
+    user: "{{ _trickster_scm_user | default(omit, true) }}"
+    password: "{{ _trickster_scm_token | default(omit, true) }}"
+  register: _trickster_release
 
 - name: re-define trickster_version
   when:
     - not running_in_check_mode
     - trickster_version == "latest"
-    - _release.version is defined
-    - _release.version | length > 0
+    - _trickster_release.version is defined
+    - _trickster_release.version | length > 0
   ansible.builtin.set_fact:
-    trickster_version: "{{ _release.version }}"
+    trickster_version: "{{ _trickster_release.version }}"
 
 - name: define delegate instance for download handling
   when:
@@ -63,7 +63,7 @@
   delegate_to: "{{ trickster_delegate_to }}"
   run_once: "{{ 'false' if trickster_direct_download else 'true' }}"
   ansible.builtin.stat:
-    path: "{{ trickster_local_tmp_directory }}/{{ _release.file }}"
+    path: "{{ trickster_local_tmp_directory }}/{{ _trickster_release.file }}"
   register: trickster_stat_archive
 
 - name: download
@@ -72,17 +72,16 @@
     - trickster_stat_archive.stat is defined
     - not trickster_stat_archive.stat.exists | default(false) | bool
   block:
-
     - name: download trickster binary archive
       become: false
       delegate_to: "{{ trickster_delegate_to }}"
       run_once: "{{ 'false' if trickster_direct_download else 'true' }}"
       ansible.builtin.get_url:
-        url: "{{ _release.download_url }}"
-        url_username: "{{ lookup('env', 'GH_USER') | default(omit) }}"
-        url_password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
-        dest: "{{ trickster_local_tmp_directory }}/{{ _release.file }}"
-        checksum: "{{ _release.checksum_string | default(omit) }}"
+        url: "{{ _trickster_release.download_url }}"
+        url_username: "{{ _trickster_scm_user | default(omit, true) }}"
+        url_password: "{{ _trickster_scm_token | default(omit, true) }}"
+        dest: "{{ trickster_local_tmp_directory }}/{{ _trickster_release.file }}"
+        checksum: "{{ _trickster_release.checksum_string | default(omit) }}"
         mode: "0640"
       register: _download_archive
       until: _download_archive is succeeded
@@ -110,7 +109,7 @@
   delegate_to: "{{ trickster_delegate_to }}"
   run_once: "{{ 'false' if trickster_direct_download else 'true' }}"
   ansible.builtin.stat:
-    path: "{{ trickster_local_tmp_directory }}/{{ _release.file }}"
+    path: "{{ trickster_local_tmp_directory }}/{{ _trickster_release.file }}"
   register: trickster_stat_archive
 
 - name: detect extracted binary
@@ -120,7 +119,7 @@
   delegate_to: "{{ trickster_delegate_to }}"
   run_once: "{{ 'false' if trickster_direct_download else 'true' }}"
   ansible.builtin.stat:
-    path: "{{ trickster_local_tmp_directory }}/bin/{{ trickster_release.binary }}"
+    path: "{{ trickster_local_tmp_directory }}/{{ trickster_release.binary }}"
   register: trickster_stat_binary
 
 - name: extract trickster archive
@@ -135,7 +134,7 @@
   delegate_to: "{{ trickster_delegate_to }}"
   run_once: "{{ 'false' if trickster_direct_download else 'true' }}"
   ansible.builtin.unarchive:
-    src: "{{ trickster_local_tmp_directory }}/{{ _release.file }}"
+    src: "{{ trickster_local_tmp_directory }}/{{ _trickster_release.file }}"
     dest: "{{ trickster_local_tmp_directory }}/"
     remote_src: "{{ 'true' if trickster_direct_download else 'false' }}"
     extra_opts:

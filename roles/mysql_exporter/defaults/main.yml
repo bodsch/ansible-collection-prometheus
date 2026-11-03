@@ -2,12 +2,25 @@
 
 mysql_exporter_version: "0.18.0"
 
-mysql_exporter_system_user: mysql_exporter
-mysql_exporter_system_group: mysql_exporter
+# mysql_exporter_state: installed
+
+mysql_exporter_system_user:
+  owner: mysql-exporter
+  group: mysql-exporter
+
+mysql_exporter_system_service:
+  state: started
+  enabled: true
 
 mysql_exporter_direct_download: false
 
-mysql_exporter_release: {}
+mysql_exporter_release:
+  provider: github
+  host: https://github.com
+  project:  prometheus
+  repository: mysqld_exporter
+  file: mysqld_exporter-{{ mysql_exporter_version }}.{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz
+  binary: mysqld_exporter
 
 mysql_exporter_service: {}
 

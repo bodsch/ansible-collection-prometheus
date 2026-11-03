@@ -9,8 +9,8 @@ After             = network-online.target
 Type              = simple
 EnvironmentFile   = {{ nginx_exporter_defaults_directory }}/nginx_exporter
 
-User              = {{ nginx_exporter_system_user }}
-Group             = {{ nginx_exporter_system_group }}
+User              = {{ nginx_exporter_system_user.owner }}
+Group             = {{ nginx_exporter_system_user.group }}
 
 ExecReload        = /bin/kill -HUP $MAINPID
 ExecStart         = /usr/bin/{{ nginx_exporter_release.binary }} $OPTIONS

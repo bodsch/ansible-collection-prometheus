@@ -9,7 +9,7 @@
   become: true
   ansible.builtin.service:
     name: mongodb_exporter
-    enabled: true
-    state: started
+    state: "{{ mongodb_exporter_system_service.state | default('started') }}"
+    enabled: "{{ mongodb_exporter_system_service.enabled | default(true) | bool }}"
 
 ...

@@ -3,18 +3,18 @@
 - name: user and group handling
   when:
     - not running_in_check_mode
-    - node_exporter_system_user != "root"
+    - node_exporter_system_user.owner != "root"
   block:
     - name: create node_exporter group
       ansible.builtin.group:
-        name: "{{ node_exporter_system_group }}"
+        name: "{{ node_exporter_system_user.group }}"
         state: present
         system: true
 
     - name: create node_exporter user
       ansible.builtin.user:
-        name: "{{ node_exporter_system_user }}"
-        groups: "{{ node_exporter_system_group }}"
+        name: "{{ node_exporter_system_user.owner }}"
+        groups: "{{ node_exporter_system_user.group }}"
         append: true
         shell: /usr/sbin/nologin
         system: true
@@ -27,8 +27,8 @@
   ansible.builtin.file:
     path: "{{ node_exporter_install_path }}"
     state: directory
-    owner: "{{ node_exporter_system_user }}"
-    group: "{{ node_exporter_system_group }}"
+    owner: "{{ node_exporter_system_user.owner }}"
+    group: "{{ node_exporter_system_user.group }}"
     mode: "0755"
 
 - name: deploy and activate node_exporter version {{ node_exporter_version }}
@@ -39,8 +39,8 @@
     install_dir: "{{ node_exporter_install_path }}"
     link_dir: "/usr/bin"
     remote_src: "{{ ('true' if node_exporter_direct_download else 'false') | bool }}"
-    owner: "{{ node_exporter_system_user }}"
-    group: "{{ node_exporter_system_group }}"
+    owner: "{{ node_exporter_system_user.owner }}"
+    group: "{{ node_exporter_system_user.group }}"
     mode: "0755"
     items:
       - name: "{{ node_exporter_release.binary }}"
@@ -59,7 +59,7 @@
         dest: "{{ node_exporter_defaults_directory }}/node_exporter"
         force: true
         owner: root
-        group: "{{ node_exporter_system_group }}"
+        group: "{{ node_exporter_system_user.group }}"
         mode: "0640"
       notify:
         - restart node exporter

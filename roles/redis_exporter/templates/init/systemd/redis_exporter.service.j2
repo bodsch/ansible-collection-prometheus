@@ -9,8 +9,8 @@ After             = network-online.target
 Type              = simple
 EnvironmentFile   = {{ redis_exporter_defaults_directory }}/redis_exporter
 
-User              = {{ redis_exporter_system_user }}
-Group             = {{ redis_exporter_system_group }}
+User              = {{ redis_exporter_system_user.owner }}
+Group             = {{ redis_exporter_system_user.group }}
 
 ExecReload        = /bin/kill -HUP $MAINPID
 ExecStart         = /usr/bin/{{ redis_exporter_release.binary }} $OPTIONS
