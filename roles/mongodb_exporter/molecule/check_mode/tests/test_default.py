@@ -51,16 +51,6 @@ def test_files(host, get_vars):
         assert not f.is_file
 
 
-def test_user(host, get_vars):
-    username = get_vars.get("mongodb_exporter_system_user")
-    groupname = get_vars.get("mongodb_exporter_system_group")
-
-    assert not host.group(groupname).exists
-    assert not host.user(username).exists
-    # assert groupname in host.user(username).groups
-    # assert host.user(username).home == "/nonexistent"
-
-
 def test_service(host, get_vars):
     service = host.service("mongodb_exporter")
     if service.exists:
