@@ -21,8 +21,6 @@ nginx_exporter_release:
   file: nginx-prometheus-exporter_{{ nginx_exporter_version }}_{{ ansible_facts.system | lower }}_{{ system_architecture }}.tar.gz
   binary: nginx_exporter
 
-# nginx_exporter_system_group: nginx-exporter
-# nginx_exporter_system_user: "{{ nginx_exporter_system_group }}"
 nginx_exporter_config_dir: /etc/nginx_exporter
 
 nginx_exporter_direct_download: false

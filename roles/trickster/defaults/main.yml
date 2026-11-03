@@ -30,13 +30,8 @@ trickster_scm:
 
 trickster_direct_download: false
 
-# trickster_system_user: trickster
-# trickster_system_group: trickster
-
 trickster_bin: /bin/trickster
 trickster_config_dir: /etc/trickster
-
-# trickster_service_state: started
 
 trickster_service_config: {}
 

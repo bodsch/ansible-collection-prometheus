@@ -29,8 +29,6 @@ prometheus_scm:
     - "beta"
     - "rc"
 
-# prometheus_system_user: prometheus
-# prometheus_system_group: prometheus
 prometheus_config_dir: /etc/prometheus
 prometheus_data_dir: /var/lib/prometheus
 
@@ -93,18 +91,5 @@ prometheus_file_sd_targets:
       labels:
         service: prometheus
         host: "{{ ansible_facts.hostname }}"
-
-# prometheus_web:
-#   http_listen_address: "0.0.0.0"
-#   http_listen_port: "9090"
-#   telemetry_path: "/metrics"
-#   external_url: ""
-#
-# prometheus_storage:
-#   retention: "30d"
-#   # Available since Prometheus 2.7.0
-#   # [EXPERIMENTAL] Maximum number of bytes that can be stored for blocks.
-#   # Units supported: KB, MB, GB, TB, PB.
-#   retention_size: "0"
 
 ...

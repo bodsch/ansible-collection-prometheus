@@ -20,8 +20,6 @@ promscout_release:
   file: "promscout-{{ promscout_version }}-{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz"
   binary: promscout
 
-# promscout_system_user:
-# promscout_system_group: promscout
 promscout_config_dir: /etc/promscout
 
 promscout_direct_download: false
